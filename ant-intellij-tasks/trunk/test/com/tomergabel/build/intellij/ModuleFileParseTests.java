@@ -12,7 +12,7 @@ public class ModuleFileParseTests {
         final File resource = new File( this.getClass().getResource( "parsing-test.iml" ).getFile() );
         final Module module = Module.parse( resource );
 
-        assertEquals( "Project name incorrectly parsed.", "parsing-test", module.getName() );
+        assertEquals( "Module name incorrectly parsed.", "parsing-test", module.getName() );
         assertEquals( "Compiler output URL incorrectly parsed.", "file://$MODULE_DIR$/bin", module.getOutputUrl() );
         assertEquals( "Compiler test class output URL incorrectly parsed.", "file://$MODULE_DIR$/bin",
                 module.getTestOutputUrl() );

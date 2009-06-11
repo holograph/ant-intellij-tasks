@@ -1,24 +1,18 @@
 package com.tomergabel.build.intellij;
 
-import com.tomergabel.util.XmlUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Collections;
 
-public final class Module {
+public final class Module extends IntelliJParserBase {
     private final File root;
     private String outputUrl;
     private String testOutputUrl;
@@ -49,15 +43,15 @@ public final class Module {
     }
 
     public Collection<String> getSourceUrls() {
-        return this.sourceUrls;
+        return Collections.unmodifiableCollection( this.sourceUrls );
     }
 
     public Collection<String> getTestSourceUrls() {
-        return this.testSourceUrls;
+        return Collections.unmodifiableCollection( this.testSourceUrls );
     }
 
     public Collection<Dependency> getDepdencies() {
-        return this.depdencies;
+        return Collections.unmodifiableCollection( this.depdencies );
     }
 
     private Module( File descriptor ) throws IllegalArgumentException {
@@ -73,41 +67,6 @@ public final class Module {
         this.depdencies = new HashSet<Dependency>();
     }
 
-    static final XPath xpath = XPathFactory.newInstance().newXPath();
-
-    private static String extract( Node context, String xpath, String failMessage )
-            throws IllegalArgumentException, ParseException {
-        if ( context == null )
-            throw new IllegalArgumentException( "The context cannot be null." );
-        if ( xpath == null )
-            throw new IllegalArgumentException( "The XPath expression cannot be null." );
-        if ( failMessage == null )
-            throw new IllegalArgumentException( "The failure message cannot be null." );
-
-        try {
-            return Module.xpath.evaluate( xpath, context );
-        } catch ( XPathExpressionException e ) {
-            throw new ParseException( failMessage, e );
-        }
-    }
-
-    private static Collection<Node> extractAll( Node context, String xpath, String failMessage )
-            throws IllegalArgumentException, ParseException {
-        if ( context == null )
-            throw new IllegalArgumentException( "The context cannot be null." );
-        if ( xpath == null )
-            throw new IllegalArgumentException( "The XPath expression cannot be null." );
-        if ( failMessage == null )
-            throw new IllegalArgumentException( "The failure message cannot be null." );
-
-        try {
-            return XmlUtils.wrapNodeList( (NodeList) Module.xpath.evaluate( xpath, context, XPathConstants.NODESET ) );
-        } catch ( XPathExpressionException e ) {
-            throw new ParseException( failMessage, e );
-        }
-    }
-
-    static DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 
     static Module parse( File descriptor ) throws IOException, ParseException, IllegalArgumentException {
         if ( descriptor == null )
