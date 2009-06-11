@@ -1,20 +1,20 @@
 package com.tomergabel.build.intellij;
 
 import static com.tomergabel.util.TestUtils.assertSetEquality;
+import com.tomergabel.util.UriUtils;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
+import java.net.URI;
 
 public class ModuleFileParseTests {
-    private File resource;
+    private URI resource;
     private Module module;
 
     @Before
-    public void testSetup() throws IOException, ParseException {
-        this.resource = new File( this.getClass().getResource( "parsing-test.iml" ).getFile() );
+    public void testSetup() throws Exception {
+        this.resource = this.getClass().getResource( "parsing-test.iml" ).toURI();
         this.module = Module.parse( this.resource );
     }
 
@@ -22,7 +22,7 @@ public class ModuleFileParseTests {
     public void testPropertyExtraction() {
         assertSetEquality( "Module properties incorrectly generated.", new String[] { "MODULE_DIR" },
                 this.module.getProperties().keySet() );
-        assertEquals( "Module directory incorrectly set.", resource.getParentFile(),
+        assertEquals( "Module directory incorrectly set.", UriUtils.getParent( this.resource ).getPath(),
                 this.module.getProperties().get( "MODULE_DIR" ) );
     }
 

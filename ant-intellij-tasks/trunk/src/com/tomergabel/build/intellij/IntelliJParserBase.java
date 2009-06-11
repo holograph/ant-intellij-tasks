@@ -51,16 +51,16 @@ public abstract class IntelliJParserBase {
         }
     }
 
-    private Map<String, Object> propertyCache;
+    private Map<String, String> propertyCache;
 
-    public final Map<String, Object> getProperties() {
+    public final Map<String, String> getProperties() {
         if ( this.propertyCache == null ) {
-            HashMap<String, Object> map = new HashMap<String, Object>();
+            HashMap<String, String> map = new HashMap<String, String>();
             generatePropertyMap( map );
             this.propertyCache = Collections.unmodifiableMap( map );
         }
         return this.propertyCache;
     }
 
-    protected abstract void generatePropertyMap( Map<String, Object> properties );
+    protected abstract void generatePropertyMap( Map<String, String> properties );
 }

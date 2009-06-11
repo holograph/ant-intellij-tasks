@@ -1,64 +1,65 @@
 package com.tomergabel.build.intellij;
 
-import org.junit.Test;
-import static org.junit.Assert.fail;
+import com.tomergabel.util.UriUtils;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class ResolverTests {
     // Support code --
 
-    File projectFile, moduleFile;
+    URI projectUri, moduleUri;
     Project project;
     Module module;
 
-    void loadProject() throws IOException, ParseException {
-        this.projectFile = new File( this.getClass().getResource( "parsing-test.ipr" ).getFile() );
-        this.project = Project.parse( this.projectFile );
+    void loadProject() throws IOException, ParseException, URISyntaxException {
+        this.projectUri = this.getClass().getResource( "parsing-test.ipr" ).toURI();
+        this.project = Project.parse( this.projectUri );
     }
 
-    void loadModule() throws IOException, ParseException {
-        this.moduleFile = new File( this.getClass().getResource( "parsing-test.iml" ).getFile() );
-        this.module = Module.parse( this.moduleFile );
+    void loadModule() throws IOException, ParseException, URISyntaxException {
+        this.moduleUri = this.getClass().getResource( "parsing-test.iml" ).toURI();
+        this.module = Module.parse( this.moduleUri );
     }
 
     // Test code --
 
     @Test
-    public void testProjectDirectoryResolutionFailure_ModuleOnly() throws IOException, ParseException {
+    public void testProjectDirectoryResolutionFailure_ModuleOnly() throws Exception {
         loadModule();
         try {
-            Resolver.resolve( null, this.module, "file://$PROJECT_DIR$/" );
-            fail( "Project not specified, PropertyResolutionException expected" );
-        } catch ( PropertyResolutionException e ) {
+            Resolver.resolveUri( null, this.module, "file://$PROJECT_DIR$/" );
+            fail( "Project not specified, ResolutionException expected" );
+        } catch ( ResolutionException e ) {
             // Expected, all is well
         }
     }
 
     @Test
-    public void testProjectDirectoryResolution_ModuleAndProject()
-            throws IOException, ParseException, PropertyResolutionException {
+    public void testProjectDirectoryResolution_ModuleAndProject() throws Exception {
         loadModule();
         loadProject();
-        assertEquals( "Project directory expanded incorrectly.", "file://" + this.projectFile.getParent() + "/",
-                Resolver.resolve( this.project, this.module, "file://$PROJECT_DIR$/" ) );
+
+        assertEquals( "Project directory expanded incorrectly.", UriUtils.getParent( this.projectUri ),
+                Resolver.resolveUri( this.project, this.module, "file://$PROJECT_DIR$/" ) );
     }
 
     @Test
     public void testModuleDirectoryResolution_ModuleOnly() throws Exception {
         loadModule();
-        assertEquals( "Module directory expanded incorrectly.", "file://" + this.moduleFile.getParent() + "/",
-                Resolver.resolve( null, this.module, "file://$MODULE_DIR$/" ) );
+        assertEquals( "Module directory expanded incorrectly.", UriUtils.getParent( this.moduleUri ),
+                Resolver.resolveUri( null, this.module, "file://$MODULE_DIR$/" ) );
     }
 
     @Test
-    public void testModuleDirectoryResolution_ModuleAndProject()
-            throws IOException, ParseException, PropertyResolutionException {
+    public void testModuleDirectoryResolution_ModuleAndProject() throws Exception {
         loadModule();
         loadProject();
-        assertEquals( "Project directory expanded incorrectly.", "file://" + this.moduleFile.getParent() + "/",
-                Resolver.resolve( this.project, this.module, "file://$MODULE_DIR$/" ) );
+        assertEquals( "Project directory expanded incorrectly.", UriUtils.getParent( this.projectUri ),
+                Resolver.resolveUri( this.project, this.module, "file://$MODULE_DIR$/" ) );
     }
 }

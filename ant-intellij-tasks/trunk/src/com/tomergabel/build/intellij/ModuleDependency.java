@@ -1,22 +1,23 @@
 package com.tomergabel.build.intellij;
 
-class ModuleDependency extends Dependency {
+public class ModuleDependency extends Dependency {
     public final String name;
 
-    public ModuleDependency( String name ) {
+    public ModuleDependency( String name ) throws IllegalArgumentException {
+        if ( name == null )
+            throw new IllegalArgumentException( "Module name cannot be null." );
         this.name = name;
     }
 
     @Override
-    public boolean equals( Object o ) {
+    public boolean equals( final Object o ) {
         if ( this == o ) return true;
         if ( o == null || getClass() != o.getClass() ) return false;
 
-        ModuleDependency that = (ModuleDependency) o;
+        final ModuleDependency that = (ModuleDependency) o;
 
-        if ( name != null ? !name.equals( that.name ) : that.name != null ) return false;
+        return !( name != null ? !name.equals( that.name ) : that.name != null );
 
-        return true;
     }
 
     @Override

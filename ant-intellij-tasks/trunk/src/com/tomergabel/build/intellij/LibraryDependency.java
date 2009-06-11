@@ -1,6 +1,6 @@
 package com.tomergabel.build.intellij;
 
-class LibraryDependency extends Dependency {
+public class LibraryDependency extends Dependency {
     public enum Scope {
         PROJECT,
         MODULE,;
@@ -26,10 +26,8 @@ class LibraryDependency extends Dependency {
 
         LibraryDependency that = (LibraryDependency) o;
 
-        if ( name != null ? !name.equals( that.name ) : that.name != null ) return false;
-        if ( scope != that.scope ) return false;
+        return !( name != null ? !name.equals( that.name ) : that.name != null ) && scope == that.scope;
 
-        return true;
     }
 
     @Override

@@ -8,6 +8,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public final class XmlUtils {
+    private XmlUtils() {
+    }
+
     public static Collection<Node> wrapNodeList( final NodeList nodeList ) throws IllegalArgumentException {
         if ( nodeList == null )
             throw new IllegalArgumentException( "Cannot wrap null NodeList" );
@@ -59,7 +62,7 @@ public final class XmlUtils {
 
             @Override
             public Object[] toArray() {
-                final Node[] array = new Node[ nodeList.getLength() ];
+                final Node[] array = new Node[nodeList.getLength()];
                 for ( int i = 0; i < array.length; ++i )
                     array[ i ] = nodeList.item( i );
                 return array;
@@ -69,7 +72,8 @@ public final class XmlUtils {
             @SuppressWarnings( { "unchecked" } )
             public <T> T[] toArray( final T[] a ) throws ArrayStoreException {
                 if ( !a.getClass().getComponentType().isAssignableFrom( Node.class ) )
-                    throw new ArrayStoreException( a.getClass().getComponentType().getName() + " is not the same or a supertype of Node" );
+                    throw new ArrayStoreException(
+                            a.getClass().getComponentType().getName() + " is not the same or a supertype of Node" );
 
                 if ( a.length >= nodeList.getLength() ) {
                     for ( int i = 0; i < nodeList.getLength(); ++i )

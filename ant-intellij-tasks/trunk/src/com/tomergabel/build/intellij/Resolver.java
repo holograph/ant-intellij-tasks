@@ -1,20 +1,48 @@
 package com.tomergabel.build.intellij;
 
+import com.tomergabel.util.Lazy;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.concurrent.Callable;
 
 public final class Resolver {
-    private HashMap<String, Object> properties;
+    private HashMap<String, String> properties;
+    private HashMap<URI, Lazy<Module>> moduleDescriptorMap;
+    private HashMap<String, Lazy<Module>> moduleNameMap;
 
-    public Resolver( final Project project, final Module module ) {
+    public Resolver( final Project project, final Module module ) throws ResolutionException {
         // Resolve properties: module overrides project
-        this.properties = new HashMap<String, Object>();
+        this.properties = new HashMap<String, String>();
         if ( project != null )
             this.properties.putAll( project.getProperties() );
         if ( module != null )
             this.properties.putAll( module.getProperties() );
+
+        // Load project
+        if ( project != null ) {
+            this.moduleNameMap = new HashMap<String, Lazy<Module>>();
+            this.moduleDescriptorMap = new HashMap<URI, Lazy<Module>>();
+            for ( String moduleUrl : project.getModules() ) {
+                // Resolve URL and add to list
+                final URI resolvedDescriptor = resolveUri( moduleUrl );
+                this.moduleDescriptorMap.put( resolvedDescriptor, new Lazy<Module>( new Callable<Module>() {
+                    @Override
+                    public Module call() throws Exception {
+                        return Module.parse( resolvedDescriptor );
+                    }
+                } ) );
+            }
+
+            // Override current module with preloaded instance
+            final Lazy<Module> knownModule = new Lazy<Module>( module );
+            this.moduleDescriptorMap.put( module.getDescriptor(), knownModule );
+            this.moduleNameMap.put( module.getName(), knownModule );
+        }
     }
 
-    public String resolve( String string ) throws IllegalArgumentException, PropertyResolutionException {
+    public URI resolveUri( String string ) throws IllegalArgumentException, ResolutionException {
         if ( string == null )
             return null;
 
@@ -37,19 +65,31 @@ public final class Resolver {
             segmentIndex = next + 1;
 
             // Expand property
-            final Object property = this.properties.get( propertyName );
-            if ( property == null )
-                throw new PropertyResolutionException( propertyName );
-            sb.append( property );
+            final String propertyValue = this.properties.get( propertyName );
+            if ( propertyValue == null ) {
+                final ResolutionException e = new ResolutionException();
+                e.setProperty( propertyName );
+                throw e;
+            }
+
+            // Append property and skip trailing backslashes
+            sb.append( propertyValue );
+            if ( propertyValue.endsWith( "/" ) && segmentIndex < string.length() &&
+                    string.charAt( segmentIndex ) == '/' )
+                ++segmentIndex;
         }
 
         // Append final segment and return resolved string
         sb.append( string.substring( segmentIndex ) );
-        return sb.toString();
+        try {
+            return new URI( sb.toString() );
+        } catch ( URISyntaxException e ) {
+            throw new ResolutionException( "Invalid expanded URI generated: " + sb.toString(), e );
+        }
     }
 
-    public static String resolve( Project project, Module module, String string )
-            throws IllegalArgumentException, PropertyResolutionException {
-        return new Resolver( project, module ).resolve( string );
+    public static URI resolveUri( Project project, Module module, String string )
+            throws IllegalArgumentException, ResolutionException {
+        return new Resolver( project, module ).resolveUri( string );
     }
 }

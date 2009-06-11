@@ -1,20 +1,20 @@
 package com.tomergabel.build.intellij;
 
 import static com.tomergabel.util.TestUtils.assertSetEquality;
+import com.tomergabel.util.UriUtils;
 import static org.junit.Assert.assertEquals;
-import org.junit.Test;
 import org.junit.Before;
+import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
+import java.net.URI;
 
 public class ProjectParsingTests {
-    private File resource;
+    private URI resource;
     private Project project;
 
     @Before
-    public void testSetup() throws IOException, ParseException {
-        resource = new File( this.getClass().getResource( "parsing-test.ipr" ).getFile() );
+    public void testSetup() throws Exception {
+        resource = this.getClass().getResource( "parsing-test.ipr" ).toURI();
         project = Project.parse( resource );
     }
 
@@ -73,7 +73,7 @@ public class ProjectParsingTests {
         // Assert correct property extraction
         assertSetEquality( "Project properties incorrectly generated.", new String[] { "PROJECT_DIR" },
                 this.project.getProperties().keySet() );
-        assertEquals( "Project directory incorrectly set.", resource.getParentFile(),
+        assertEquals( "Project directory incorrectly set.", UriUtils.getParent( resource ).getPath(),
                 this.project.getProperties().get( "PROJECT_DIR" ) );
     }
 }

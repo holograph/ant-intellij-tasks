@@ -1,5 +1,6 @@
 package com.tomergabel.build.intellij;
 
+import com.tomergabel.util.UriUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
@@ -7,10 +8,11 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.*;
 
 public final class Project extends IntelliJParserBase {
-    private final File root;
+    private final URI projectRoot;
     private boolean relativePaths;
     private String outputUrl;
     private String name;
@@ -101,12 +103,12 @@ public final class Project extends IntelliJParserBase {
     private final HashMap<String, Handler> handlerMap;
     private final Handler defaultHandler;
 
-    private Project( File projectDescriptor ) throws IllegalArgumentException {
+    private Project( URI projectDescriptor ) throws IllegalArgumentException {
         if ( projectDescriptor == null )
             throw new IllegalArgumentException( "Project descriptor cannot be null." );
 
-        // Extract project root
-        this.root = projectDescriptor.getParentFile();
+        // Extract project projectRoot
+        this.projectRoot = projectDescriptor;
 
         // Build component handler map
         final Handler ignoreHandler = new Handler() {
@@ -152,11 +154,11 @@ public final class Project extends IntelliJParserBase {
     }
 
 
-    public static Project parse( File descriptor ) throws IllegalArgumentException, IOException, ParseException {
+    public static Project parse( URI descriptor ) throws IllegalArgumentException, IOException, ParseException {
         // Load document
         final Document document;
         try {
-            document = builderFactory.newDocumentBuilder().parse( descriptor );
+            document = builderFactory.newDocumentBuilder().parse( new File( descriptor ) );
         } catch ( SAXException e ) {
             throw new ParseException( "Cannot parse XML document, see inner exception for details.", e );
         } catch ( ParserConfigurationException e ) {
@@ -201,8 +203,8 @@ public final class Project extends IntelliJParserBase {
     }
 
     @Override
-    protected void generatePropertyMap( final Map<String, Object> properties ) {
-        properties.put( "PROJECT_DIR", this.root );
+    protected void generatePropertyMap( final Map<String, String> properties ) {
+        properties.put( "PROJECT_DIR", UriUtils.getParent( this.projectRoot ).getPath() );
     }
 
     @Override

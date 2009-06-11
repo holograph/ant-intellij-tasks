@@ -1,5 +1,6 @@
 package com.tomergabel.build.intellij;
 
+import com.tomergabel.util.UriUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -8,24 +9,32 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.net.URI;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
 
 public final class Module extends IntelliJParserBase {
-    private final File root;
+    private final URI descriptor;
     private String outputUrl;
     private String testOutputUrl;
     private String contentRootUrl;
     private Collection<String> sourceUrls;
     private Collection<String> testSourceUrls;
     private Collection<Dependency> depdencies;
-    private String name;
 
-    public String getName() {
-        return this.name;
+    public URI getDescriptor() {
+        return this.descriptor;
     }
 
-    public File getRoot() {
-        return this.root;
+    public String getName() {
+        final String filename = UriUtils.getFilename( this.descriptor );
+        return filename.lastIndexOf( '.' ) != -1 ? filename.substring( 0, filename.lastIndexOf( '.' ) ) : filename;
+    }
+
+    public URI getModuleRoot() {
+        return UriUtils.getParent( this.descriptor );
     }
 
     public String getOutputUrl() {
@@ -52,29 +61,28 @@ public final class Module extends IntelliJParserBase {
         return Collections.unmodifiableCollection( this.depdencies );
     }
 
-    private Module( File descriptor ) throws IllegalArgumentException {
-        final String fileName = descriptor.getName();
+    private Module( URI descriptor ) throws IllegalArgumentException {
+        final String fileName = UriUtils.getFilename( descriptor );
         if ( !fileName.toLowerCase().endsWith( ".iml" ) )
             throw new IllegalArgumentException( "The specified module descriptor \"" + descriptor +
                     "\" does not point to a valid IDEA module file (.iml)" );
 
-        this.root = descriptor.getParentFile();
-        this.name = fileName.subSequence( 0, fileName.length() - 4 ).toString();   // Strip extension
+        this.descriptor = descriptor;
         this.sourceUrls = new HashSet<String>();
         this.testSourceUrls = new HashSet<String>();
         this.depdencies = new HashSet<Dependency>();
     }
 
 
-    public static Module parse( File descriptor ) throws IOException, ParseException, IllegalArgumentException {
+    public static Module parse( URI descriptor ) throws IOException, ParseException, IllegalArgumentException {
         if ( descriptor == null )
-            throw new IllegalArgumentException( "The module descriptor file path cannot be null." );
+            throw new IllegalArgumentException( "The module descriptor URI cannot be null." );
 
         // Instantiate module and load document
         final Module module = new Module( descriptor );
         final Document document;
         try {
-            document = builderFactory.newDocumentBuilder().parse( descriptor );
+            document = builderFactory.newDocumentBuilder().parse( new File( descriptor ) );
         } catch ( SAXException e ) {
             throw new ParseException( "Cannot parse XML document, see inner exception for details.", e );
         } catch ( ParserConfigurationException e ) {
@@ -148,12 +156,12 @@ public final class Module extends IntelliJParserBase {
     }
 
     @Override
-    protected void generatePropertyMap( final Map<String, Object> properties ) {
-        properties.put( "MODULE_DIR", this.root );
+    protected void generatePropertyMap( final Map<String, String> properties ) {
+        properties.put( "MODULE_DIR", getModuleRoot().getPath() );
     }
 
     @Override
     public String toString() {
-        return "IntelliJ IDEA module \"" + this.name + "\"";
+        return "IntelliJ IDEA module \"" + getName() + "\"";
     }
 }

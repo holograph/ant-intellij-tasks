@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 public final class TestUtils {
+    private TestUtils() {
+    }
+
     public static <T> void assertSetEquality( Collection<T> expected, T[] actual ) {
         assertSetEquality( null, expected, actual );
     }
