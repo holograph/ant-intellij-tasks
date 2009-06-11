@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.*;
 
 public final class Project extends IntelliJParserBase {
+    private final File root;
     private boolean relativePaths;
     private String outputUrl;
     private String name;
@@ -100,7 +101,13 @@ public final class Project extends IntelliJParserBase {
     private final HashMap<String, Handler> handlerMap;
     private final Handler defaultHandler;
 
-    private Project() {
+    private Project( File projectDescriptor ) throws IllegalArgumentException {
+        if ( projectDescriptor == null )
+            throw new IllegalArgumentException( "Project descriptor cannot be null." );
+
+        // Extract project root
+        this.root = projectDescriptor.getParentFile();
+
         // Build component handler map
         final Handler ignoreHandler = new Handler() {
             @Override
@@ -157,7 +164,7 @@ public final class Project extends IntelliJParserBase {
         }
 
         // Instantiate project and parse relative paths flag
-        final Project project = new Project();
+        final Project project = new Project( descriptor );
         project.relativePaths = extract( document, "/project/@relativePaths", "Cannot extract relative paths flag" )
                 .equals( "true" );
 
@@ -191,5 +198,15 @@ public final class Project extends IntelliJParserBase {
 
     public Map<String, Library> getLibraries() {
         return Collections.unmodifiableMap( this.libraries );
+    }
+
+    @Override
+    protected void generatePropertyMap( final Map<String, Object> properties ) {
+        properties.put( "PROJECT_DIR", this.root );
+    }
+
+    @Override
+    public String toString() {
+        return "IntelliJ IDEA project \"" + this.name + "\"";
     }
 }

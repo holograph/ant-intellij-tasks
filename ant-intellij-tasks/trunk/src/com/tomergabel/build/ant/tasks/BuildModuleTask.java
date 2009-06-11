@@ -3,6 +3,7 @@ package com.tomergabel.build.ant.tasks;
 import com.tomergabel.build.intellij.Module;
 import com.tomergabel.build.intellij.ParseException;
 import com.tomergabel.build.intellij.Project;
+import com.tomergabel.build.intellij.Resolver;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
@@ -27,7 +28,7 @@ public class BuildModuleTask extends Task {
     }
 
     private boolean ensure( boolean condition, String message ) {
-        return condition ? true : error( message );
+        return condition || error( message );
     }
 
     private boolean error( final String message ) {
@@ -47,7 +48,7 @@ public class BuildModuleTask extends Task {
             return;
 
         // Load module descriptor and, optionally, project descriptor
-        final Module module;
+        Module module = null;
         try {
             module = Module.parse( this.moduleDescriptor );
         } catch ( IOException e ) {
@@ -57,18 +58,22 @@ public class BuildModuleTask extends Task {
             if ( !error( "Error parsing module file " + this.moduleDescriptor, e ) )
                 return;
         }
-        final Project project;
-        try {
-            project = this.projectDescriptor != null ? Project.parse( this.projectDescriptor ) : null;
-        } catch ( IOException e ) {
-            if ( !error( "Failed to read project file " + this.projectDescriptor, e ) )
-                return;
-        } catch ( ParseException e ) {
-            if ( !error( "Error parsing project file " + this.projectDescriptor, e ) )
-                return;
-        }
+        Project project = null;
+        if ( this.projectDescriptor != null  )
+            try {
+                project = Project.parse( this.projectDescriptor );
+            } catch ( IOException e ) {
+                if ( !error( "Failed to read project file " + this.projectDescriptor, e ) )
+                    return;
+            } catch ( ParseException e ) {
+                if ( !error( "Error parsing project file " + this.projectDescriptor, e ) )
+                    return;
+            }
+        final Resolver resolver = new Resolver( project, module );
 
         // Resolve output directory
+        //module.getOutputUrl()
+
         // resolve module dependencies
         // build module dependencies
         // resolve classpath

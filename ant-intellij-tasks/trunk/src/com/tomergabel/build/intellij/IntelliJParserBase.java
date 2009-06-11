@@ -10,8 +10,11 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-public class IntelliJParserBase {
+public abstract class IntelliJParserBase {
 
     protected static final XPath xpath = XPathFactory.newInstance().newXPath();
     protected static DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
@@ -47,4 +50,17 @@ public class IntelliJParserBase {
             throw new ParseException( failMessage, e );
         }
     }
+
+    private Map<String, Object> propertyCache;
+
+    public final Map<String, Object> getProperties() {
+        if ( this.propertyCache == null ) {
+            HashMap<String, Object> map = new HashMap<String, Object>();
+            generatePropertyMap( map );
+            this.propertyCache = Collections.unmodifiableMap( map );
+        }
+        return this.propertyCache;
+    }
+
+    protected abstract void generatePropertyMap( Map<String, Object> properties );
 }

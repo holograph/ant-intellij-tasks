@@ -8,9 +8,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Collections;
+import java.util.*;
 
 public final class Module extends IntelliJParserBase {
     private final File root;
@@ -147,5 +145,15 @@ public final class Module extends IntelliJParserBase {
                 } else throw new ParseException( "Unrecognized order entry type \"" + type + "\"" );
             }
         }
+    }
+
+    @Override
+    protected void generatePropertyMap( final Map<String, Object> properties ) {
+        properties.put( "MODULE_DIR", this.root );
+    }
+
+    @Override
+    public String toString() {
+        return "IntelliJ IDEA module \"" + this.name + "\"";
     }
 }
