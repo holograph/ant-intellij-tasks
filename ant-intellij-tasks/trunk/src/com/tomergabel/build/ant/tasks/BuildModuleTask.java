@@ -87,8 +87,14 @@ public class BuildModuleTask extends Task {
             return;
         }
 
-
-        //resolver.resolveDependencies( module, project,  );
+        // Resolve module dependencies
+//        final Collection<Module> moduleDependencies;
+//        try {
+//            moduleDependencies = resolver.resolveModuleDependencies( module );
+//        } catch ( ResolutionException e ) {
+//            error( "Failed to resolve module dependencies", e );
+//            return;
+//        }
 
 
         // build module dependencies

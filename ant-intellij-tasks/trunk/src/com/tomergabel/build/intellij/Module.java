@@ -156,6 +156,39 @@ public final class Module extends IntelliJParserBase {
     }
 
     @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) return true;
+        if ( o == null || getClass() != o.getClass() ) return false;
+
+        final Module module = (Module) o;
+
+        if ( contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl ) : module.contentRootUrl != null )
+            return false;
+        if ( depdencies != null ? !depdencies.equals( module.depdencies ) : module.depdencies != null ) return false;
+        if ( descriptor != null ? descriptor.compareTo( module.descriptor ) != 0 : module.descriptor != null ) return false;
+        if ( outputUrl != null ? !outputUrl.equals( module.outputUrl ) : module.outputUrl != null ) return false;
+        if ( sourceUrls != null ? !sourceUrls.equals( module.sourceUrls ) : module.sourceUrls != null ) return false;
+        if ( testOutputUrl != null ? !testOutputUrl.equals( module.testOutputUrl ) : module.testOutputUrl != null )
+            return false;
+        if ( testSourceUrls != null ? !testSourceUrls.equals( module.testSourceUrls ) : module.testSourceUrls != null )
+            return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = descriptor != null ? descriptor.hashCode() : 0;
+        result = 31 * result + ( outputUrl != null ? outputUrl.hashCode() : 0 );
+        result = 31 * result + ( testOutputUrl != null ? testOutputUrl.hashCode() : 0 );
+        result = 31 * result + ( contentRootUrl != null ? contentRootUrl.hashCode() : 0 );
+        result = 31 * result + ( sourceUrls != null ? sourceUrls.hashCode() : 0 );
+        result = 31 * result + ( testSourceUrls != null ? testSourceUrls.hashCode() : 0 );
+        result = 31 * result + ( depdencies != null ? depdencies.hashCode() : 0 );
+        return result;
+    }
+
+    @Override
     protected void generatePropertyMap( final Map<String, String> properties ) {
         properties.put( "MODULE_DIR", getModuleRoot().getPath() );
     }

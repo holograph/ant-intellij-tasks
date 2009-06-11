@@ -139,7 +139,7 @@
     <option name="ADDITIONAL_OPTIONS_STRING" value="" />
   </component>
   <component name="ProjectDetails">
-    <option name="projectName" value="Delver" />
+    <option name="projectName" value="Test" />
   </component>
   <component name="ProjectFileVersion" converted="true" />
   <component name="ProjectKey">
@@ -147,9 +147,8 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/libraries/libraries.iml" filepath="$PROJECT_DIR$/libraries/libraries.iml" />
-      <module fileurl="file://$PROJECT_DIR$/lucene/lucene.iml" filepath="$PROJECT_DIR$/lucene/lucene.iml" />
-      <module fileurl="file://$PROJECT_DIR$/shci-commons/shci-commons.iml" filepath="$PROJECT_DIR$/shci-commons/shci-commons.iml" />
+      <module fileurl="file://$PROJECT_DIR$/parsing-test.iml" filepath="$PROJECT_DIR$/parsing-test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dependee.iml" filepath="$PROJECT_DIR$/dependee.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
@@ -163,42 +162,10 @@
     <option name="ADDITIONAL_OPTIONS_STRING" value="" />
   </component>
   <component name="SvnBranchConfigurationManager">
-    <option name="myConfigurationMap">
-      <map>
-        <entry key="$PROJECT_DIR$/libraries">
-          <value>
-            <SvnBranchConfiguration>
-              <option name="branchUrls">
-                <list>
-                  <option value="https://fatboy:8443/svn/ohio/branches" />
-                  <option value="https://fatboy:8443/svn/ohio/tags" />
-                </list>
-              </option>
-              <option name="trunkUrl" value="https://fatboy:8443/svn/ohio/trunk" />
-            </SvnBranchConfiguration>
-          </value>
-        </entry>
-        <entry key="$PROJECT_DIR$/shci-commons">
-          <value>
-            <SvnBranchConfiguration>
-              <option name="branchUrls">
-                <list>
-                  <option value="https://fatboy:8443/svn/ohio/branches" />
-                  <option value="https://fatboy:8443/svn/ohio/tags" />
-                </list>
-              </option>
-              <option name="trunkUrl" value="https://fatboy:8443/svn/ohio/trunk" />
-            </SvnBranchConfiguration>
-          </value>
-        </entry>
-      </map>
-    </option>
-    <option name="mySupportsUserInfoFilter" value="true" />
+    <!-- Removed for security concerns. It's not supported yet anyway. -->
   </component>
   <component name="VcsDirectoryMappings">
-    <mapping directory="" vcs="svn" />
-    <mapping directory="$PROJECT_DIR$/libraries" vcs="svn" />
-    <mapping directory="$PROJECT_DIR$/shci-commons" vcs="svn" />
+    <!-- Removed for security concerns. It's not supported yet anyway. -->
   </component>
   <component name="libraryTable">
     <library name="servlet-api">
@@ -226,6 +193,7 @@
         <root url="jar://$PROJECT_DIR$/libraries/junit/junit-4.6-src.jar!/" />
       </SOURCES>
     </library>
+    <module module-name="dependee" />
   </component>
 </project>
 

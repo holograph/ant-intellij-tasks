@@ -1,28 +1,34 @@
 package com.tomergabel.build.intellij;
 
 import com.tomergabel.util.Lazy;
+import com.tomergabel.util.LazyInitializationException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 public final class Resolver {
-    private HashMap<String, String> properties;
-    private HashMap<URI, Lazy<Module>> moduleDescriptorMap;
-    private HashMap<String, Lazy<Module>> moduleNameMap;
+    private final Project project;
+    private final Module module;
+    private final HashMap<URI, Lazy<Module>> moduleDescriptorMap;
+    private final HashMap<String, Module> moduleNameMap;
+    private final HashMap<String, String> properties;
 
     public Resolver( final Project project, final Module module ) throws ResolutionException {
+        this.project = project;
+        this.module = module;
+
         // Resolve properties: module overrides project
         this.properties = new HashMap<String, String>();
-        if ( project != null )
-            this.properties.putAll( project.getProperties() );
-        if ( module != null )
-            this.properties.putAll( module.getProperties() );
 
         // Load project
         if ( project != null ) {
-            this.moduleNameMap = new HashMap<String, Lazy<Module>>();
+            this.properties.putAll( project.getProperties() );
+            this.moduleNameMap = new HashMap<String, Module>();
             this.moduleDescriptorMap = new HashMap<URI, Lazy<Module>>();
             for ( String moduleUrl : project.getModules() ) {
                 // Resolve URL and add to list
@@ -36,10 +42,16 @@ public final class Resolver {
             }
 
             // Override current module with preloaded instance
-            final Lazy<Module> knownModule = new Lazy<Module>( module );
-            this.moduleDescriptorMap.put( module.getDescriptor(), knownModule );
-            this.moduleNameMap.put( module.getName(), knownModule );
+            this.moduleDescriptorMap.put( module.getDescriptor(), new Lazy<Module>( module ) );
+            this.moduleNameMap.put( module.getName(), module );
+        } else {
+            this.moduleNameMap = null;
+            this.moduleDescriptorMap = null;
         }
+
+        // Override project properties with module properties, if applicable
+        if ( module != null )
+            this.properties.putAll( module.getProperties() );
     }
 
     public URI resolveUri( String string ) throws IllegalArgumentException, ResolutionException {
@@ -91,5 +103,55 @@ public final class Resolver {
     public static URI resolveUri( Project project, Module module, String string )
             throws IllegalArgumentException, ResolutionException {
         return new Resolver( project, module ).resolveUri( string );
+    }
+
+    public Collection<Module> resolveModuleDependencies() throws IllegalStateException, ResolutionException {
+        final Collection<Module> modules = new ArrayList<Module>( this.module.getDepdencies().size() );
+
+        // Iterate dependencies and process module dependencies
+dependency:
+        for ( Dependency dependency : this.module.getDepdencies() )
+            if ( dependency instanceof ModuleDependency ) {
+                // Assert that a project was specified to resolve module dependencies
+                if ( this.project == null )
+                    throw new IllegalStateException( "Cannot resolve module dependencies, project not specified" );
+
+                // Look up module in name map
+                final String name = ( (ModuleDependency) dependency ).name;
+                if ( this.moduleNameMap.containsKey( name ) ) {
+                    modules.add( this.moduleNameMap.get( name ) );
+                    continue;
+                }
+
+                // Iterate descriptor map. We'll have to lazy-load each module to extract its name
+                for ( Lazy<Module> candidate : this.moduleDescriptorMap.values() ) {
+                    try {
+                        if ( candidate.get().getName().equals( name ) ) {
+                            // Found! Update named map, add to module list
+                            this.moduleNameMap.put( name, candidate.get() );
+                            modules.add( candidate.get() );
+                            continue dependency;
+                        }
+                    } catch ( LazyInitializationException e ) {
+                        // An error has occured during lazy initialization; since only the module
+                        // loader is invoked this can only be a parse error.
+                        throw new ResolutionException( "Failed to parse a project module.", e.getCause() );
+                    }
+                }
+
+                // Dependency not found, abort
+                throw new ResolutionException( "Cannot resolve module \"" + name + "\"" );
+            }
+
+        return Collections.unmodifiableCollection( modules );
+    }
+
+    public static Collection<Module> resolveModuleDependencies( final Project project, final Module module )
+            throws IllegalArgumentException, ResolutionException {
+        try {
+            return new Resolver( project, module ).resolveModuleDependencies();
+        } catch ( IllegalStateException e ) {
+            throw new IllegalArgumentException( e.getMessage() );
+        }
     }
 }

@@ -108,7 +108,7 @@ public final class Project extends IntelliJParserBase {
             throw new IllegalArgumentException( "Project descriptor cannot be null." );
 
         // Extract project projectRoot
-        this.projectRoot = projectDescriptor;
+        this.projectRoot = UriUtils.getParent( projectDescriptor );
 
         // Build component handler map
         final Handler ignoreHandler = new Handler() {
@@ -204,11 +204,41 @@ public final class Project extends IntelliJParserBase {
 
     @Override
     protected void generatePropertyMap( final Map<String, String> properties ) {
-        properties.put( "PROJECT_DIR", UriUtils.getParent( this.projectRoot ).getPath() );
+        properties.put( "PROJECT_DIR", this.projectRoot.getPath() );
     }
 
     @Override
     public String toString() {
         return "IntelliJ IDEA project \"" + this.name + "\"";
+    }
+
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) return true;
+        if ( o == null || getClass() != o.getClass() ) return false;
+
+        final Project project = (Project) o;
+
+        if ( relativePaths != project.relativePaths ) return false;
+        if ( libraries != null ? !libraries.equals( project.libraries ) : project.libraries != null ) return false;
+        if ( modules != null ? !modules.equals( project.modules ) : project.modules != null ) return false;
+        if ( name != null ? !name.equals( project.name ) : project.name != null ) return false;
+        if ( outputUrl != null ? !outputUrl.equals( project.outputUrl ) : project.outputUrl != null ) return false;
+        return !( projectRoot != null ? projectRoot.compareTo( project.projectRoot ) != 0
+                : project.projectRoot != null );
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = projectRoot != null ? projectRoot.hashCode() : 0;
+        result = 31 * result + ( relativePaths ? 1 : 0 );
+        result = 31 * result + ( outputUrl != null ? outputUrl.hashCode() : 0 );
+        result = 31 * result + ( name != null ? name.hashCode() : 0 );
+        result = 31 * result + ( modules != null ? modules.hashCode() : 0 );
+        result = 31 * result + ( libraries != null ? libraries.hashCode() : 0 );
+        result = 31 * result + ( handlerMap != null ? handlerMap.hashCode() : 0 );
+        result = 31 * result + ( defaultHandler != null ? defaultHandler.hashCode() : 0 );
+        return result;
     }
 }

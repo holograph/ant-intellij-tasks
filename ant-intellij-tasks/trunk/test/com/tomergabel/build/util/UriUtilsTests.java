@@ -18,16 +18,23 @@ public class UriUtilsTests {
     }
 
     @Test
-    public void testGetParent_OneSegmentURI_ReturnsRoot() throws URISyntaxException {
+    public void testGetParent_OneSegmentContainerURI_ReturnsRoot() throws URISyntaxException {
         final URI parent = new URI( "file://c:/" );
         final URI uri = new URI( "file://c:/temp/" );
         assertEquals( "Get parent on one-segment URI failed.", parent, UriUtils.getParent( uri ) );
     }
     
     @Test
-    public void testGetParent_TwoSegmentURI_ReturnsParent() throws URISyntaxException {
+    public void testGetParent_TwoSegmentContainerURI_ReturnsParent() throws URISyntaxException {
         final URI parent = new URI( "file://c:/temp/" );
         final URI uri = new URI( "file://c:/temp/test/" );
+        assertEquals( "Get parent on two-segment URI failed.", parent, UriUtils.getParent( uri ) );
+    }
+
+    @Test
+    public void testGetParent_TwoSegmentFileURI_ReturnsContainer() throws URISyntaxException {
+        final URI parent = new URI( "file://c:/temp/test/" );
+        final URI uri = new URI( "file://c:/temp/test/file.ext" );
         assertEquals( "Get parent on two-segment URI failed.", parent, UriUtils.getParent( uri ) );
     }
 

@@ -20,7 +20,7 @@ public class ProjectParsingTests {
 
     @Test
     public void testGeneralMetadataParsing() {
-        assertEquals( "Project name incorrectly parsed.", "Delver", this.project.getName() );
+        assertEquals( "Project name incorrectly parsed.", "Test", this.project.getName() );
         assertEquals( "Relative paths flag incorrectly parsed.", true, this.project.isRelativePaths() );
         assertEquals( "Output URL incorrectly parsed.", "file://$PROJECT_DIR$/out", this.project.getOutputUrl() );
     }
@@ -28,9 +28,8 @@ public class ProjectParsingTests {
     @Test
     public void testModuleParsing() {
         assertSetEquality( "Project modules incorrectly parsed.", new String[] {
-                "file://$PROJECT_DIR$/libraries/libraries.iml",
-                "file://$PROJECT_DIR$/lucene/lucene.iml",
-                "file://$PROJECT_DIR$/shci-commons/shci-commons.iml"
+                "file://$PROJECT_DIR$/parsing-test.iml",
+                "file://$PROJECT_DIR$/dependee.iml"
         }, this.project.getModules() );
     }
 

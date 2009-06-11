@@ -41,8 +41,7 @@
     <orderEntry type="library" name="servlet-api" level="project" />
     <orderEntry type="library" name="log4j" level="project" />
     <orderEntry type="library" name="junit" level="project" />
-    <orderEntry type="module" module-name="lucene" />
-    <orderEntry type="module" module-name="shci-commons" />
+    <orderEntry type="module" module-name="dependee" />
   </component>
 </module>
 

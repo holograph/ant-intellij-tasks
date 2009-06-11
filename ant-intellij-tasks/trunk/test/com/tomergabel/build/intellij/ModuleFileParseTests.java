@@ -32,8 +32,7 @@ public class ModuleFileParseTests {
                 new LibraryDependency( LibraryDependency.Scope.PROJECT, "servlet-api" ),
                 new LibraryDependency( LibraryDependency.Scope.PROJECT, "log4j" ),
                 new LibraryDependency( LibraryDependency.Scope.PROJECT, "junit" ),
-                new ModuleDependency( "lucene" ),
-                new ModuleDependency( "shci-commons" )
+                new ModuleDependency( "dependee" )
         }, this.module.getDepdencies() );
     }
 

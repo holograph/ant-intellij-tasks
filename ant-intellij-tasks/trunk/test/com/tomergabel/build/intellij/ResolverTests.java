@@ -1,6 +1,7 @@
 package com.tomergabel.build.intellij;
 
 import com.tomergabel.util.UriUtils;
+import static com.tomergabel.util.TestUtils.assertSetEquality;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import org.junit.Test;
@@ -61,5 +62,25 @@ public class ResolverTests {
         loadProject();
         assertEquals( "Project directory expanded incorrectly.", UriUtils.getParent( this.projectUri ),
                 Resolver.resolveUri( this.project, this.module, "file://$MODULE_DIR$/" ) );
+    }
+
+    @Test
+    public void testResolveModuleDependencies_WithNoProject_IllegalArgumentExceptionIsThrown() throws Exception {
+        loadModule();
+        try {
+            Resolver.resolveModuleDependencies( null, this.module );
+        } catch ( IllegalArgumentException e ) {
+            // Expected, all is well
+        }
+    }
+
+    @Test
+    public void testResolveModuleDependencies_WithProjectFile_ModulesResolvedCorrectly() throws Exception {
+        loadModule();
+        loadProject();
+
+        assertSetEquality( "Module dependencies resolved incorrectly.", new Module[] {
+                Module.parse( this.getClass().getResource( "dependee.iml" ).toURI() )
+        }, Resolver.resolveModuleDependencies( this.project, this.module ) );
     }
 }
