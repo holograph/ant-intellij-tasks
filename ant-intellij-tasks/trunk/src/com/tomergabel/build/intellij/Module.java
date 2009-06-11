@@ -68,7 +68,7 @@ public final class Module extends IntelliJParserBase {
     }
 
 
-    static Module parse( File descriptor ) throws IOException, ParseException, IllegalArgumentException {
+    public static Module parse( File descriptor ) throws IOException, ParseException, IllegalArgumentException {
         if ( descriptor == null )
             throw new IllegalArgumentException( "The module descriptor file path cannot be null." );
 

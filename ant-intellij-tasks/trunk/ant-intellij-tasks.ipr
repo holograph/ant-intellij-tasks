@@ -327,13 +327,20 @@
   </component>
   <component name="WebServicesPlugin" addRequiredLibraries="true" />
   <component name="libraryTable">
-    <library name="JUnit">
+    <library name="ant">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/../../../ohio/branches/tg-search/java/libraries/junit/junit-4.6.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../../../Tools/apache-ant-1.7.1/lib/ant.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="junit">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/../../../Libraries/junit-4.6.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/../../../ohio/branches/tg-search/java/libraries/junit/junit-4.6-src.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../../Libraries/junit-4.6-src.jar!/" />
       </SOURCES>
     </library>
   </component>
