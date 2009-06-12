@@ -1,4 +1,4 @@
-package com.tomergabel.build.intellij;
+package com.tomergabel.build.intellij.model;
 
 public class ParseException extends Exception {
     public ParseException() {

@@ -1,4 +1,4 @@
-package com.tomergabel.build.intellij;
+package com.tomergabel.build.intellij.model;
 
 import com.tomergabel.util.XmlUtils;
 import org.w3c.dom.Node;

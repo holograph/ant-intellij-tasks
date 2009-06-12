@@ -1,4 +1,4 @@
-package com.tomergabel.build.intellij;
+package com.tomergabel.build.intellij.model;
 
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import com.tomergabel.util.UriUtils;

@@ -1,4 +1,4 @@
-package com.tomergabel.build.intellij;
+package com.tomergabel.build.intellij.model;
 
 import com.tomergabel.util.Lazy;
 import com.tomergabel.util.LazyInitializationException;

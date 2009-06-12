@@ -1,4 +1,4 @@
-package com.tomergabel.build.intellij;
+package com.tomergabel.build.intellij.model;
 
 import com.tomergabel.util.UriUtils;
 import org.w3c.dom.Document;
@@ -102,12 +102,14 @@ public final class Project extends IntelliJParserBase {
 
     private final HashMap<String, Handler> handlerMap;
     private final Handler defaultHandler;
+    private final URI projectDescriptor;
 
     private Project( URI projectDescriptor ) throws IllegalArgumentException {
         if ( projectDescriptor == null )
             throw new IllegalArgumentException( "Project descriptor cannot be null." );
 
         // Extract project projectRoot
+        this.projectDescriptor = projectDescriptor;
         this.projectRoot = UriUtils.getParent( projectDescriptor );
 
         // Build component handler map
@@ -200,6 +202,14 @@ public final class Project extends IntelliJParserBase {
 
     public Map<String, Library> getLibraries() {
         return Collections.unmodifiableMap( this.libraries );
+    }
+
+    public URI getProjectRoot() {
+        return projectRoot;
+    }
+
+    public URI getDescriptor() {
+        return projectDescriptor;
     }
 
     @Override

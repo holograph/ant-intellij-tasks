@@ -1,7 +1,8 @@
-package com.tomergabel.build.intellij;
+package com.tomergabel.build.intellij.model;
 
 import com.tomergabel.util.UriUtils;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
+import com.tomergabel.build.intellij.model.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import org.junit.Test;

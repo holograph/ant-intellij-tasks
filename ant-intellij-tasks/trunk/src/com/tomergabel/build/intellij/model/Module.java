@@ -1,4 +1,4 @@
-package com.tomergabel.build.intellij;
+package com.tomergabel.build.intellij.model;
 
 import com.tomergabel.util.UriUtils;
 import org.w3c.dom.Document;
