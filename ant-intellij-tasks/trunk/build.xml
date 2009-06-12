@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="ant-intellij-tasks">
+<project name="ant-intellij-tasks" default="build">
 
-<!-- TODO -->    
+    <taskdef resource="com/tomergabel/build/intellij/ant/antlib.xml" classpath="ant-intellij-tasks.jar" />
+
+    <target name="build">
+        <resolveModuleDependencies mode="NAMES" property="idea.moduledependencies" projectfile="ant-intellij-tasks.ipr" srcfile="ant-intellij-tasks.iml" />  
+
+        <echo message="${idea.moduledependencies}" />
+    </target>
 
 </project>

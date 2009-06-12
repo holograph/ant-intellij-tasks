@@ -8,32 +8,13 @@ import com.tomergabel.util.Mapper;
 import org.apache.tools.ant.BuildException;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ResolveModuleDependenciesTask extends ModuleTaskBase {
     protected static final String LIST_SEPARATOR = ",";
 
     public enum Modes {
         NAMES,
-        DESCRIPTORS;
-
-        private static Map<String, Modes> modeMap;
-
-        static {
-            modeMap = new HashMap<String, Modes>( Modes.values().length );
-            for ( Modes mode : Modes.values() )
-                modeMap.put( mode.toString().toLowerCase(), mode );
-        }
-
-        public static Modes parse( String mode ) throws IllegalArgumentException {
-            if ( mode == null )
-                throw new IllegalArgumentException( "Mode value cannot be null." );
-            final Modes parsed = modeMap.get( mode.toLowerCase() );
-            if ( parsed == null )
-                throw new IllegalArgumentException( "Unknown mode \"" + mode + "\"" );
-            return parsed;
-        }
+        DESCRIPTORS
     }
 
     protected String property;
@@ -48,10 +29,6 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
             throw new IllegalArgumentException( "Mode value cannot be null." );
 
         this.mode = mode;
-    }
-
-    public void setMode( final String mode ) throws IllegalArgumentException {
-        this.mode = Modes.parse( mode );
     }
 
     public String getProperty() {

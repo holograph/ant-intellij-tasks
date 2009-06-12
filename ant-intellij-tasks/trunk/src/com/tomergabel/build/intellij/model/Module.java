@@ -61,7 +61,9 @@ public final class Module extends IntelliJParserBase {
         return Collections.unmodifiableCollection( this.depdencies );
     }
 
-    private Module( URI descriptor ) throws IllegalArgumentException {
+    private Module( URI descriptor, Handler defaultHandler ) throws IllegalArgumentException {
+        super( defaultHandler );
+
         final String fileName = UriUtils.getFilename( descriptor );
         if ( !fileName.toLowerCase().endsWith( ".iml" ) )
             throw new IllegalArgumentException( "The specified module descriptor \"" + descriptor +
@@ -73,13 +75,17 @@ public final class Module extends IntelliJParserBase {
         this.depdencies = new HashSet<Dependency>();
     }
 
-
     public static Module parse( URI descriptor ) throws IOException, ParseException, IllegalArgumentException {
+        return parse( descriptor, throwHandler );
+    }
+
+    public static Module parse( URI descriptor, Handler defaultHandler )
+            throws IOException, ParseException, IllegalArgumentException {
         if ( descriptor == null )
             throw new IllegalArgumentException( "The module descriptor URI cannot be null." );
 
         // Instantiate module and load document
-        final Module module = new Module( descriptor );
+        final Module module = new Module( descriptor, defaultHandler );
         final Document document;
         try {
             document = builderFactory.newDocumentBuilder().parse( new File( descriptor ) );
@@ -162,18 +168,17 @@ public final class Module extends IntelliJParserBase {
 
         final Module module = (Module) o;
 
-        if ( contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl ) : module.contentRootUrl != null )
-            return false;
-        if ( depdencies != null ? !depdencies.equals( module.depdencies ) : module.depdencies != null ) return false;
-        if ( descriptor != null ? descriptor.compareTo( module.descriptor ) != 0 : module.descriptor != null ) return false;
-        if ( outputUrl != null ? !outputUrl.equals( module.outputUrl ) : module.outputUrl != null ) return false;
-        if ( sourceUrls != null ? !sourceUrls.equals( module.sourceUrls ) : module.sourceUrls != null ) return false;
-        if ( testOutputUrl != null ? !testOutputUrl.equals( module.testOutputUrl ) : module.testOutputUrl != null )
-            return false;
-        if ( testSourceUrls != null ? !testSourceUrls.equals( module.testSourceUrls ) : module.testSourceUrls != null )
-            return false;
+        return !( contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl )
+                : module.contentRootUrl != null ) &&
+                !( depdencies != null ? !depdencies.equals( module.depdencies ) : module.depdencies != null ) &&
+                !( descriptor != null ? descriptor.compareTo( module.descriptor ) != 0 : module.descriptor != null ) &&
+                !( outputUrl != null ? !outputUrl.equals( module.outputUrl ) : module.outputUrl != null ) &&
+                !( sourceUrls != null ? !sourceUrls.equals( module.sourceUrls ) : module.sourceUrls != null ) &&
+                !( testOutputUrl != null ? !testOutputUrl.equals( module.testOutputUrl )
+                        : module.testOutputUrl != null ) &&
+                !( testSourceUrls != null ? !testSourceUrls.equals( module.testSourceUrls )
+                        : module.testSourceUrls != null );
 
-        return true;
     }
 
     @Override

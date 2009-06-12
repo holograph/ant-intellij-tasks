@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.concurrent.Callable;
 
 public final class Resolver {
     private final Project project;
@@ -33,16 +32,16 @@ public final class Resolver {
             for ( String moduleUrl : project.getModules() ) {
                 // Resolve URL and add to list
                 final URI resolvedDescriptor = resolveUri( moduleUrl );
-                this.moduleDescriptorMap.put( resolvedDescriptor, new Lazy<Module>( new Callable<Module>() {
+                this.moduleDescriptorMap.put( resolvedDescriptor, new Lazy<Module>() {
                     @Override
                     public Module call() throws Exception {
                         return Module.parse( resolvedDescriptor );
                     }
-                } ) );
+                } );
             }
 
             // Override current module with preloaded instance
-            this.moduleDescriptorMap.put( module.getDescriptor(), new Lazy<Module>( module ) );
+            this.moduleDescriptorMap.put( module.getDescriptor(), Lazy.from( module ) );
             this.moduleNameMap.put( module.getName(), module );
         } else {
             this.moduleNameMap = null;
@@ -109,7 +108,7 @@ public final class Resolver {
         final Collection<Module> modules = new ArrayList<Module>( this.module.getDepdencies().size() );
 
         // Iterate dependencies and process module dependencies
-dependency:
+        dependency:
         for ( Dependency dependency : this.module.getDepdencies() )
             if ( dependency instanceof ModuleDependency ) {
                 // Assert that a project was specified to resolve module dependencies

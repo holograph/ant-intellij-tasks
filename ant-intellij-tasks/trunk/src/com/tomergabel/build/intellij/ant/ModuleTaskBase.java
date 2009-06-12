@@ -1,8 +1,8 @@
 package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.*;
-import com.tomergabel.build.intellij.ant.TaskBase;
 import org.apache.tools.ant.BuildException;
+import org.w3c.dom.Node;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,13 +44,22 @@ public abstract class ModuleTaskBase extends TaskBase {
 
     // Helper methods
 
+    protected IntelliJParserBase.Handler warnHandler = new IntelliJParserBase.Handler() {
+        @Override
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
+            ModuleTaskBase.this.log( "Unrecognized component \"" + componentName + "\"",
+                    org.apache.tools.ant.Project.MSG_WARN );
+        }
+    };
+
     protected Module module() throws BuildException {
         if ( this.module != null )
             return this.module;
 
         if ( this.moduleDescriptor != null )
             try {
-                return Module.parse( this.moduleDescriptor );
+                return Module.parse( this.moduleDescriptor, this.warnHandler );
             } catch ( IOException e ) {
                 error( "Failed to read module file " + this.moduleDescriptor, e );
                 return null;
@@ -65,18 +74,18 @@ public abstract class ModuleTaskBase extends TaskBase {
 
     protected Project project() throws BuildException {
         if ( this.project != null )
-                return this.project;
+            return this.project;
 
         if ( this.projectDescriptor != null )
-        try {
-            return Project.parse( this.projectDescriptor );
-        } catch ( IOException e ) {
-            error( "Failed to read project file " + this.projectDescriptor, e );
-            return null;
-        } catch ( ParseException e ) {
-            error( "Error parsing project file " + this.projectDescriptor, e );
-            return null;
-        }
+            try {
+                return Project.parse( this.projectDescriptor, this.warnHandler );
+            } catch ( IOException e ) {
+                error( "Failed to read project file " + this.projectDescriptor, e );
+                return null;
+            } catch ( ParseException e ) {
+                error( "Error parsing project file " + this.projectDescriptor, e );
+                return null;
+            }
 
         error( "Project file ('projectfile' attribute) not specified." );
         return null;

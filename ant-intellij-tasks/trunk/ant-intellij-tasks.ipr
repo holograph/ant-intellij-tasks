@@ -343,7 +343,9 @@
         <root url="jar://$PROJECT_DIR$/../../../../Tools/apache-ant-1.7.1/lib/ant.jar!/" />
       </CLASSES>
       <JAVADOC />
-      <SOURCES />
+      <SOURCES>
+        <root url="file://$PROJECT_DIR$/../../../Sources/apache-ant-1.7.1/src/main" />
+      </SOURCES>
     </library>
     <library name="junit">
       <CLASSES>

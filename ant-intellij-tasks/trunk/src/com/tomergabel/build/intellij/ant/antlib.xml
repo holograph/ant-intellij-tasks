@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
 <antlib>
-    <taskdef name="ResolveModuleDependencies" classname="com.tomergabel.build.intellij.ant.ResolveModuleDependenciesTask" />
+    <taskdef name="resolveModuleDependencies" classname="com.tomergabel.build.intellij.ant.ResolveModuleDependenciesTask" />
 </antlib>
         

@@ -45,13 +45,9 @@ public final class Project extends IntelliJParserBase {
         }
     }
 
-    private interface Handler {
-        void parse( Node componentNode ) throws IllegalArgumentException, ParseException;
-    }
-
     private class ProjectRootManagerHandler implements Handler {
         @Override
-        public void parse( final Node componentNode ) throws IllegalArgumentException, ParseException {
+        public void parse( String componentName, Node componentNode ) throws IllegalArgumentException, ParseException {
             // TODO language level
             // TODO assert keywords
             Project.this.outputUrl = extract( componentNode, "output/@url",
@@ -61,7 +57,7 @@ public final class Project extends IntelliJParserBase {
 
     private class ProjectDetailsHandler implements Handler {
         @Override
-        public void parse( final Node componentNode ) throws IllegalArgumentException, ParseException {
+        public void parse( String componentName, Node componentNode ) throws IllegalArgumentException, ParseException {
             Project.this.name = extract( componentNode, "option[@name=\"projectName\"]/@value",
                     "Cannot extract project name" );
         }
@@ -69,7 +65,7 @@ public final class Project extends IntelliJParserBase {
 
     private class ProjectModuleManagerHandler implements Handler {
         @Override
-        public void parse( final Node componentNode ) throws IllegalArgumentException, ParseException {
+        public void parse( String componentName, Node componentNode ) throws IllegalArgumentException, ParseException {
             for ( Node module : extractAll( componentNode, "modules/module", "Cannot extract module list" ) )
                 Project.this.modules.add( extract( module, "@fileurl", "Cannot extract module file path" ) );
         }
@@ -77,7 +73,7 @@ public final class Project extends IntelliJParserBase {
 
     private class LibraryTableHandler implements Handler {
         @Override
-        public void parse( final Node componentNode ) throws IllegalArgumentException, ParseException {
+        public void parse( String componentName, Node componentNode ) throws IllegalArgumentException, ParseException {
             for ( Node libraryNode : extractAll( componentNode, "library", "Cannot extract libraries" ) ) {
                 // Parse library data
                 final Library library = new Library( extract( libraryNode, "@name", "Cannot extract library name" ) );
@@ -100,63 +96,54 @@ public final class Project extends IntelliJParserBase {
     }
 
 
-    private final HashMap<String, Handler> handlerMap;
-    private final Handler defaultHandler;
     private final URI projectDescriptor;
 
-    private Project( URI projectDescriptor ) throws IllegalArgumentException {
+    private Project( URI projectDescriptor, Handler defaultHandler ) throws IllegalArgumentException {
+        super( defaultHandler );
+
         if ( projectDescriptor == null )
             throw new IllegalArgumentException( "Project descriptor cannot be null." );
 
-        // Extract project projectRoot
+        // Extract project root
         this.projectDescriptor = projectDescriptor;
         this.projectRoot = UriUtils.getParent( projectDescriptor );
 
-        // Build component handler map
-        final Handler ignoreHandler = new Handler() {
-            @Override
-            public void parse( Node componentNode ) {
-            }
-        };
+        // Register handlers
 
-        this.handlerMap = new HashMap<String, Handler>();
-        this.handlerMap.put( "AntConfiguration", ignoreHandler );
-        this.handlerMap.put( "BuildJarProjectSettings", ignoreHandler );
-        this.handlerMap.put( "CodeStyleSettingsManager", ignoreHandler );
-        this.handlerMap.put( "CompilerConfiguration", ignoreHandler );
-        this.handlerMap.put( "CopyrightManager", ignoreHandler );
-        this.handlerMap.put( "DependencyValidationManager", ignoreHandler );
-        this.handlerMap.put( "EclipseCompilerSettings", ignoreHandler );
-        this.handlerMap.put( "Encoding", ignoreHandler );
-        this.handlerMap.put( "InspectionProjectProfileManager", ignoreHandler );
-        this.handlerMap.put( "JavacSettings", ignoreHandler );
-        this.handlerMap.put( "JavadocGenerationManager", ignoreHandler );
-        this.handlerMap.put( "JikesSettings", ignoreHandler );
-        this.handlerMap.put( "ProjectDetails", new ProjectDetailsHandler() );
-        this.handlerMap.put( "ProjectFileVersion", ignoreHandler );
-        this.handlerMap.put( "ProjectKey", ignoreHandler );
-        this.handlerMap.put( "ProjectModuleManager", new ProjectModuleManagerHandler() );
-        this.handlerMap.put( "ProjectRootManager", new ProjectRootManagerHandler() );
-        this.handlerMap.put( "RmicSettings", ignoreHandler );
-        this.handlerMap.put( "SvnBranchConfigurationManager", ignoreHandler );
-        this.handlerMap.put( "VcsDirectoryMappings", ignoreHandler );
-        this.handlerMap.put( "libraryTable", new LibraryTableHandler() );
+        // Register ignored components
+        registerComponentHandler( "AntConfiguration", ignoreHandler );
+        registerComponentHandler( "BuildJarProjectSettings", ignoreHandler );               // TODO
+        registerComponentHandler( "CodeStyleSettingsManager", ignoreHandler );
+        registerComponentHandler( "CompilerConfiguration", ignoreHandler );                 // TODO
+        registerComponentHandler( "CopyrightManager", ignoreHandler );
+        registerComponentHandler( "DependencyValidationManager", ignoreHandler );
+        registerComponentHandler( "EclipseCompilerSettings", ignoreHandler );
+        registerComponentHandler( "Encoding", ignoreHandler );                              // TODO
+        registerComponentHandler( "InspectionProjectProfileManager", ignoreHandler );
+        registerComponentHandler( "JavacSettings", ignoreHandler );                         // TODO
+        registerComponentHandler( "JavadocGenerationManager", ignoreHandler );              // TODO
+        registerComponentHandler( "JikesSettings", ignoreHandler );
+        registerComponentHandler( "ProjectFileVersion", ignoreHandler );
+        registerComponentHandler( "ProjectKey", ignoreHandler );
+        registerComponentHandler( "RmicSettings", ignoreHandler );
+        registerComponentHandler( "SvnBranchConfigurationManager", ignoreHandler );
+        registerComponentHandler( "VcsDirectoryMappings", ignoreHandler );                  // TODO
 
-        // Set up default handler
-        this.defaultHandler = new Handler() {
-            @Override
-            public void parse( Node componentNode ) throws ParseException {
-                // TODO log warnings
-                // TODO external configuration
-                throw new ParseException(
-                        "Unrecognized component " + componentNode.getAttributes().getNamedItem( "name" ) );
-            }
-        };
-
+        // Register handlers
+        registerComponentHandler( "ProjectDetails", new ProjectDetailsHandler() );
+        registerComponentHandler( "ProjectModuleManager", new ProjectModuleManagerHandler() );
+        registerComponentHandler( "ProjectRootManager", new ProjectRootManagerHandler() );
+        registerComponentHandler( "libraryTable", new LibraryTableHandler() );
     }
 
-
     public static Project parse( URI descriptor ) throws IllegalArgumentException, IOException, ParseException {
+        return parse( descriptor, throwHandler );
+    }
+
+    public static Project parse( URI descriptor, Handler defaultHandler ) throws IllegalArgumentException, IOException, ParseException {
+        if ( descriptor == null )
+            throw new IllegalArgumentException( "The project descriptor URI cannot be null." );
+
         // Load document
         final Document document;
         try {
@@ -168,19 +155,12 @@ public final class Project extends IntelliJParserBase {
         }
 
         // Instantiate project and parse relative paths flag
-        final Project project = new Project( descriptor );
+        final Project project = new Project( descriptor, defaultHandler );
         project.relativePaths = extract( document, "/project/@relativePaths", "Cannot extract relative paths flag" )
                 .equals( "true" );
 
         // Parse all components
-        for ( Node component : extractAll( document, "project/component", "Cannot extract project components" ) ) {
-            final String componentName = extract( component, "@name", "Cannot extract component name" );
-            final Handler handler =
-                    project.handlerMap.containsKey( componentName ) ? project.handlerMap.get( componentName )
-                            : project.defaultHandler;
-            handler.parse( component );
-        }
-
+        project.processComponents( document );
         return project;
     }
 
@@ -229,13 +209,13 @@ public final class Project extends IntelliJParserBase {
 
         final Project project = (Project) o;
 
-        if ( relativePaths != project.relativePaths ) return false;
-        if ( libraries != null ? !libraries.equals( project.libraries ) : project.libraries != null ) return false;
-        if ( modules != null ? !modules.equals( project.modules ) : project.modules != null ) return false;
-        if ( name != null ? !name.equals( project.name ) : project.name != null ) return false;
-        if ( outputUrl != null ? !outputUrl.equals( project.outputUrl ) : project.outputUrl != null ) return false;
-        return !( projectRoot != null ? projectRoot.compareTo( project.projectRoot ) != 0
-                : project.projectRoot != null );
+        return relativePaths == project.relativePaths &&
+                !( libraries != null ? !libraries.equals( project.libraries ) : project.libraries != null ) &&
+                !( modules != null ? !modules.equals( project.modules ) : project.modules != null ) &&
+                !( name != null ? !name.equals( project.name ) : project.name != null ) &&
+                !( outputUrl != null ? !outputUrl.equals( project.outputUrl ) : project.outputUrl != null ) &&
+                !( projectRoot != null ? projectRoot.compareTo( project.projectRoot ) != 0
+                        : project.projectRoot != null );
 
     }
 
@@ -247,8 +227,6 @@ public final class Project extends IntelliJParserBase {
         result = 31 * result + ( name != null ? name.hashCode() : 0 );
         result = 31 * result + ( modules != null ? modules.hashCode() : 0 );
         result = 31 * result + ( libraries != null ? libraries.hashCode() : 0 );
-        result = 31 * result + ( handlerMap != null ? handlerMap.hashCode() : 0 );
-        result = 31 * result + ( defaultHandler != null ? defaultHandler.hashCode() : 0 );
         return result;
     }
 }
