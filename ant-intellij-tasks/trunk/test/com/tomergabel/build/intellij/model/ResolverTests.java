@@ -1,8 +1,7 @@
 package com.tomergabel.build.intellij.model;
 
-import com.tomergabel.util.UriUtils;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
-import com.tomergabel.build.intellij.model.*;
+import com.tomergabel.util.UriUtils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import org.junit.Test;
@@ -66,11 +65,11 @@ public class ResolverTests {
     }
 
     @Test
-    public void testResolveModuleDependencies_WithNoProject_IllegalArgumentExceptionIsThrown() throws Exception {
+    public void testResolveModuleDependencies_WithNoProject_ResolutionExceptionIsThrown() throws Exception {
         loadModule();
         try {
             Resolver.resolveModuleDependencies( null, this.module );
-        } catch ( IllegalArgumentException e ) {
+        } catch ( ResolutionException e ) {
             // Expected, all is well
         }
     }

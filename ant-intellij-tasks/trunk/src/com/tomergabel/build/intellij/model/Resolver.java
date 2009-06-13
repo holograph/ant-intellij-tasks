@@ -113,7 +113,7 @@ public final class Resolver {
             if ( dependency instanceof ModuleDependency ) {
                 // Assert that a project was specified to resolve module dependencies
                 if ( this.project == null )
-                    throw new IllegalStateException( "Cannot resolve module dependencies, project not specified" );
+                    throw new ResolutionException( "Cannot resolve module dependencies, project not specified" );
 
                 // Look up module in name map
                 final String name = ( (ModuleDependency) dependency ).name;

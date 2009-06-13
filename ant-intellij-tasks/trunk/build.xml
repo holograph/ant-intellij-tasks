@@ -3,10 +3,13 @@
 
     <taskdef resource="com/tomergabel/build/intellij/ant/antlib.xml" classpath="ant-intellij-tasks.jar" />
 
-    <target name="build">
-        <resolveModuleDependencies mode="NAMES" property="idea.moduledependencies" projectfile="ant-intellij-tasks.ipr" srcfile="ant-intellij-tasks.iml" />  
+    <target name="build-module">
+    </target>
 
-        <echo message="${idea.moduledependencies}" />
+    <target name="build">
+        <resolveModuleDependencies mode="NAMES" property="idea.moduledependencies"
+                                   projectfile="test/com/tomergabel/build/intellij/model/parsing-test.ipr"
+                                   srcfile="test/com/tomergabel/build/intellij/model/parsing-test.iml" />
     </target>
 
 </project>

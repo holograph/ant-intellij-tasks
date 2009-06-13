@@ -50,7 +50,7 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
         final Collection<Module> modules;
         try {
             modules = resolveModules();
-        } catch ( ResolutionException e ) {
+        } catch ( BuildException e ) {
             error( e );
             return;
         }
@@ -85,7 +85,12 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
         getProject().setProperty( this.property, join( map( modules, mapper ), ',' ) );
     }
 
-    public Collection<Module> resolveModules() throws ResolutionException {
-        return resolver().resolveModuleDependencies();
+    public Collection<Module> resolveModules() throws BuildException {
+        try {
+            return resolver().resolveModuleDependencies();
+        } catch ( ResolutionException e ) {
+            error( "Failed to resolve module dependencies.", e );
+            return null;
+        }
     }
 }

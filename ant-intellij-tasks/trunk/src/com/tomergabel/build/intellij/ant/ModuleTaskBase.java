@@ -87,7 +87,6 @@ public abstract class ModuleTaskBase extends TaskBase {
                 return null;
             }
 
-        error( "Project file ('projectfile' attribute) not specified." );
         return null;
     }
 
