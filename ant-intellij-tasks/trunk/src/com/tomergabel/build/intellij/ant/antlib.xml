@@ -1,5 +1,7 @@
 <?xml version="1.0" ?>
 <antlib>
     <taskdef name="resolveModuleDependencies" classname="com.tomergabel.build.intellij.ant.ResolveModuleDependenciesTask" />
+    <taskdef name="resolveOutputDirectory" classname="com.tomergabel.build.intellij.ant.ResolveOutputDirectoryTask" />
+    <taskdef name="resolveSourceDirectories" classname="com.tomergabel.build.intellij.ant.ResolveSourceDirectoriesTask" />
 </antlib>
         

@@ -7,6 +7,7 @@ import static com.tomergabel.util.CollectionUtils.map;
 import com.tomergabel.util.Mapper;
 import org.apache.tools.ant.BuildException;
 
+import java.io.File;
 import java.util.Collection;
 
 public class ResolveModuleDependenciesTask extends ModuleTaskBase {
@@ -71,7 +72,7 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
                 mapper = new Mapper<Module, Object>() {
                     @Override
                     public Object map( final Module source ) {
-                        return source.getDescriptor();
+                        return new File( source.getDescriptor() ).getAbsolutePath();
                     }
                 };
                 break;
