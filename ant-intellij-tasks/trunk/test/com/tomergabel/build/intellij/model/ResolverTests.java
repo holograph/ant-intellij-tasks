@@ -1,40 +1,25 @@
 package com.tomergabel.build.intellij.model;
 
+import static com.tomergabel.build.intellij.model.MockModel.*;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import com.tomergabel.util.UriUtils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.Collections;
 
 public class ResolverTests {
-    // Support code --
 
-    URI projectUri, moduleUri;
-    Project project;
-    Module module;
-
-    void loadProject() throws IOException, ParseException, URISyntaxException {
-        this.projectUri = this.getClass().getResource( "parsing-test.ipr" ).toURI();
-        this.project = Project.parse( this.projectUri );
-    }
-
-    void loadModule() throws IOException, ParseException, URISyntaxException {
-        this.moduleUri = this.getClass().getResource( "parsing-test.iml" ).toURI();
-        this.module = Module.parse( this.moduleUri );
-    }
-
-    // Test code --
+    // ------------------------------------------------------
+    // resolveUriString tests
+    // ------------------------------------------------------
 
     @Test
     public void testResolveUri_ProjectRelativeUriWithProjectSpecified_UriResolvedCorrectly() throws Exception {
-        loadProject();
-        assertEquals( "Project-relative URI incorrectly resolved.", this.project.getProjectRoot().resolve( "file.ext" ),
-                Resolver.resolveUri( this.project, null, "file://$PROJECT_DIR$/file.ext" ) );
+        assertEquals( "Project-relative URI incorrectly resolved.",
+                project.get().getProjectRoot().resolve( "file.ext" ),
+                Resolver.resolveUri( project.get(), null, "file://$PROJECT_DIR$/file.ext" ) );
     }
 
     @Test
@@ -49,30 +34,33 @@ public class ResolverTests {
 
     @Test
     public void testResolveUri_ModuleRelatedUri_UriResolvedCorrectly() throws Exception {
-        loadModule();
-        assertEquals( "Project-relative URI incorrectly resolved.", this.module.getModuleRoot().resolve( "file.ext" ),
-                Resolver.resolveUri( null, this.module, "file://$MODULE_DIR$/file.ext" ) );
+        assertEquals( "Project-relative URI incorrectly resolved.",
+                selfContained.get().getModuleRoot().resolve( "file.ext" ),
+                Resolver.resolveUri( null, selfContained.get(), "file://$MODULE_DIR$/file.ext" ) );
     }
 
     @Test
     public void testResolveUri_ProjectRelativeJarUriWithProjectSpecified_UriResolvedCorrectly() throws Exception {
-        loadProject();
-        assertEquals( "Project-relative URI incorrectly resolved.", this.project.getProjectRoot().resolve( "some.jar" ),
-                Resolver.resolveUri( this.project, null, "jar://$PROJECT_DIR$/some.jar!/" ) );
+        assertEquals( "Project-relative URI incorrectly resolved.",
+                project.get().getProjectRoot().resolve( "some.jar" ),
+                Resolver.resolveUri( project.get(), null, "jar://$PROJECT_DIR$/some.jar!/" ) );
     }
 
     @Test
     public void testResolveUri_ModuleRelatedJarUri_UriResolvedCorrectly() throws Exception {
-        loadModule();
-        assertEquals( "Project-relative URI incorrectly resolved.", this.module.getModuleRoot().resolve( "some.jar" ),
-                Resolver.resolveUri( null, this.module, "jar://$MODULE_DIR$/some.jar!/" ) );
+        assertEquals( "Project-relative URI incorrectly resolved.",
+                selfContained.get().getModuleRoot().resolve( "some.jar" ),
+                Resolver.resolveUri( null, selfContained.get(), "jar://$MODULE_DIR$/some.jar!/" ) );
     }
+
+    // ------------------------------------------------------
+    // Specific property resolution tests
+    // ------------------------------------------------------
 
     @Test
     public void testProjectDirectoryResolutionFailure_ModuleOnly() throws Exception {
-        loadModule();
         try {
-            Resolver.resolveUri( null, this.module, "file://$PROJECT_DIR$/" );
+            Resolver.resolveUri( null, selfContained.get(), "file://$PROJECT_DIR$/" );
             fail( "Project not specified, ResolutionException expected" );
         } catch ( ResolutionException e ) {
             // Expected, all is well
@@ -81,33 +69,30 @@ public class ResolverTests {
 
     @Test
     public void testProjectDirectoryResolution_ModuleAndProject() throws Exception {
-        loadModule();
-        loadProject();
-
-        assertEquals( "Project directory expanded incorrectly.", UriUtils.getParent( this.projectUri ),
-                Resolver.resolveUri( this.project, this.module, "file://$PROJECT_DIR$/" ) );
+        assertEquals( "Project directory expanded incorrectly.", project.get().getProjectRoot(),
+                Resolver.resolveUri( project.get(), selfContained.get(), "file://$PROJECT_DIR$/" ) );
     }
 
     @Test
     public void testModuleDirectoryResolution_ModuleOnly() throws Exception {
-        loadModule();
-        assertEquals( "Module directory expanded incorrectly.", UriUtils.getParent( this.moduleUri ),
-                Resolver.resolveUri( null, this.module, "file://$MODULE_DIR$/" ) );
+        assertEquals( "Module directory expanded incorrectly.", selfContained.get().getModuleRoot(),
+                Resolver.resolveUri( null, selfContained.get(), "file://$MODULE_DIR$/" ) );
     }
 
     @Test
     public void testModuleDirectoryResolution_ModuleAndProject() throws Exception {
-        loadModule();
-        loadProject();
-        assertEquals( "Project directory expanded incorrectly.", UriUtils.getParent( this.projectUri ),
-                Resolver.resolveUri( this.project, this.module, "file://$MODULE_DIR$/" ) );
+        assertEquals( "Project directory expanded incorrectly.", selfContained.get().getModuleRoot(),
+                Resolver.resolveUri( project.get(), selfContained.get(), "file://$MODULE_DIR$/" ) );
     }
+
+    // ------------------------------------------------------
+    // resolveModuleDependencies tests
+    // ------------------------------------------------------
 
     @Test
     public void testResolveModuleDependencies_WithNoProject_ResolutionExceptionIsThrown() throws Exception {
-        loadModule();
         try {
-            Resolver.resolveModuleDependencies( null, this.module );
+            Resolver.resolveModuleDependencies( null, dependantModule.get() );
         } catch ( ResolutionException e ) {
             // Expected, all is well
         }
@@ -115,26 +100,88 @@ public class ResolverTests {
 
     @Test
     public void testResolveModuleDependencies_WithProjectFile_ModulesResolvedCorrectly() throws Exception {
-        loadModule();
-        loadProject();
-
-        assertSetEquality( "Module dependencies resolved incorrectly.", new Module[] {
-                Module.parse( this.getClass().getResource( "dependee.iml" ).toURI() )
-        }, Resolver.resolveModuleDependencies( this.project, this.module ) );
+        assertSetEquality( "Module dependencies resolved incorrectly.", Collections.singleton( dependee.get() ),
+                Resolver.resolveModuleDependencies( project.get(), dependantModule.get() ) );
     }
+
+    // ------------------------------------------------------
+    // resolveLibraryDependencies tests
+    // ------------------------------------------------------
 
     @Test
     public void testResolveLibraryDependencies_WithProjectFile_ProjectLevelLibrariesResolvedCorrectly()
             throws Exception {
-        loadModule();
-        loadProject();
+        assertSetEquality( "Project dependencies resolved incorrectly.",
+                Collections.singleton( junitLibraryPath.get() ),
+                Resolver.resolveLibraryDependencies( project.get(), dependantLibrary.get() ) );
+    }
 
-        assertSetEquality( "Project dependencies resolved incorrectly.", new String[] {
-                new File( this.project.getProjectRoot().resolve( "libraries/jee/servlet-api.jar" ) ).getAbsolutePath(),
-                new File(
-                        this.project.getProjectRoot().resolve( "libraries/log4j/log4j-1.2.15.jar" ) ).getAbsolutePath(),
-                new File( this.project.getProjectRoot().resolve(
-                        "libraries/junit/junit-4.6.jar" ) ).getAbsolutePath(),
-        }, Resolver.resolveLibraryDependencies( this.project, this.module ) );
+    // ------------------------------------------------------
+    // resolveClasspath tests
+    // ------------------------------------------------------
+
+    @Test
+    public void testResolveClasspath_NullModuleFile_ThrowsResolutionException() throws Exception {
+        try {
+            new Resolver( null, null ).resolveClasspath();
+            fail( "No module specified, expected ResolutionException" );
+        } catch ( ResolutionException e ) {
+            // Expected, all is well
+        }
+    }
+
+    @Test
+    public void testResolveClasspath_NoProjectLevelModuleOrLibraryDependenciesAndNoProjectSpecified_ClasspathResolvedCorrectly()
+            throws Exception {
+        assertSetEquality( "Classpath resolved incorrectly.", new String[] { },
+                Resolver.resolveClasspath( null, selfContained.get() ) );
+    }
+
+    @Test
+    public void testResolveClasspath_WithProjectLevelModuleDependenciesAndNoProjectSpecified_ResolutionExceptionIsThrown()
+            throws Exception {
+        try {
+            Resolver.resolveClasspath( null, dependantModule.get() );
+            fail( "Project not specified but module dependencies exist, expected ResolutionException" );
+        } catch ( ResolutionException e ) {
+            // Expected, all is well
+        }
+    }
+
+    @Test
+    public void testResolveClasspath_WithProjectLevelModuleDependencies_ClasspathResolvedCorrectly() throws Exception {
+        final String dependeeOutput = UriUtils
+                .getPath( Resolver.resolveUri( project.get(), dependee.get(), dependee.get().getOutputUrl() ) );
+        assertSetEquality( "Classpath resolved incorrectly.", new String[] {
+                dependeeOutput,
+                junitLibraryPath.get()  // Inherited from dependee
+        }, Resolver.resolveClasspath( project.get(), dependantModule.get() ) );
+    }
+
+    @Test
+    public void testResolveClasspath_WithProjectLevelLibraryDependencies_ClasspathResolvedCorrectly()
+            throws Exception {
+        assertSetEquality( "Classpath resolved incorrectly.", Collections.singleton( junitLibraryPath.get() ),
+                Resolver.resolveClasspath( project.get(), dependantLibrary.get() ) );
+    }
+
+    @Test
+    public void testResolveClasspath_WithProjectLevelModuleAndLibraryDependencies_ClasspathResolvedCorrectly()
+            throws Exception {
+        final String dependeeOutput = UriUtils
+                .getPath( Resolver.resolveUri( project.get(), dependee.get(), dependee.get().getOutputUrl() ) );
+        assertSetEquality( "Classpath resolved incorrectly.", new String[] { dependeeOutput, junitLibraryPath.get() },
+                Resolver.resolveClasspath( project.get(), dependantBoth.get() ) );
+    }
+
+    @Test
+    public void testResolveClasspath_WithProjectLevelLibraryDependenciesAndNoProjectSpecified_ResolutionExceptionIsThrown()
+            throws Exception {
+        try {
+            Resolver.resolveClasspath( null, dependantLibrary.get() );
+            fail( "Project not specified but project level library dependencies exist, expected ResolutionException" );
+        } catch ( ResolutionException e ) {
+            // Expected, all is well
+        }
     }
 }

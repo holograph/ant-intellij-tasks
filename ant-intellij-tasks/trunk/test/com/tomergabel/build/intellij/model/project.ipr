@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project relativePaths="true" version="4">
+  <component name="ProjectDetails">
+    <option name="projectName" value="project" />
+  </component>
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/modules/dependant-library.iml" filepath="$PROJECT_DIR$/modules/dependant-library.iml" />
+      <module fileurl="file://$PROJECT_DIR$/modules/dependant-module.iml" filepath="$PROJECT_DIR$/modules/dependant-module.iml" />
+      <module fileurl="file://$PROJECT_DIR$/modules/self-contained.iml" filepath="$PROJECT_DIR$/modules/self-contained.iml" />
+      <module fileurl="file://$PROJECT_DIR$/modules/dependee.iml" filepath="$PROJECT_DIR$/modules/dependee.iml" />
+    </modules>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+  <component name="libraryTable">
+    <library name="junit">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/libraries/junit/junit-4.6.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/libraries/junit/junit-4.6-src.jar!/" />
+      </SOURCES>
+    </library>
+    <module module-name="dependee" />
+  </component>
+</project>

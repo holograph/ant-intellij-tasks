@@ -4,16 +4,32 @@
     <taskdef resource="com/tomergabel/build/intellij/ant/antlib.xml" classpath="lib/ant-intellij-tasks.jar" />
     <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="lib/ant-contrib.jar" />
 
-    <property name="project-file" value="ant-intellij-tasks.ipr" />
+    <!-- Globals -->
     <!-- replace with lookup -->
     <property name="module-file" value="ant-intellij-tasks.iml" />
+    <property name="project-file" value="ant-intellij-tasks.ipr" />
+
+    <!-- Forward declarations -->
+    <property name="idea.moduledeps" value="" />
+    <property name="idea.output" value="" />
+    <property name="idea.sources" value="" />
+
+    <!-- Targets -->
 
     <target name="resolve-deps">
-        <resolveModuleDependencies mode="DESCRIPTORS" property="idea.moduledependencies"
+        <resolveModuleDependencies mode="DESCRIPTORS" property="idea.moduledeps"
                                    projectfile="${project-file}" srcfile="${module-file}" />
     </target>
 
-    <target name="build" depends="resolve-deps">
+    <target name="build-deps" depends="resolve-deps">
+        <for list="${idea.moduledeps}" param="dependency">
+            <sequential>
+                <ant antfile="${dependency}" />
+            </sequential>
+        </for>
+    </target>
+
+    <target name="build" depends="build-deps">
         <resolveOutputDirectory  property="idea.output"
                                 projectfile="test/com/tomergabel/build/intellij/model/parsing-test.ipr"
                                 srcfile="test/com/tomergabel/build/intellij/model/parsing-test.iml" />
@@ -22,7 +38,6 @@
                                   projectfile="test/com/tomergabel/build/intellij/model/parsing-test.ipr"
                                   srcfile="test/com/tomergabel/build/intellij/model/parsing-test.iml" />
 
-        
     </target>
 
 </project>

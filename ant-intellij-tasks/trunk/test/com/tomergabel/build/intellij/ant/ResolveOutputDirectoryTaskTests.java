@@ -38,7 +38,7 @@ public class ResolveOutputDirectoryTaskTests {
             throws URISyntaxException {
         final ResolveOutputDirectoryTask task = new ResolveOutputDirectoryTask();
         task.setModuleDescriptor( this.getClass().getResource( "output-project-relative.iml" ).toURI() );
-        task.setProjectDescriptor( this.getClass().getResource( "../model/parsing-test.ipr" ).toURI() );
+        task.setProjectDescriptor( this.getClass().getResource( "../model/project.ipr" ).toURI() );
         assertEquals( "Output directory resolved incorrectly.",
                 new File( task.project().getProjectRoot().resolve( "bin" ) ).getAbsolutePath(),
                 task.resolveOutputDirectory() );

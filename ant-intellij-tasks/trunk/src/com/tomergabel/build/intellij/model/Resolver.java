@@ -2,8 +2,8 @@ package com.tomergabel.build.intellij.model;
 
 import com.tomergabel.util.Lazy;
 import com.tomergabel.util.LazyInitializationException;
+import com.tomergabel.util.UriUtils;
 
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -29,7 +29,7 @@ public final class Resolver {
             this.moduleDescriptorMap = new HashMap<URI, Lazy<Module>>();
             for ( String moduleUrl : project.getModules() ) {
                 // Resolve URL and add to list
-                final URI resolvedDescriptor = resolveUri( moduleUrl );
+                final URI resolvedDescriptor = resolveUriString( moduleUrl );
                 this.moduleDescriptorMap.put( resolvedDescriptor, new Lazy<Module>() {
                     @Override
                     public Module call() throws Exception {
@@ -53,7 +53,7 @@ public final class Resolver {
             this.properties.putAll( module.getProperties() );
     }
 
-    public URI resolveUri( String string ) throws IllegalArgumentException, ResolutionException {
+    public URI resolveUriString( String string ) throws IllegalArgumentException, ResolutionException {
         if ( string == null )
             return null;
 
@@ -124,13 +124,16 @@ public final class Resolver {
 
     public static URI resolveUri( Project project, Module module, String string )
             throws IllegalArgumentException, ResolutionException {
-        return new Resolver( project, module ).resolveUri( string );
+        return new Resolver( project, module ).resolveUriString( string );
     }
 
     public Collection<Module> resolveModuleDependencies() throws ResolutionException {
-        final Collection<Module> modules = new ArrayList<Module>( this.module.getDependencies().size() );
+        // Assert that a module has been specified
+        if ( this.module == null )
+            throw new ResolutionException( "Cannot resolve module dependencies, module not specified" );
 
         // Iterate dependencies and process module dependencies
+        final Collection<Module> modules = new ArrayList<Module>( this.module.getDependencies().size() );
         dependency:
         for ( Dependency dependency : this.module.getDependencies() )
             if ( dependency instanceof ModuleDependency ) {
@@ -170,17 +173,25 @@ public final class Resolver {
 
     public static Collection<Module> resolveModuleDependencies( final Project project, final Module module )
             throws ResolutionException {
+        if ( module == null )
+            throw new IllegalArgumentException( "The module cannot be null." );
+
         return new Resolver( project, module ).resolveModuleDependencies();
     }
 
     public Collection<String> resolveLibraryDependencies() throws ResolutionException {
-        final Collection<String> dependencies = new HashSet<String>();
+        // Assert that a module has been specified
+        if ( this.module == null )
+            throw new ResolutionException( "Cannot resolve module dependencies, module not specified" );
 
         // Iterate dependencies and process library dependencies
-        for ( Dependency dependency : module.getDependencies() )
+        final Collection<String> dependencies = new HashSet<String>();
+        for ( Dependency dependency : this.module.getDependencies() )
             if ( dependency instanceof LibraryDependency ) {
                 final LibraryDependency library = (LibraryDependency) dependency;
-                switch ( library.scope ) {
+
+                // Resolve URI according to library level
+                switch ( library.level ) {
                     case MODULE:
                         // TODO add support for module dependencies
                         throw new ResolutionException(
@@ -200,12 +211,12 @@ public final class Resolver {
 
                         // Resolve the library and add it to the dependency list
                         for ( String uri : libraries.get( library.name ).getClasses() )
-                            dependencies.add( new File( resolveUri( uri ) ).getAbsolutePath() );
+                            dependencies.add( UriUtils.getPath( resolveUriString( uri ) ) );
                         break;
 
                     default:
                         // Safety net (should never happen)
-                        throw new ResolutionException( "Unknown library scope \"" + library.scope + "\"" );
+                        throw new ResolutionException( "Unknown library level \"" + library.level + "\"" );
                 }
             }
 
@@ -214,6 +225,34 @@ public final class Resolver {
 
     public static Collection<String> resolveLibraryDependencies( Project project, Module module )
             throws ResolutionException {
+        if ( module == null )
+            throw new IllegalArgumentException( "The module cannot be null." );
+
         return new Resolver( project, module ).resolveLibraryDependencies();
     }
-}                                                                
+
+    public Collection<String> resolveClasspath() throws ResolutionException {
+        final Collection<String> classpath = new HashSet<String>();
+
+        // Iterate all module dependencies. Aggregate each dependency's classpath
+        // and output directory.
+        for ( Module dependency : resolveModuleDependencies() ) {
+            final Resolver dependencyResolver = new Resolver( this.project, dependency );
+            classpath.addAll( dependencyResolver.resolveClasspath() );
+            classpath.add( UriUtils.getPath( dependencyResolver.resolveUriString( dependency.getOutputUrl() ) ) );
+        }
+
+        // Iterate all library dependencies add add them to the classpath. 
+        classpath.addAll( resolveLibraryDependencies() );
+
+        return Collections.unmodifiableCollection( classpath );
+    }
+
+    public static Collection<String> resolveClasspath( Project project, Module module )
+            throws IllegalArgumentException, ResolutionException {
+        if ( module == null )
+            throw new IllegalArgumentException( "The module cannot be null." );
+
+        return new Resolver( project, module ).resolveClasspath();
+    }
+}

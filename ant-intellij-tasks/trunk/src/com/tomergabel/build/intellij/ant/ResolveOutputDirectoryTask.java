@@ -29,7 +29,7 @@ public class ResolveOutputDirectoryTask extends ModuleTaskBase {
 
     public String resolveOutputDirectory() throws BuildException {
         try {
-            return new File( resolver().resolveUri( module().getOutputUrl() ) ).getAbsolutePath();
+            return new File( resolver().resolveUriString( module().getOutputUrl() ) ).getAbsolutePath();
         } catch ( ResolutionException e ) {
             error( "Failed to resolve output directory.", e );
             return null;

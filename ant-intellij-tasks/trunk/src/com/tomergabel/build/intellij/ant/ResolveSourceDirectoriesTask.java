@@ -52,7 +52,7 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
             @Override
             public String map( final String source ) throws BuildException {
                 try {
-                    return new File( resolver.resolveUri( source ) ).getAbsolutePath();
+                    return new File( resolver.resolveUriString( source ) ).getAbsolutePath();
                 } catch ( ResolutionException e ) {
                     throw new BuildException( "Cannot resolve source directory for \"" + source + "\"", e );
                 }

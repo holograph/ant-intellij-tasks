@@ -144,15 +144,15 @@ public final class Module extends IntelliJParserBase {
                     // TODO handle forTests
                 } else if ( type.equals( "library" ) ) {
                     final String name = extract( dependency, "@name", "Cannot extract library dependency name" );
-                    final LibraryDependency.Scope scope;
+                    final LibraryDependency.Level level;
                     try {
-                        scope = LibraryDependency.Scope
-                                .parse( extract( dependency, "@level", "Cannot extract library dependency scope" ) );
+                        level = LibraryDependency.Level
+                                .parse( extract( dependency, "@level", "Cannot extract library dependency level" ) );
                     } catch ( IllegalArgumentException e ) {
                         throw new ParseException(
-                                "Cannot parse library dependency scope for library \"" + name + "\"" );
+                                "Cannot parse library dependency level for library \"" + name + "\"" );
                     }
-                    module.depdencies.add( new LibraryDependency( scope, name ) );
+                    module.depdencies.add( new LibraryDependency( level, name ) );
                 } else if ( type.equals( "module" ) ) {
                     module.depdencies.add( new ModuleDependency(
                             extract( dependency, "@module-name", "Cannot extract module dependency name" ) ) );

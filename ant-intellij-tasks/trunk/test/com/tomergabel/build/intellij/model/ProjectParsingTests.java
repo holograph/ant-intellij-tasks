@@ -2,7 +2,6 @@ package com.tomergabel.build.intellij.model;
 
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import com.tomergabel.util.UriUtils;
-import com.tomergabel.build.intellij.model.Project;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +27,7 @@ public class ProjectParsingTests {
 
     @Test
     public void testModuleParsing() {
-        assertSetEquality( "Project modules incorrectly parsed.", new String[] {
+        assertSetEquality( "Project test incorrectly parsed.", new String[] {
                 "file://$PROJECT_DIR$/parsing-test.iml",
                 "file://$PROJECT_DIR$/dependee.iml"
         }, this.project.getModules() );

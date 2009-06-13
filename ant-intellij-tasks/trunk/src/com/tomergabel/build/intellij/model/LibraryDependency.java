@@ -1,21 +1,21 @@
 package com.tomergabel.build.intellij.model;
 
 public class LibraryDependency extends Dependency {
-    public enum Scope {
+    public enum Level {
         PROJECT,
         MODULE,;
         // Global,      // Global dependencies are not supported
 
-        public static Scope parse( final String level ) throws IllegalArgumentException {
-            return Scope.valueOf( level.toUpperCase() );
+        public static Level parse( final String level ) throws IllegalArgumentException {
+            return Level.valueOf( level.toUpperCase() );
         }
     }
 
-    public final Scope scope;
+    public final Level level;
     public final String name;
 
-    public LibraryDependency( Scope scope, String name ) {
-        this.scope = scope;
+    public LibraryDependency( Level level, String name ) {
+        this.level = level;
         this.name = name;
     }
 
@@ -26,19 +26,19 @@ public class LibraryDependency extends Dependency {
 
         LibraryDependency that = (LibraryDependency) o;
 
-        return !( name != null ? !name.equals( that.name ) : that.name != null ) && scope == that.scope;
+        return !( name != null ? !name.equals( that.name ) : that.name != null ) && level == that.level;
 
     }
 
     @Override
     public int hashCode() {
-        int result = scope != null ? scope.hashCode() : 0;
+        int result = level != null ? level.hashCode() : 0;
         result = 31 * result + ( name != null ? name.hashCode() : 0 );
         return result;
     }
 
     @Override
     public String toString() {
-        return "library:" + this.name + " (" + this.scope.toString().toLowerCase() + ")";
+        return "library:" + this.name + " (" + this.level.toString().toLowerCase() + ")";
     }
 }

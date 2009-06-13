@@ -1,5 +1,6 @@
 package com.tomergabel.build.intellij.ant;
 
+import com.tomergabel.build.intellij.model.MockModel;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import org.apache.tools.ant.BuildException;
 import static org.junit.Assert.fail;
@@ -25,9 +26,9 @@ public class ResolveSourceDirectoriesTaskTests {
 
     @Test
     public void resolveSourceDirectories_OutputProjectRelativeAndProjectSpecified_DirectoriesResolvedCorrectly()
-            throws URISyntaxException {
+            throws Exception {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
-        task.setProjectDescriptor( this.getClass().getResource( "../model/parsing-test.ipr" ).toURI() );
+        task.setProject( MockModel.project.get() );
         task.setModuleDescriptor( this.getClass().getResource( "output-project-relative.iml" ).toURI() );
         assertSetEquality( "Source directories not resolved correctly.", new String[] {
                 new File( task.project().getProjectRoot().resolve( "src" ) ).getAbsolutePath(),

@@ -1,5 +1,6 @@
 package com.tomergabel.util;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -26,7 +27,7 @@ public final class UriUtils {
 
     public static String getFilename( final URI uri ) throws IllegalArgumentException {
         if ( uri == null )
-            throw new IllegalArgumentException( "URI cannot be null.");
+            throw new IllegalArgumentException( "URI cannot be null." );
 
         final String path = uri.getRawPath();
         int finalSeparator = Math.max( path.lastIndexOf( '/' ), path.lastIndexOf( '\\' ) );
@@ -35,5 +36,15 @@ public final class UriUtils {
         if ( finalSeparator == path.length() - 1 )
             throw new IllegalArgumentException( "Specified URI does not point to a file resource." );
         return path.substring( finalSeparator + 1 );
+    }
+
+    public static String getPath( URI uri ) throws IllegalArgumentException {
+        if ( uri == null )
+            throw new IllegalArgumentException( "URI cannot be null." );
+        if ( !uri.getScheme().equals( "file" ) )
+            throw new IllegalArgumentException(
+                    "Wrong URI scheme for path resolution, expected \"file\" " + "and got \"" + uri.getScheme() +
+                            "\"" );
+        return new File( uri ).getAbsolutePath();
     }
 }
