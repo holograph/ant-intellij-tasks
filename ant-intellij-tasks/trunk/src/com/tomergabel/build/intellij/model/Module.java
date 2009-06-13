@@ -57,7 +57,7 @@ public final class Module extends IntelliJParserBase {
         return Collections.unmodifiableCollection( this.testSourceUrls );
     }
 
-    public Collection<Dependency> getDepdencies() {
+    public Collection<Dependency> getDependencies() {
         return Collections.unmodifiableCollection( this.depdencies );
     }
 

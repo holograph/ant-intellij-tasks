@@ -33,7 +33,7 @@ public class ModuleFileParseTests {
                 new LibraryDependency( LibraryDependency.Scope.PROJECT, "log4j" ),
                 new LibraryDependency( LibraryDependency.Scope.PROJECT, "junit" ),
                 new ModuleDependency( "dependee" )
-        }, this.module.getDepdencies() );
+        }, this.module.getDependencies() );
     }
 
     @Test

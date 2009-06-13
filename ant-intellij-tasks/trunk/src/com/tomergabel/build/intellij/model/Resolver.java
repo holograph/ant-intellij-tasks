@@ -3,12 +3,10 @@ package com.tomergabel.build.intellij.model;
 import com.tomergabel.util.Lazy;
 import com.tomergabel.util.LazyInitializationException;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 
 public final class Resolver {
     private final Project project;
@@ -41,8 +39,10 @@ public final class Resolver {
             }
 
             // Override current module with preloaded instance
-            this.moduleDescriptorMap.put( module.getDescriptor(), Lazy.from( module ) );
-            this.moduleNameMap.put( module.getName(), module );
+            if ( module != null ) {
+                this.moduleDescriptorMap.put( module.getDescriptor(), Lazy.from( module ) );
+                this.moduleNameMap.put( module.getName(), module );
+            }
         } else {
             this.moduleNameMap = null;
             this.moduleDescriptorMap = null;
@@ -56,6 +56,33 @@ public final class Resolver {
     public URI resolveUri( String string ) throws IllegalArgumentException, ResolutionException {
         if ( string == null )
             return null;
+
+        // Expand embedded properties
+        final String expandedString = expandProperties( string );
+        final URI expandedUri;
+        try {
+            expandedUri = new URI( expandedString );
+        } catch ( URISyntaxException e ) {
+            throw new ResolutionException( "Invalid expanded URI generated: " + expandedString, e );
+        }
+
+        // Normalize URI
+        if ( expandedUri.getScheme().equals( "file" ) )
+            return expandedUri;
+        else if ( expandedUri.getScheme().equals( "jar" ) ) {
+            // Construct new URI: replace schema with "file" and strip trailing !/
+            final String newUri = expandedUri.toString().replace( "jar:", "file:" );
+            try {
+                return new URI( newUri.endsWith( "!/" ) ? newUri.substring( 0, newUri.length() - 2 ) : newUri );
+            } catch ( URISyntaxException e ) {
+                throw new ResolutionException( "JAR URI resolution failed", e );
+            }
+        } else throw new ResolutionException( "Unrecognized URI scheme \"" + expandedUri.getScheme() + "\"" );
+    }
+
+    private String expandProperties( final String string ) throws ResolutionException {
+        if ( string == null )
+            throw new IllegalArgumentException( "The string cannot be null." );
 
         // Look up and expand all macros
         int segmentIndex = 0;
@@ -92,11 +119,7 @@ public final class Resolver {
 
         // Append final segment and return resolved string
         sb.append( string.substring( segmentIndex ) );
-        try {
-            return new URI( sb.toString() );
-        } catch ( URISyntaxException e ) {
-            throw new ResolutionException( "Invalid expanded URI generated: " + sb.toString(), e );
-        }
+        return sb.toString();
     }
 
     public static URI resolveUri( Project project, Module module, String string )
@@ -104,12 +127,12 @@ public final class Resolver {
         return new Resolver( project, module ).resolveUri( string );
     }
 
-    public Collection<Module> resolveModuleDependencies() throws IllegalStateException, ResolutionException {
-        final Collection<Module> modules = new ArrayList<Module>( this.module.getDepdencies().size() );
+    public Collection<Module> resolveModuleDependencies() throws ResolutionException {
+        final Collection<Module> modules = new ArrayList<Module>( this.module.getDependencies().size() );
 
         // Iterate dependencies and process module dependencies
         dependency:
-        for ( Dependency dependency : this.module.getDepdencies() )
+        for ( Dependency dependency : this.module.getDependencies() )
             if ( dependency instanceof ModuleDependency ) {
                 // Assert that a project was specified to resolve module dependencies
                 if ( this.project == null )
@@ -146,11 +169,51 @@ public final class Resolver {
     }
 
     public static Collection<Module> resolveModuleDependencies( final Project project, final Module module )
-            throws IllegalArgumentException, ResolutionException {
-        try {
-            return new Resolver( project, module ).resolveModuleDependencies();
-        } catch ( IllegalStateException e ) {
-            throw new IllegalArgumentException( e.getMessage() );
-        }
+            throws ResolutionException {
+        return new Resolver( project, module ).resolveModuleDependencies();
     }
-}
+
+    public Collection<String> resolveLibraryDependencies() throws ResolutionException {
+        final Collection<String> dependencies = new HashSet<String>();
+
+        // Iterate dependencies and process library dependencies
+        for ( Dependency dependency : module.getDependencies() )
+            if ( dependency instanceof LibraryDependency ) {
+                final LibraryDependency library = (LibraryDependency) dependency;
+                switch ( library.scope ) {
+                    case MODULE:
+                        // TODO add support for module dependencies
+                        throw new ResolutionException(
+                                "Module library dependencies not supported (dependee=\"" + library.name + "\")." );
+
+                    case PROJECT:
+                        // Assert that a project was specified (we're dealing with project-level libraries)
+                        if ( this.project == null )
+                            throw new ResolutionException( "Project not specified but module contains " +
+                                    "project library dependencies (dependee=" + library.name + "\")." );
+
+                        // Ensure that the project contains the required library
+                        final Map<String, Project.Library> libraries = this.project.getLibraries();
+                        if ( !libraries.containsKey( library.name ) )
+                            throw new ResolutionException(
+                                    "Cannot resolve dependency on project library \"" + library.name + "\"" );
+
+                        // Resolve the library and add it to the dependency list
+                        for ( String uri : libraries.get( library.name ).getClasses() )
+                            dependencies.add( new File( resolveUri( uri ) ).getAbsolutePath() );
+                        break;
+
+                    default:
+                        // Safety net (should never happen)
+                        throw new ResolutionException( "Unknown library scope \"" + library.scope + "\"" );
+                }
+            }
+
+        return Collections.unmodifiableCollection( dependencies );
+    }
+
+    public static Collection<String> resolveLibraryDependencies( Project project, Module module )
+            throws ResolutionException {
+        return new Resolver( project, module ).resolveLibraryDependencies();
+    }
+}                                                                
