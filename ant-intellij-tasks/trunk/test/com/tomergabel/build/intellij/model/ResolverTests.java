@@ -117,13 +117,13 @@ public class ResolverTests {
     }
 
     // ------------------------------------------------------
-    // resolveClasspath tests
+    // resolveModuleClasspath tests
     // ------------------------------------------------------
 
     @Test
     public void testResolveClasspath_NullModuleFile_ThrowsResolutionException() throws Exception {
         try {
-            new Resolver( null, null ).resolveClasspath();
+            new Resolver( null, null ).resolveModuleClasspath();
             fail( "No module specified, expected ResolutionException" );
         } catch ( ResolutionException e ) {
             // Expected, all is well

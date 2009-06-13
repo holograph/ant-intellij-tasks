@@ -30,14 +30,10 @@
     </target>
 
     <target name="build" depends="build-deps">
-        <resolveOutputDirectory  property="idea.output"
-                                projectfile="test/com/tomergabel/build/intellij/model/parsing-test.ipr"
-                                srcfile="test/com/tomergabel/build/intellij/model/parsing-test.iml" />
-
-        <resolveSourceDirectories property="idea.sources"
-                                  projectfile="test/com/tomergabel/build/intellij/model/parsing-test.ipr"
-                                  srcfile="test/com/tomergabel/build/intellij/model/parsing-test.iml" />
-
+        <resolveOutputDirectory property="idea.output" projectfile="${project-file}" srcfile="${module-file}" />
+        <resolveSourceDirectories property="idea.sources" projectfile="${project-file}" srcfile="${module-file}" />
+        <resolveModuleClasspath pathid="idea.classpath" projectfile="${project-file}" srcfile="${module-file}" />
+        <!-- add actual build -->
     </target>
 
 </project>

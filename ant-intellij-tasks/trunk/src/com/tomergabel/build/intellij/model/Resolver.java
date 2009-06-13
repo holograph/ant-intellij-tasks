@@ -231,14 +231,14 @@ public final class Resolver {
         return new Resolver( project, module ).resolveLibraryDependencies();
     }
 
-    public Collection<String> resolveClasspath() throws ResolutionException {
+    public Collection<String> resolveModuleClasspath() throws ResolutionException {
         final Collection<String> classpath = new HashSet<String>();
 
         // Iterate all module dependencies. Aggregate each dependency's classpath
         // and output directory.
         for ( Module dependency : resolveModuleDependencies() ) {
             final Resolver dependencyResolver = new Resolver( this.project, dependency );
-            classpath.addAll( dependencyResolver.resolveClasspath() );
+            classpath.addAll( dependencyResolver.resolveModuleClasspath() );
             classpath.add( UriUtils.getPath( dependencyResolver.resolveUriString( dependency.getOutputUrl() ) ) );
         }
 
@@ -253,6 +253,6 @@ public final class Resolver {
         if ( module == null )
             throw new IllegalArgumentException( "The module cannot be null." );
 
-        return new Resolver( project, module ).resolveClasspath();
+        return new Resolver( project, module ).resolveModuleClasspath();
     }
 }
