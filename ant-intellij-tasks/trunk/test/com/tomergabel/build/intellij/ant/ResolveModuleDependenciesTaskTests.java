@@ -37,7 +37,8 @@ public class ResolveModuleDependenciesTaskTests {
         task.setModuleDescriptor( module );
         try {
             task.resolveModules();
-            fail( "Resolution did not fail even though project file was not specified and dependencies are present." );
+            fail( "Resolution did not fail even though project file was not specified and " +
+                    "module dependencies are present." );
         } catch ( BuildException e ) {
             // Expected, all is well
         }
