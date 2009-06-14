@@ -3,48 +3,58 @@
 
     <!-- Import ant-intellij-tasks -->
     <taskdef resource="com/tomergabel/build/intellij/ant/antlib.xml"
-             classpath="lib/ant-intellij-tasks.jar" />
+             classpath="lib/ant-intellij-tasks.jar"/>
     <!-- Import ant-contrib -->
     <taskdef resource="net/sf/antcontrib/antlib.xml"
-             classpath="lib/ant-contrib.jar" />
+             classpath="lib/ant-contrib.jar"/>
 
     <!-- Globals -->
     <!-- TODO: replace with lookup -->
-    <property name="module-file" value="ant-intellij-tasks.iml" />
-    <property name="project-file" value="ant-intellij-tasks.ipr" />
+    <property name="module-file" value="ant-intellij-tasks.iml"/>
+    <property name="project-file" value="ant-intellij-tasks.ipr"/>
 
     <!-- Forward declarations -->
-    <property name="idea.moduledeps" value="" />
-    <property name="idea.output" value="" />
-    <property name="idea.sources" value="" />
+    <property name="idea.moduledeps" value=""/>
+    <property name="idea.output" value=""/>
+    <property name="idea.sources" value=""/>
 
     <!-- Targets -->
 
-    <target name="resolve-deps">
-        <resolveModuleDependencies mode="DESCRIPTORS" property="idea.moduledeps"
-                                   projectfile="${project-file}" srcfile="${module-file}" />
-    </target>
 
     <target name="build-deps" depends="resolve-deps">
         <for list="${idea.moduledeps}" param="dependency">
             <sequential>
-                <ant antfile="${dependency}" />
+                <ant antfile="${dependency}"/>
             </sequential>
         </for>
     </target>
 
-    <target name="build" depends="build-deps">
+    <target name="clean" depends="resolve-output">
+        <delete dir="${idea.output}" includes="**" />
+    </target>
 
-        <!-- Resolve module details -->
-        <resolveOutputDirectory   property="idea.output"    projectfile="${project-file}" srcfile="${module-file}" />
-        <resolveSourceDirectories pathid  ="idea.sources"   projectfile="${project-file}" srcfile="${module-file}" />
-        <resolveModuleClasspath   pathid  ="idea.classpath" projectfile="${project-file}" srcfile="${module-file}" />
+    <target name="resolve-all" depends="resolve-output, resolve-classpath, resolve-sources, resolve-deps"/>
+    <target name="resolve-output">
+        <resolveOutputDirectory property="idea.output" projectfile="${project-file}" modulefile="${module-file}"/>
+    </target>
+    <target name="resolve-sources">
+        <resolveSourceDirectories pathid="idea.sources" projectfile="${project-file}" modulefile="${module-file}"/>
+    </target>
+    <target name="resolve-classpath">
+        <resolveModuleClasspath pathid="idea.classpath" projectfile="${project-file}" modulefile="${module-file}"/>
+    </target>
+    <target name="resolve-deps">
+        <resolveModuleDependencies mode="descriptors" property="idea.moduledeps" projectfile="${project-file}"
+                                   srcfile="${module-file}"/>
+    </target>
 
+    <target name="build" depends="resolve-all, build-deps">
         <!-- Build module -->
-        <javac sourcepath="${idea.sources}"
-               destdir="${idea.output}"
+        <javac destdir="${idea.output}"
                classpathref="idea.classpath"
-               debug="true" encoding="utf-8" />
+               debug="true" encoding="utf-8">
+            <src refid="idea.sources"/>
+        </javac>
     </target>
 
 </project>

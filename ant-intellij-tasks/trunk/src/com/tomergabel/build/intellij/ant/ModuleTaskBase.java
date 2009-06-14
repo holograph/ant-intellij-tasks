@@ -17,7 +17,8 @@ public abstract class ModuleTaskBase extends TaskBase {
             // I prefer the more accurate 'moduledescriptor' attribute, hence the error
             // message does not mention 'srcfile'. Ant conventions require that 'srcfile'
             // should also be supported, but it doesn't mean I have promote it :-)
-            throw new BuildException( "Module descriptor ('moduledescriptor' attribute) not specified." );
+            throw new BuildException( "Module descriptor or file ('moduledescriptor' and 'modulefile' " +
+                    "attributes respectively) not specified." );
         }
     };
 
@@ -28,6 +29,7 @@ public abstract class ModuleTaskBase extends TaskBase {
     // See http://ant.apache.org/manual/develop.html#set-magic
     // Ant does not support URI properties, as least as far as the documentation is
     // concerned. Until this is improved, file it is. --TG
+
     public void setSrcfile( final File srcfile ) throws IllegalArgumentException {
         if ( srcfile == null )
             throw new IllegalArgumentException( "Null source file ('srcfile' attribute) cannot be specified." );
@@ -35,8 +37,15 @@ public abstract class ModuleTaskBase extends TaskBase {
         setModuleDescriptor( srcfile.toURI() );
     }
 
-    public void setProjectFile( final File project ) {
-        setProjectDescriptor( project.toURI() );
+    public void setModuleFile( final File moduleFile ) {
+        if ( moduleFile == null )
+            throw new IllegalArgumentException( "Null module file ('modulefile' attribute) cannot be specified." );
+
+        setModuleDescriptor( moduleFile.toURI() );
+    }
+
+    public void setProjectFile( final File projectFile ) {
+        setProjectDescriptor( projectFile.toURI() );
     }
 
     // Code-facing properties
@@ -70,18 +79,18 @@ public abstract class ModuleTaskBase extends TaskBase {
     // Helper methods
 
     protected IntelliJParserBase.Handler warnHandler = new IntelliJParserBase.Handler() {
-                    @Override
-                    public void parse( final String componentName, final Node componentNode )
-                            throws IllegalArgumentException, ParseException {
-                        if ( componentName == null )
-                            throw new IllegalArgumentException( "Component name cannot be null." );
-                        if ( componentNode == null )
-                            throw new IllegalArgumentException( "Component node cannot be null." );
+        @Override
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
+            if ( componentName == null )
+                throw new IllegalArgumentException( "Component name cannot be null." );
+            if ( componentNode == null )
+                throw new IllegalArgumentException( "Component node cannot be null." );
 
-                        ModuleTaskBase.this.log( "Unrecognized component \"" + componentName + "\"",
-                                org.apache.tools.ant.Project.MSG_WARN );
-                    }
-                };
+            ModuleTaskBase.this.log( "Unrecognized component \"" + componentName + "\"",
+                    org.apache.tools.ant.Project.MSG_WARN );
+        }
+    };
 
     protected Module module() throws BuildException {
         try {
@@ -94,7 +103,7 @@ public abstract class ModuleTaskBase extends TaskBase {
                 error( "Error parsing module file", cause );
             else if ( cause instanceof BuildException )
                 error( cause.getMessage() );
-            else    
+            else
                 error( "Unexpected error occurred while parsing module file", cause );
             return null;
         }
