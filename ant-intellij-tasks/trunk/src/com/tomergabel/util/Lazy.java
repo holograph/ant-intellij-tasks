@@ -20,7 +20,7 @@ public abstract class Lazy<T> implements Callable<T> {
         }
     }
 
-    public static <T> Lazy<T> from( T value ) {
+    public static <T> Lazy<T> from( final T value ) {
         return new Lazy<T>( value ) {
             @Override
             public T call() throws Exception {
@@ -30,11 +30,14 @@ public abstract class Lazy<T> implements Callable<T> {
         };
     }
 
+    @SuppressWarnings( { "unchecked" } )
     public static <T> Lazy<T> from( final Callable<T> initializer ) {
         return new Lazy<T>() {
             @Override
             public T call() throws Exception {
-                return initializer.call();
+                // Lazy.from( null ) will resolve here, so (as a convenience) we support
+                // return of null values
+                return initializer == null ? null : initializer.call();
             }
         };
     }

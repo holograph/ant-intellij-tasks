@@ -1,6 +1,8 @@
 package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.*;
+import com.tomergabel.util.Lazy;
+import com.tomergabel.util.LazyInitializationException;
 import org.apache.tools.ant.BuildException;
 import org.w3c.dom.Node;
 
@@ -9,88 +11,114 @@ import java.io.IOException;
 import java.net.URI;
 
 public abstract class ModuleTaskBase extends TaskBase {
-    protected URI moduleDescriptor;
-    protected URI projectDescriptor;
-    protected Module module;
-    protected Project project;
+    private Lazy<Module> module = new Lazy<Module>() {
+        @Override
+        public Module call() throws Exception {
+            // I prefer the more accurate 'moduledescriptor' attribute, hence the error
+            // message does not mention 'srcfile'. Ant conventions require that 'srcfile'
+            // should also be supported, but it doesn't mean I have promote it :-)
+            throw new BuildException( "Module descriptor ('moduledescriptor' attribute) not specified." );
+        }
+    };
+
+    private Lazy<Project> project = Lazy.from( null );
 
     // Ant-facing properties
 
-    public void setSrcfile( final File srcfile ) {
-        this.moduleDescriptor = srcfile.toURI();
+    // See http://ant.apache.org/manual/develop.html#set-magic
+    // Ant does not support URI properties, as least as far as the documentation is
+    // concerned. Until this is improved, file it is. --TG
+    public void setSrcfile( final File srcfile ) throws IllegalArgumentException {
+        if ( srcfile == null )
+            throw new IllegalArgumentException( "Null source file ('srcfile' attribute) cannot be specified." );
+
+        setModuleDescriptor( srcfile.toURI() );
     }
 
     public void setProjectFile( final File project ) {
-        this.projectDescriptor = project.toURI();
+        setProjectDescriptor( project.toURI() );
     }
 
     // Code-facing properties
 
     public void setModule( final Module module ) {
-        this.module = module;
+        this.module = Lazy.from( module );
     }
 
     public void setModuleDescriptor( final URI moduleDescriptor ) {
-        this.moduleDescriptor = moduleDescriptor;
+        this.module = new Lazy<Module>() {
+            @Override
+            public Module call() throws IOException, ParseException {
+                return Module.parse( moduleDescriptor, ModuleTaskBase.this.warnHandler );
+            }
+        };
     }
 
     public void setProject( final Project project ) {
-        this.project = project;
+        this.project = Lazy.from( project );
     }
 
     public void setProjectDescriptor( final URI projectDescriptor ) {
-        this.projectDescriptor = projectDescriptor;
+        this.project = new Lazy<Project>() {
+            @Override
+            public Project call() throws IOException, ParseException {
+                return Project.parse( projectDescriptor, ModuleTaskBase.this.warnHandler );
+            }
+        };
     }
 
     // Helper methods
 
     protected IntelliJParserBase.Handler warnHandler = new IntelliJParserBase.Handler() {
-        @Override
-        public void parse( final String componentName, final Node componentNode )
-                throws IllegalArgumentException, ParseException {
-            ModuleTaskBase.this.log( "Unrecognized component \"" + componentName + "\"",
-                    org.apache.tools.ant.Project.MSG_WARN );
-        }
-    };
+                    @Override
+                    public void parse( final String componentName, final Node componentNode )
+                            throws IllegalArgumentException, ParseException {
+                        if ( componentName == null )
+                            throw new IllegalArgumentException( "Component name cannot be null." );
+                        if ( componentNode == null )
+                            throw new IllegalArgumentException( "Component node cannot be null." );
+
+                        ModuleTaskBase.this.log( "Unrecognized component \"" + componentName + "\"",
+                                org.apache.tools.ant.Project.MSG_WARN );
+                    }
+                };
 
     protected Module module() throws BuildException {
-        if ( this.module != null )
-            return this.module;
-
-        if ( this.moduleDescriptor != null )
-            try {
-                return Module.parse( this.moduleDescriptor, this.warnHandler );
-            } catch ( IOException e ) {
-                error( "Failed to read module file " + this.moduleDescriptor, e );
-                return null;
-            } catch ( ParseException e ) {
-                error( "Error parsing module file " + this.moduleDescriptor, e );
-                return null;
-            }
-
-        error( "Module file ('srcfile' attribute) not specified." );
-        return null;
+        try {
+            return this.module.get();
+        } catch ( LazyInitializationException e ) {
+            final Throwable cause = e.getCause();   // Guaranteed not to be null
+            if ( cause instanceof IOException )
+                error( "Failed to load module file", cause );
+            else if ( cause instanceof ParseException )
+                error( "Error parsing module file", cause );
+            else if ( cause instanceof BuildException )
+                error( cause.getMessage() );
+            else    
+                error( "Unexpected error occurred while parsing module file", cause );
+            return null;
+        }
     }
 
     protected Project project() throws BuildException {
-        if ( this.project != null )
-            return this.project;
-
-        if ( this.projectDescriptor != null )
-            try {
-                return Project.parse( this.projectDescriptor, this.warnHandler );
-            } catch ( IOException e ) {
-                error( "Failed to read project file " + this.projectDescriptor, e );
-                return null;
-            } catch ( ParseException e ) {
-                error( "Error parsing project file " + this.projectDescriptor, e );
-                return null;
-            }
-
-        return null;
+        try {
+            return this.project.get();
+        } catch ( LazyInitializationException e ) {
+            final Throwable cause = e.getCause();   // Guaranteed not to be null
+            if ( cause instanceof IOException )
+                error( "Failed to load project file", cause );
+            else if ( cause instanceof ParseException )
+                error( "Error parsing project file", cause );
+            else if ( cause instanceof BuildException )
+                error( cause.getMessage() );
+            else
+                error( "Unexpected error occurred while parsing project file", cause );
+            return null;
+        }
     }
 
     protected Resolver resolver() throws BuildException {
+        // Resolve project and module.
         final Project project = project();
         final Module module = module();
         try {

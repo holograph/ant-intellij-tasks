@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="ant-intellij-tasks" default="build">
 
-    <taskdef resource="com/tomergabel/build/intellij/ant/antlib.xml" classpath="lib/ant-intellij-tasks.jar" />
-    <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="lib/ant-contrib.jar" />
+    <!-- Import ant-intellij-tasks -->
+    <taskdef resource="com/tomergabel/build/intellij/ant/antlib.xml"
+             classpath="lib/ant-intellij-tasks.jar" />
+    <!-- Import ant-contrib -->
+    <taskdef resource="net/sf/antcontrib/antlib.xml"
+             classpath="lib/ant-contrib.jar" />
 
     <!-- Globals -->
-    <!-- replace with lookup -->
+    <!-- TODO: replace with lookup -->
     <property name="module-file" value="ant-intellij-tasks.iml" />
     <property name="project-file" value="ant-intellij-tasks.ipr" />
 
@@ -30,10 +34,17 @@
     </target>
 
     <target name="build" depends="build-deps">
-        <resolveOutputDirectory property="idea.output" projectfile="${project-file}" srcfile="${module-file}" />
-        <resolveSourceDirectories property="idea.sources" projectfile="${project-file}" srcfile="${module-file}" />
-        <resolveModuleClasspath pathid="idea.classpath" projectfile="${project-file}" srcfile="${module-file}" />
-        <!-- add actual build -->
+
+        <!-- Resolve module details -->
+        <resolveOutputDirectory   property="idea.output"    projectfile="${project-file}" srcfile="${module-file}" />
+        <resolveSourceDirectories pathid  ="idea.sources"   projectfile="${project-file}" srcfile="${module-file}" />
+        <resolveModuleClasspath   pathid  ="idea.classpath" projectfile="${project-file}" srcfile="${module-file}" />
+
+        <!-- Build module -->
+        <javac sourcepath="${idea.sources}"
+               destdir="${idea.output}"
+               classpathref="idea.classpath"
+               debug="true" encoding="utf-8" />
     </target>
 
 </project>

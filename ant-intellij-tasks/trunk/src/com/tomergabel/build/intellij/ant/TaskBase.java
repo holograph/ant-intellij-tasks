@@ -7,6 +7,11 @@ import org.apache.tools.ant.Project;
 public class TaskBase extends Task {
     protected boolean failOnError = true;
 
+    // Ant-facing tasks
+
+    // See http://ant.apache.org/manual/develop.html#writingowntask
+    // Ant convention specifies property setters should have first letter capitalized
+    // and the rest lower-cased. Go blame them. --TG
     public void setFailonerror( final boolean failonerror ) {
         this.failOnError = failonerror;
     }

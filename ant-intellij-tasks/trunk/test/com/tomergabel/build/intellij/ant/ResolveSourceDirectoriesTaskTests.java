@@ -2,14 +2,23 @@ package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.MockModel;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
+import static junit.framework.Assert.assertNull;
 import org.apache.tools.ant.BuildException;
 import static org.junit.Assert.fail;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.net.URISyntaxException;
 
 public class ResolveSourceDirectoriesTaskTests {
+
+
+    @Before
+    public void testSetup() {
+
+    }
+
     @Test
     public void resolveSourceDirectories_OutputProjectRelativeButProjectNotSpecified_BuildExceptionThrown()
             throws URISyntaxException {
@@ -22,6 +31,15 @@ public class ResolveSourceDirectoriesTaskTests {
         } catch ( BuildException e ) {
             // Expected, all is well
         }
+    }
+
+    @Test
+    public void resolveSourceDirectories_OutputProjectRelativeButProjectNotSpecified_NoFailOnError_ReturnsNull()
+            throws URISyntaxException {
+        final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
+        task.setModuleDescriptor( this.getClass().getResource( "output-project-relative.iml" ).toURI() );
+        task.setFailonerror( false );
+        assertNull( task.resolveSourceDirectories() );
     }
 
     @Test
@@ -57,4 +75,45 @@ public class ResolveSourceDirectoriesTaskTests {
                 new File( task.module().getModuleRoot().resolve( "src" ) ).getAbsolutePath(),
         }, task.resolveSourceDirectories() );
     }
+
+    @Test
+    public void execute_NoModuleSpecified_ThrowsBuildException() {
+    }
+
+    @Test
+    public void execute_NoModuleSpecifiedAndNoFailOnError_NothingHappens() {
+    }
+
+    @Test
+    public void execute_OutputNotProjectRelativeAndProjectNotSpecified_PropertyGeneratedCorrectly() {
+    }
+
+    @Test
+    public void execute_OutputNotProjectRelativeAndProjectNotSpecified_PathGeneratedCorrectly() {
+    }
+
+    @Test
+    public void execute_OutputNotProjectRelativeAndProjectNotSpecified_PathAndPathGeneratedCorrectly() {
+    }
+
+    @Test
+    public void execute_OutputProjectRelativeAndProjectSpecified_ThrowsBuildException() {
+    }
+
+    @Test
+    public void execute_OutputProjectRelativeAndProjectSpecifiedAndNoFailOnError_NothingHappens() {
+    }
+
+    @Test
+    public void execute_OutputProjectRelativeAndProjectSpecified_PropertyGeneratedCorrectly() {
+    }
+
+    @Test
+    public void execute_OutputProjectRelativeAndProjectSpecified_PathGeneratedCorrectly() {
+    }
+
+    @Test
+    public void execute_OutputProjectRelativeAndProjectSpecified_PathAndPathGeneratedCorrectly() {
+    }
+
 }

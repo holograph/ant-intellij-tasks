@@ -13,13 +13,16 @@ import java.util.Collection;
 public class ResolveModuleDependenciesTask extends ModuleTaskBase {
     protected static final String LIST_SEPARATOR = ",";
 
+    // See http://ant.apache.org/manual/develop.html#set-magic
+    // Ant supports enums as of 1.7.0, but requires case-sensitive matching.
+    // Until this is improved, modes are declared lower-cased. --TG
     public enum Modes {
-        NAMES,
-        DESCRIPTORS
+        names,
+        descriptors
     }
 
     protected String property;
-    protected Modes mode = Modes.NAMES;
+    protected Modes mode = Modes.names;
 
     public Modes getMode() {
         return mode;
@@ -59,7 +62,7 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
         // Build the correct mapper for the specified mode
         final Mapper<Module, ?> mapper;
         switch ( this.mode ) {
-            case NAMES:
+            case names:
                 mapper = new Mapper<Module, Object>() {
                     @Override
                     public Object map( final Module source ) {
@@ -68,7 +71,7 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
                 };
                 break;
 
-            case DESCRIPTORS:
+            case descriptors:
                 mapper = new Mapper<Module, Object>() {
                     @Override
                     public Object map( final Module source ) {
