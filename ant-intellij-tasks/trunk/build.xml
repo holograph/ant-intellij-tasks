@@ -20,7 +20,6 @@
 
     <!-- Targets -->
 
-
     <target name="build-deps" depends="resolve-deps">
         <for list="${idea.moduledeps}" param="dependency">
             <sequential>
@@ -33,12 +32,17 @@
         <delete dir="${idea.output}" includes="**" />
     </target>
 
-    <target name="resolve-all" depends="resolve-output, resolve-classpath, resolve-sources, resolve-deps"/>
+    <target name="resolve-core" depends="resolve-output, resolve-classpath, resolve-sources-core, resolve-deps"/>
+    <target name="resolve-all" depends="resolve-core, resolve-sources-test" />
+
     <target name="resolve-output">
         <resolveOutputDirectory property="idea.output" projectfile="${project-file}" modulefile="${module-file}"/>
     </target>
-    <target name="resolve-sources">
-        <resolveSourceDirectories pathid="idea.sources" projectfile="${project-file}" modulefile="${module-file}"/>
+    <target name="resolve-sources-core">
+        <resolveSourceDirectories pathid="idea.sources" filter="source" projectfile="${project-file}" modulefile="${module-file}"/>
+    </target>
+    <target name="resolve-sources-test">
+        <resolveSourceDirectories pathid="idea.sources" filter="test" projectfile="${project-file}" modulefile="${module-file}"/>
     </target>
     <target name="resolve-classpath">
         <resolveModuleClasspath pathid="idea.classpath" projectfile="${project-file}" modulefile="${module-file}"/>
@@ -48,13 +52,34 @@
                                    srcfile="${module-file}"/>
     </target>
 
-    <target name="build" depends="resolve-all, build-deps">
+    <target name="build" depends="build-core" />
+
+    <target name="build-core" depends="resolve-core, build-deps">
         <!-- Build module -->
         <javac destdir="${idea.output}"
                classpathref="idea.classpath"
                debug="true" encoding="utf-8">
             <src refid="idea.sources"/>
         </javac>
+    </target>
+    <target name="build-all" depends="resolve-all, build-deps">
+        <!-- Build module -->
+        <javac destdir="${idea.output}"
+               classpathref="idea.classpath"
+               debug="true" encoding="utf-8">
+            <src refid="idea.sources"/>
+        </javac>
+    </target>
+
+    <target name="test" depends="build-all">
+        <junit>
+            <formatter type="plain" usefile="false" />
+            <classpath><path refid="project.classpath"/></classpath>
+            <batchtest>
+                <fileset dir="${idea.testsources}" includes="**/*Test*.java" />
+            </batchtest>
+
+        </junit>
     </target>
 
 </project>

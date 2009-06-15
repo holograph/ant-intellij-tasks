@@ -43,7 +43,7 @@ public class ResolveSourceDirectoriesTaskTests {
     }
 
     @Test
-    public void resolveSourceDirectories_OutputProjectRelativeAndProjectSpecified_DirectoriesResolvedCorrectly()
+    public void resolveSourceDirectories_OutputProjectRelativeAndProjectSpecified_Both_DirectoriesResolvedCorrectly()
             throws Exception {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
         task.setProject( MockModel.project.get() );
@@ -66,14 +66,34 @@ public class ResolveSourceDirectoriesTaskTests {
     }
 
     @Test
-    public void resolveSourceDirectories_ProjectWithTestFilesButTestsNotIncluded_OnlySourceDirectoriesReturned()
+    public void resolveSourceDirectories_ProjectWithTestFilesAndSourceFilterSpecified_OnlySourceDirectoriesReturned()
             throws URISyntaxException {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
-        task.setIncludeTestDirectories( false );
         task.setModuleDescriptor( this.getClass().getResource( "output-module-relative.iml" ).toURI() );
         assertSetEquality( "Source directories not resolved correctly.", new String[] {
                 new File( task.module().getModuleRoot().resolve( "src" ) ).getAbsolutePath(),
-        }, task.resolveSourceDirectories() );
+        }, task.resolveSourceDirectories( ResolveSourceDirectoriesTask.Filter.source ) );
+    }
+
+    @Test
+    public void resolveSourceDirectories_ProjectWithTestFilesAndTestFilterSpecified_OnlyTestDirectoriesReturned()
+            throws URISyntaxException {
+        final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
+        task.setModuleDescriptor( this.getClass().getResource( "output-module-relative.iml" ).toURI() );
+        assertSetEquality( "Source directories not resolved correctly.", new String[] {
+                new File( task.module().getModuleRoot().resolve( "test" ) ).getAbsolutePath(),
+        }, task.resolveSourceDirectories( ResolveSourceDirectoriesTask.Filter.test ) );
+    }
+
+    @Test
+    public void resolveSourceDirectories_ProjectWithTestFilesAndBothFilterSpecified_SourceAndTestDirectoriesReturned()
+            throws URISyntaxException {
+        final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
+        task.setModuleDescriptor( this.getClass().getResource( "output-module-relative.iml" ).toURI() );
+        assertSetEquality( "Source directories not resolved correctly.", new String[] {
+                new File( task.module().getModuleRoot().resolve( "src" ) ).getAbsolutePath(),
+                new File( task.module().getModuleRoot().resolve( "test" ) ).getAbsolutePath(),
+        }, task.resolveSourceDirectories( ResolveSourceDirectoriesTask.Filter.both ) );
     }
 
     @Test
