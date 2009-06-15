@@ -1,10 +1,14 @@
 package com.tomergabel.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
 public final class CollectionUtils {
+    private static final Object DEFAULT_JOIN_SEPARATOR = ',';
+    private static final boolean DEFAULT_JOIN_NULL_BEHAVIOR = false;
+
     private CollectionUtils() {
     }
 
@@ -128,16 +132,43 @@ public final class CollectionUtils {
         return new Iterable<U>() {
             @Override
             public Iterator<U> iterator() {
-                return new MappingIterator( source, mapper );
+                return new MappingIterator<T, U>( source, mapper );
             }
         };
     }
 
+    public static <T> String join( boolean renderNulls, T[]... values ) {
+        return join( Arrays.asList( values ), DEFAULT_JOIN_SEPARATOR, renderNulls );
+    }
+
+    public static <T> String join( Object separator, T[]... values ) {
+        return join( Arrays.asList( values ), separator, DEFAULT_JOIN_NULL_BEHAVIOR );
+    }
+
+    public static <T> String join( boolean renderNulls, Object separator, T[]... values ) {
+        return join( Arrays.asList( values ), separator, renderNulls );
+    }
+
+    public static <T> String join( final Iterable<T> source ) {
+        return join( source, DEFAULT_JOIN_SEPARATOR, DEFAULT_JOIN_NULL_BEHAVIOR );
+    }
+
+    public static <T> String join( final Iterable<T> source, final boolean renderNulls ) {
+        return join( source, DEFAULT_JOIN_SEPARATOR, renderNulls );
+    }
+
     public static <T> String join( final Iterable<T> source, final Object separator ) {
+        return join( source, separator, DEFAULT_JOIN_NULL_BEHAVIOR );
+    }
+    
+    public static <T> String join( final Iterable<T> source, final Object separator, final boolean renderNulls ) {
         final StringBuilder sb = new StringBuilder();
         boolean first = true;
 
         for ( T value : source ) {
+            if ( value == null && !renderNulls )
+                continue;
+            
             if ( !first )
                 sb.append( separator );
             else

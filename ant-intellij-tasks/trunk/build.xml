@@ -29,20 +29,22 @@
     </target>
 
     <target name="clean" depends="resolve-output">
-        <delete dir="${idea.output}" includes="**" />
+        <delete dir="${idea.output}" includes="**"/>
     </target>
 
     <target name="resolve-core" depends="resolve-output, resolve-classpath, resolve-sources-core, resolve-deps"/>
-    <target name="resolve-all" depends="resolve-core, resolve-sources-test" />
+    <target name="resolve-all" depends="resolve-core, resolve-sources-test"/>
 
     <target name="resolve-output">
         <resolveOutputDirectory property="idea.output" projectfile="${project-file}" modulefile="${module-file}"/>
     </target>
     <target name="resolve-sources-core">
-        <resolveSourceDirectories pathid="idea.sources" filter="source" projectfile="${project-file}" modulefile="${module-file}"/>
+        <resolveSourceDirectories pathid="idea.sources.core" filter="source" projectfile="${project-file}"
+                                  modulefile="${module-file}"/>
     </target>
     <target name="resolve-sources-test">
-        <resolveSourceDirectories pathid="idea.sources" filter="test" projectfile="${project-file}" modulefile="${module-file}"/>
+        <resolveSourceDirectories pathid="idea.sources.test" filter="test" projectfile="${project-file}"
+                                  modulefile="${module-file}"/>
     </target>
     <target name="resolve-classpath">
         <resolveModuleClasspath pathid="idea.classpath" projectfile="${project-file}" modulefile="${module-file}"/>
@@ -52,14 +54,14 @@
                                    srcfile="${module-file}"/>
     </target>
 
-    <target name="build" depends="build-core" />
+    <target name="build" depends="build-core"/>
 
     <target name="build-core" depends="resolve-core, build-deps">
         <!-- Build module -->
         <javac destdir="${idea.output}"
                classpathref="idea.classpath"
                debug="true" encoding="utf-8">
-            <src refid="idea.sources"/>
+            <src refid="idea.sources.core"/>
         </javac>
     </target>
     <target name="build-all" depends="resolve-all, build-deps">
@@ -67,16 +69,23 @@
         <javac destdir="${idea.output}"
                classpathref="idea.classpath"
                debug="true" encoding="utf-8">
-            <src refid="idea.sources"/>
+            <src refid="idea.sources.core"/>
+            <src refid="idea.sources.test"/>
         </javac>
     </target>
 
     <target name="test" depends="build-all">
         <junit>
-            <formatter type="plain" usefile="false" />
-            <classpath><path refid="project.classpath"/></classpath>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="idea.classpath"/>
+            </classpath>
             <batchtest>
-                <fileset dir="${idea.testsources}" includes="**/*Test*.java" />
+                <fileset dir="${idea.sources.test}">
+                    <include name="**/Test*.java" />
+                    <include name="**/*Test.java" />
+                    <include name="**/*Tests.java" />
+                </fileset>
             </batchtest>
 
         </junit>

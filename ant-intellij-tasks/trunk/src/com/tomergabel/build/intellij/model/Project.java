@@ -128,6 +128,10 @@ public final class Project extends IntelliJParserBase {
         registerComponentHandler( "RmicSettings", ignoreHandler );
         registerComponentHandler( "SvnBranchConfigurationManager", ignoreHandler );
         registerComponentHandler( "VcsDirectoryMappings", ignoreHandler );                  // TODO
+        registerComponentHandler( "IdProvider", ignoreHandler );
+        registerComponentHandler( "Palette2", ignoreHandler );
+        registerComponentHandler( "ResourceManagerContainer", ignoreHandler );              // TODO
+        registerComponentHandler( "WebServicesPlugin", ignoreHandler );                     // TODO for package
 
         // Register handlers
         registerComponentHandler( "ProjectDetails", new ProjectDetailsHandler() );
