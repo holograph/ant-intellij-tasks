@@ -58,7 +58,7 @@ public abstract class ModuleTaskBase extends TaskBase {
         this.module = new Lazy<Module>() {
             @Override
             public Module call() throws IOException, ParseException {
-                return Module.parse( moduleDescriptor, ModuleTaskBase.this.warnHandler );
+                return Module.parse( moduleDescriptor, new WarnHandler( "module" ) );
             }
         };
     }
@@ -71,14 +71,20 @@ public abstract class ModuleTaskBase extends TaskBase {
         this.project = new Lazy<Project>() {
             @Override
             public Project call() throws IOException, ParseException {
-                return Project.parse( projectDescriptor, ModuleTaskBase.this.warnHandler );
+                return Project.parse( projectDescriptor, new WarnHandler( "project" ) );
             }
         };
     }
 
     // Helper methods
 
-    protected IntelliJParserBase.Handler warnHandler = new IntelliJParserBase.Handler() {
+    class WarnHandler implements IntelliJParserBase.Handler {
+        private final String contextName;
+
+        public WarnHandler( final String contextName ) {
+            this.contextName = contextName;
+        }
+
         @Override
         public void parse( final String componentName, final Node componentNode )
                 throws IllegalArgumentException, ParseException {
@@ -87,10 +93,10 @@ public abstract class ModuleTaskBase extends TaskBase {
             if ( componentNode == null )
                 throw new IllegalArgumentException( "Component node cannot be null." );
 
-            ModuleTaskBase.this.log( "Unrecognized component \"" + componentName + "\"",
+            ModuleTaskBase.this.log( "Unrecognized " + this.contextName + " component \"" + componentName + "\"",
                     org.apache.tools.ant.Project.MSG_WARN );
         }
-    };
+    }
 
     protected Module module() throws BuildException {
         try {
