@@ -85,17 +85,17 @@
     </target>
 
     <target name="copy-resources-core" depends="resolve-resources-core">
-        <copy todir="${idea.output}" includeemptydirs="false" verbose="true">
+        <copy todir="${idea.output}" includeemptydirs="false">
             <path refid="idea.resources.core"/>
         </copy>
     </target>
     <target name="copy-resources-test" depends="resolve-resources-test">
-        <copy todir="${idea.output}" includeemptydirs="false" verbose="true">
+        <copy todir="${idea.output}" includeemptydirs="false">
             <path refid="idea.resources.core"/>
         </copy>
     </target>
     <target name="copy-resources-all" depends="resolve-resources-all">
-        <copy todir="${idea.output}" includeemptydirs="false" verbose="true">
+        <copy todir="${idea.output}" includeemptydirs="false">
             <path refid="idea.resources.core"/>
         </copy>
     </target>
