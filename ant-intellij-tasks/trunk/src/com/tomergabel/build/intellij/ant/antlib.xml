@@ -4,5 +4,6 @@
     <taskdef name="resolveOutputDirectory" classname="com.tomergabel.build.intellij.ant.ResolveOutputDirectoryTask" />
     <taskdef name="resolveSourceDirectories" classname="com.tomergabel.build.intellij.ant.ResolveSourceDirectoriesTask" />
     <taskdef name="resolveModuleClasspath" classname="com.tomergabel.build.intellij.ant.ResolveModuleClasspathTask" />
+    <taskdef name="resolveModuleResources" classname="com.tomergabel.build.intellij.ant.ResolveModuleResourcesTask" />
 </antlib>
         

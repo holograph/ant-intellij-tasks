@@ -33,8 +33,9 @@
         <delete dir="${idea.output}" includes="**"/>
     </target>
 
-    <target name="resolve-core" depends="resolve-output, resolve-classpath, resolve-sources-core, resolve-deps"/>
-    <target name="resolve-all" depends="resolve-core, resolve-sources-test"/>
+    <target name="resolve-core"
+            depends="resolve-output, resolve-classpath, resolve-sources-core, resolve-deps, resolve-resources-core"/>
+    <target name="resolve-all" depends="resolve-core, resolve-sources-test, resolve-resources-test"/>
 
     <target name="resolve-output">
         <resolveOutputDirectory property="idea.output" projectfile="${project-file}" modulefile="${module-file}"/>
@@ -54,25 +55,49 @@
         <resolveModuleDependencies mode="descriptors" property="idea.moduledeps" projectfile="${project-file}"
                                    srcfile="${module-file}"/>
     </target>
+    <target name="resolve-resources-core">
+        <resolveModuleResources pathid="idea.resources.core" filter="source" projectfile="${project-file}"
+                                modulefile="${module-file}"/>
+    </target>
+    <target name="resolve-resources-test">
+        <resolveModuleResources pathid="idea.resources.core" filter="test" projectfile="${project-file}"
+                                modulefile="${module-file}"/>
+    </target>
+    <target name="resolve-resources-all">
+        <resolveModuleResources pathid="idea.resources.core" filter="both" projectfile="${project-file}"
+                                modulefile="${module-file}"/>
+    </target>
 
     <target name="build" depends="build-core"/>
 
-    <target name="build-core" depends="resolve-core, build-deps">
+    <target name="build-core" depends="resolve-core, build-deps, copy-resources-core">
         <!-- Build module -->
-        <javac destdir="${idea.output}"
-               classpathref="idea.classpath"
-               debug="true" encoding="utf-8">
+        <javac destdir="${idea.output}" classpathref="idea.classpath" debug="true" encoding="utf-8">
             <src refid="idea.sources.core"/>
         </javac>
     </target>
-    <target name="build-all" depends="resolve-all, build-deps">
+    <target name="build-all" depends="resolve-all, build-deps, copy-resources-all">
         <!-- Build module -->
-        <javac destdir="${idea.output}"
-               classpathref="idea.classpath"
-               debug="true" encoding="utf-8">
+        <javac destdir="${idea.output}" classpathref="idea.classpath" debug="true" encoding="utf-8">
             <src refid="idea.sources.core"/>
             <src refid="idea.sources.test"/>
         </javac>
+    </target>
+
+    <target name="copy-resources-core" depends="resolve-resources-core">
+        <copy todir="${idea.output}" includeemptydirs="false" verbose="true">
+            <path refid="idea.resources.core"/>
+        </copy>
+    </target>
+    <target name="copy-resources-test" depends="resolve-resources-test">
+        <copy todir="${idea.output}" includeemptydirs="false" verbose="true">
+            <path refid="idea.resources.core"/>
+        </copy>
+    </target>
+    <target name="copy-resources-all" depends="resolve-resources-all">
+        <copy todir="${idea.output}" includeemptydirs="false" verbose="true">
+            <path refid="idea.resources.core"/>
+        </copy>
     </target>
 
     <target name="test" depends="build-all">
@@ -86,8 +111,8 @@
                         <enable/>
                     </assertions>
                     <classpath>
-                        <path refid="idea.classpath" />
-                        <dirset dir="${idea.output}" />
+                        <path refid="idea.classpath"/>
+                        <dirset dir="${idea.output}"/>
                     </classpath>
                     <batchtest>
                         <fileset dir="@{directory}">
