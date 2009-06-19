@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project relativePaths="true" version="4">
+  <component name="ProjectDetails">
+    <option name="projectName" value="project" />
+  </component>
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/resource-test.iml" filepath="$PROJECT_DIR$/resource-test.iml" />
+    </modules>
+  </component>
+
+  <component name="CompilerConfiguration">
+    <option name="DEFAULT_COMPILER" value="Javac" />
+    <option name="DEPLOY_AFTER_MAKE" value="0" />
+    <wildcardResourcePatterns>
+      <entry name="?*.jpg" />
+    </wildcardResourcePatterns>
+    <resourceExtensions>
+      <entry name=".+\.(gif)" />
+    </resourceExtensions>
+  </component>
+</project>

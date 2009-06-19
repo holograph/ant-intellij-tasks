@@ -33,6 +33,15 @@ public class ResolveModuleDependenciesTaskTests {
     }
 
     @Test
+    public void testDepdencyResolution_ProjectNotSpecifiedWithModuleDependencies_NoFailOnError_NothingHappens()
+            throws Exception {
+        final ResolveModuleDependenciesTask task = new ResolveModuleDependenciesTask();
+        task.setFailonerror( false );
+        task.setModule( MockModel.dependantModule.get() );
+        task.resolveModules();
+    }
+    
+    @Test
     public void testDepdencyResolution_ProjectSpecifiedWithModuleDependencies_DependenciesResolvedCorrectly()
             throws Exception {
         final ResolveModuleDependenciesTask task = new ResolveModuleDependenciesTask();

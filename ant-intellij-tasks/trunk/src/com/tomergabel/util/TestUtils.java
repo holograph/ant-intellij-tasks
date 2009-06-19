@@ -1,11 +1,24 @@
 package com.tomergabel.util;
 
-import java.util.Collection;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.*;
 
 public final class TestUtils {
     private TestUtils() {
+    }
+
+    private static <T> Collection<T> toCollection( final Iterator<T> iterator ) {
+        final List<T> list = new ArrayList<T>();
+        while ( iterator.hasNext() )
+            list.add( iterator.next() );
+        return list;
+    }
+
+    public static <T> void assertSetEquality( T[] expected, Iterator<T> actual ) {
+        assertSetEquality( null, expected, toCollection( actual ) );
+    }
+
+    public static <T> void assertSetEquality( String message, T[] expected, Iterator<T> actual ) {
+        assertSetEquality( null, expected, toCollection( actual ) );
     }
 
     public static <T> void assertSetEquality( Collection<T> expected, T[] actual ) {
