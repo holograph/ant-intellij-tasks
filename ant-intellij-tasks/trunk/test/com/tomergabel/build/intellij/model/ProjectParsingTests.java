@@ -75,4 +75,26 @@ public class ProjectParsingTests {
         assertEquals( "Project directory incorrectly set.", UriUtils.getParent( resource ).getPath(),
                 this.project.getProperties().get( "PROJECT_DIR" ) );
     }
+
+    @Test
+    public void testResourceExtensionExtraction() {
+        // Assert correct resource extension extraction
+        assertSetEquality( "Project resource extensions incorrectly extracted.",
+                new String[] { "properties", "xml", "html", "dtd", "tld", "gif", "png", "jpeg", "jpg" },
+                this.project.getResourceExtensions() );
+    }
+
+
+    @Test
+    public void testResourceWildcardPatternExtraction() {
+        // Assert correct resource extension extraction
+        assertSetEquality( "Project resource wildcard patterns incorrectly extracted.",
+                new String[] {
+                        "?*.properties", "?*.xml", "?*.gif", "?*.png", "?*.jpeg", "?*.jpg", "?*.html", "?*.dtd",
+                        "?*.tld", "?*.ftl", "?*.properties", "?*.xml", "?*.html", "?*.dtd", "?*.tld", "?*.gif",
+                        "?*.png", "?*.jpeg", "?*.jpg", "?*.zip"
+                },
+                this.project.getResourceWildcardPatterns() );
+    }
+
 }

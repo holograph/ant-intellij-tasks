@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class Project extends IntelliJParserBase {
     private final URI projectRoot;
@@ -18,6 +20,8 @@ public final class Project extends IntelliJParserBase {
     private String name;
     private Collection<String> modules = new HashSet<String>();
     private Map<String, Library> libraries = new HashMap<String, Library>();
+    private Collection<String> resourceExtensions = new HashSet<String>();
+    private Collection<String> resourceWildcardPatterns = new HashSet<String>();
 
     public static class Library {
         private final String name;
@@ -95,6 +99,32 @@ public final class Project extends IntelliJParserBase {
         }
     }
 
+    static final Pattern extensionPattern = Pattern.compile( "\\.\\+\\\\\\.\\((.*)\\)" );
+
+    private class CompilerConfigurationHandler implements Handler {
+        @Override
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
+            // TODO in the future: DEFAULT_COMPILER
+
+            // Extract resource extensions
+            for ( Node extensionSet : extractAll( componentNode, "resourceExtensions/entry/@name",
+                    "Cannot extract resource extensions." ) ) {
+                // Try to match pattern
+                final Matcher m = extensionPattern.matcher( extensionSet.getNodeValue() );
+                if ( m.matches() )
+                    Project.this.resourceExtensions
+                            .addAll( Arrays.asList( m.group( 1 ).split( "\\|" ) ) );
+                // TODO else emit parse warning (once warning infrastructure is in place)
+            }
+
+            // Extract wildcard resource patterns
+            for ( Node resourcePattern : extractAll( componentNode, "wildcardResourcePatterns/entry/@name",
+                    "Cannot extract wilcard resource patterns." ) )
+                Project.this.resourceWildcardPatterns.add( resourcePattern.getNodeValue() );
+        }
+    }
+
 
     private final URI projectDescriptor;
 
@@ -114,7 +144,6 @@ public final class Project extends IntelliJParserBase {
         registerComponentHandler( "AntConfiguration", ignoreHandler );
         registerComponentHandler( "BuildJarProjectSettings", ignoreHandler );               // TODO
         registerComponentHandler( "CodeStyleSettingsManager", ignoreHandler );
-        registerComponentHandler( "CompilerConfiguration", ignoreHandler );                 // TODO
         registerComponentHandler( "CopyrightManager", ignoreHandler );
         registerComponentHandler( "DependencyValidationManager", ignoreHandler );
         registerComponentHandler( "EclipseCompilerSettings", ignoreHandler );
@@ -138,13 +167,15 @@ public final class Project extends IntelliJParserBase {
         registerComponentHandler( "ProjectModuleManager", new ProjectModuleManagerHandler() );
         registerComponentHandler( "ProjectRootManager", new ProjectRootManagerHandler() );
         registerComponentHandler( "libraryTable", new LibraryTableHandler() );
+        registerComponentHandler( "CompilerConfiguration", new CompilerConfigurationHandler() );
     }
 
     public static Project parse( URI descriptor ) throws IllegalArgumentException, IOException, ParseException {
         return parse( descriptor, throwHandler );
     }
 
-    public static Project parse( URI descriptor, Handler defaultHandler ) throws IllegalArgumentException, IOException, ParseException {
+    public static Project parse( URI descriptor, Handler defaultHandler )
+            throws IllegalArgumentException, IOException, ParseException {
         if ( descriptor == null )
             throw new IllegalArgumentException( "The project descriptor URI cannot be null." );
 
@@ -196,6 +227,14 @@ public final class Project extends IntelliJParserBase {
         return projectDescriptor;
     }
 
+    public Collection<String> getResourceExtensions() {
+        return Collections.unmodifiableCollection( resourceExtensions );
+    }
+
+    public Collection<String> getResourceWildcardPatterns() {
+        return Collections.unmodifiableCollection( resourceWildcardPatterns );
+    }
+
     @Override
     protected void generatePropertyMap( final Map<String, String> properties ) {
         properties.put( "PROJECT_DIR", this.projectRoot.getPath() );
@@ -206,6 +245,7 @@ public final class Project extends IntelliJParserBase {
         return "IntelliJ IDEA project \"" + this.name + "\"";
     }
 
+    @SuppressWarnings( { "RedundantIfStatement" } )
     @Override
     public boolean equals( final Object o ) {
         if ( this == o ) return true;
@@ -213,14 +253,19 @@ public final class Project extends IntelliJParserBase {
 
         final Project project = (Project) o;
 
-        return relativePaths == project.relativePaths &&
-                !( libraries != null ? !libraries.equals( project.libraries ) : project.libraries != null ) &&
-                !( modules != null ? !modules.equals( project.modules ) : project.modules != null ) &&
-                !( name != null ? !name.equals( project.name ) : project.name != null ) &&
-                !( outputUrl != null ? !outputUrl.equals( project.outputUrl ) : project.outputUrl != null ) &&
-                !( projectRoot != null ? projectRoot.compareTo( project.projectRoot ) != 0
-                        : project.projectRoot != null );
+        if ( relativePaths != project.relativePaths ) return false;
+        if ( libraries != null ? !libraries.equals( project.libraries ) : project.libraries != null ) return false;
+        if ( modules != null ? !modules.equals( project.modules ) : project.modules != null ) return false;
+        if ( name != null ? !name.equals( project.name ) : project.name != null ) return false;
+        if ( outputUrl != null ? !outputUrl.equals( project.outputUrl ) : project.outputUrl != null ) return false;
+        if ( projectRoot != null ? !projectRoot.equals( project.projectRoot ) : project.projectRoot != null )
+            return false;
+        if ( resourceExtensions != null ? !resourceExtensions.equals( project.resourceExtensions )
+                : project.resourceExtensions != null ) return false;
+        if ( resourceWildcardPatterns != null ? !resourceWildcardPatterns.equals( project.resourceWildcardPatterns )
+                : project.resourceWildcardPatterns != null ) return false;
 
+        return true;
     }
 
     @Override
@@ -231,6 +276,9 @@ public final class Project extends IntelliJParserBase {
         result = 31 * result + ( name != null ? name.hashCode() : 0 );
         result = 31 * result + ( modules != null ? modules.hashCode() : 0 );
         result = 31 * result + ( libraries != null ? libraries.hashCode() : 0 );
+        result = 31 * result + ( resourceExtensions != null ? resourceExtensions.hashCode() : 0 );
+        result = 31 * result + ( resourceWildcardPatterns != null ? resourceWildcardPatterns.hashCode() : 0 );
+        result = 31 * result + ( projectDescriptor != null ? projectDescriptor.hashCode() : 0 );
         return result;
     }
 }
