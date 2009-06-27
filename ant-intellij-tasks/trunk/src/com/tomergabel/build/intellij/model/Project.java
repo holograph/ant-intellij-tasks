@@ -18,10 +18,10 @@ public final class Project extends IntelliJParserBase {
     private boolean relativePaths;
     private String outputUrl;
     private String name;
-    private Collection<String> modules = new HashSet<String>();
-    private Map<String, Library> libraries = new HashMap<String, Library>();
-    private Collection<String> resourceExtensions = new HashSet<String>();
-    private Collection<String> resourceWildcardPatterns = new HashSet<String>();
+    private final Collection<String> modules = new HashSet<String>();
+    private final Map<String, Library> libraries = new HashMap<String, Library>();
+    private final Collection<String> resourceExtensions = new HashSet<String>();
+    private final Collection<String> resourceWildcardPatterns = new HashSet<String>();
 
     public static class Library {
         private final String name;
@@ -51,7 +51,8 @@ public final class Project extends IntelliJParserBase {
 
     private class ProjectRootManagerHandler implements Handler {
         @Override
-        public void parse( String componentName, Node componentNode ) throws IllegalArgumentException, ParseException {
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
             // TODO language level
             // TODO assert keywords
             Project.this.outputUrl = extract( componentNode, "output/@url",
@@ -61,7 +62,8 @@ public final class Project extends IntelliJParserBase {
 
     private class ProjectDetailsHandler implements Handler {
         @Override
-        public void parse( String componentName, Node componentNode ) throws IllegalArgumentException, ParseException {
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
             Project.this.name = extract( componentNode, "option[@name=\"projectName\"]/@value",
                     "Cannot extract project name" );
         }
@@ -69,16 +71,18 @@ public final class Project extends IntelliJParserBase {
 
     private class ProjectModuleManagerHandler implements Handler {
         @Override
-        public void parse( String componentName, Node componentNode ) throws IllegalArgumentException, ParseException {
-            for ( Node module : extractAll( componentNode, "modules/module", "Cannot extract module list" ) )
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
+            for ( final Node module : extractAll( componentNode, "modules/module", "Cannot extract module list" ) )
                 Project.this.modules.add( extract( module, "@fileurl", "Cannot extract module file path" ) );
         }
     }
 
     private class LibraryTableHandler implements Handler {
         @Override
-        public void parse( String componentName, Node componentNode ) throws IllegalArgumentException, ParseException {
-            for ( Node libraryNode : extractAll( componentNode, "library", "Cannot extract libraries" ) ) {
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
+            for ( final Node libraryNode : extractAll( componentNode, "library", "Cannot extract libraries" ) ) {
                 // Parse library data
                 final Library library = new Library( extract( libraryNode, "@name", "Cannot extract library name" ) );
                 iterateRoots( libraryNode, library.name, "CLASSES", library.classes );
@@ -91,7 +95,7 @@ public final class Project extends IntelliJParserBase {
         private void iterateRoots( final Node libraryNode, final String libraryName, final String node,
                                    final Collection<String> target )
                 throws ParseException {
-            for ( Node root : extractAll( libraryNode, node + "/root",
+            for ( final Node root : extractAll( libraryNode, node + "/root",
                     "Cannot extract " + node.toLowerCase() + " root paths for library \"" + libraryName + "\"" ) )
                 target.add( extract( root, "@url",
                         "Cannot extract " + node.toLowerCase() + " root path URL for library \"" + libraryName +
@@ -108,7 +112,7 @@ public final class Project extends IntelliJParserBase {
             // TODO in the future: DEFAULT_COMPILER
 
             // Extract resource extensions
-            for ( Node extensionSet : extractAll( componentNode, "resourceExtensions/entry/@name",
+            for ( final Node extensionSet : extractAll( componentNode, "resourceExtensions/entry/@name",
                     "Cannot extract resource extensions." ) ) {
                 // Try to match pattern
                 final Matcher m = extensionPattern.matcher( extensionSet.getNodeValue() );
@@ -119,7 +123,7 @@ public final class Project extends IntelliJParserBase {
             }
 
             // Extract wildcard resource patterns
-            for ( Node resourcePattern : extractAll( componentNode, "wildcardResourcePatterns/entry/@name",
+            for ( final Node resourcePattern : extractAll( componentNode, "wildcardResourcePatterns/entry/@name",
                     "Cannot extract wilcard resource patterns." ) )
                 Project.this.resourceWildcardPatterns.add( resourcePattern.getNodeValue() );
         }
@@ -128,7 +132,7 @@ public final class Project extends IntelliJParserBase {
 
     private final URI projectDescriptor;
 
-    private Project( URI projectDescriptor, Handler defaultHandler ) throws IllegalArgumentException {
+    private Project( final URI projectDescriptor, final Handler defaultHandler ) throws IllegalArgumentException {
         super( defaultHandler );
 
         if ( projectDescriptor == null )
@@ -170,11 +174,11 @@ public final class Project extends IntelliJParserBase {
         registerComponentHandler( "CompilerConfiguration", new CompilerConfigurationHandler() );
     }
 
-    public static Project parse( URI descriptor ) throws IllegalArgumentException, IOException, ParseException {
+    public static Project parse( final URI descriptor ) throws IllegalArgumentException, IOException, ParseException {
         return parse( descriptor, throwHandler );
     }
 
-    public static Project parse( URI descriptor, Handler defaultHandler )
+    public static Project parse( final URI descriptor, final Handler defaultHandler )
             throws IllegalArgumentException, IOException, ParseException {
         if ( descriptor == null )
             throw new IllegalArgumentException( "The project descriptor URI cannot be null." );
@@ -191,8 +195,8 @@ public final class Project extends IntelliJParserBase {
 
         // Instantiate project and parse relative paths flag
         final Project project = new Project( descriptor, defaultHandler );
-        project.relativePaths = extract( document, "/project/@relativePaths", "Cannot extract relative paths flag" )
-                .equals( "true" );
+        project.relativePaths = "true"
+                .equals( extract( document, "/project/@relativePaths", "Cannot extract relative paths flag" ) );
 
         // Parse all components
         project.processComponents( document );
@@ -220,19 +224,19 @@ public final class Project extends IntelliJParserBase {
     }
 
     public URI getProjectRoot() {
-        return projectRoot;
+        return this.projectRoot;
     }
 
     public URI getDescriptor() {
-        return projectDescriptor;
+        return this.projectDescriptor;
     }
 
     public Collection<String> getResourceExtensions() {
-        return Collections.unmodifiableCollection( resourceExtensions );
+        return Collections.unmodifiableCollection( this.resourceExtensions );
     }
 
     public Collection<String> getResourceWildcardPatterns() {
-        return Collections.unmodifiableCollection( resourceWildcardPatterns );
+        return Collections.unmodifiableCollection( this.resourceWildcardPatterns );
     }
 
     @Override
@@ -253,16 +257,17 @@ public final class Project extends IntelliJParserBase {
 
         final Project project = (Project) o;
 
-        if ( relativePaths != project.relativePaths ) return false;
-        if ( libraries != null ? !libraries.equals( project.libraries ) : project.libraries != null ) return false;
-        if ( modules != null ? !modules.equals( project.modules ) : project.modules != null ) return false;
-        if ( name != null ? !name.equals( project.name ) : project.name != null ) return false;
-        if ( outputUrl != null ? !outputUrl.equals( project.outputUrl ) : project.outputUrl != null ) return false;
-        if ( projectRoot != null ? !projectRoot.equals( project.projectRoot ) : project.projectRoot != null )
+        if ( this.relativePaths != project.relativePaths ) return false;
+        if ( this.libraries != null ? !libraries.equals( project.libraries ) : project.libraries != null ) return false;
+        if ( this.modules != null ? !modules.equals( project.modules ) : project.modules != null ) return false;
+        if ( this.name != null ? !name.equals( project.name ) : project.name != null ) return false;
+        if ( this.outputUrl != null ? !outputUrl.equals( project.outputUrl ) : project.outputUrl != null ) return false;
+        if ( this.projectRoot != null ? !projectRoot.equals( project.projectRoot ) : project.projectRoot != null )
             return false;
-        if ( resourceExtensions != null ? !resourceExtensions.equals( project.resourceExtensions )
+        if ( this.resourceExtensions != null ? !resourceExtensions.equals( project.resourceExtensions )
                 : project.resourceExtensions != null ) return false;
-        if ( resourceWildcardPatterns != null ? !resourceWildcardPatterns.equals( project.resourceWildcardPatterns )
+        if ( this.resourceWildcardPatterns != null ? !resourceWildcardPatterns
+                .equals( project.resourceWildcardPatterns )
                 : project.resourceWildcardPatterns != null ) return false;
 
         return true;
@@ -270,15 +275,15 @@ public final class Project extends IntelliJParserBase {
 
     @Override
     public int hashCode() {
-        int result = projectRoot != null ? projectRoot.hashCode() : 0;
-        result = 31 * result + ( relativePaths ? 1 : 0 );
-        result = 31 * result + ( outputUrl != null ? outputUrl.hashCode() : 0 );
-        result = 31 * result + ( name != null ? name.hashCode() : 0 );
-        result = 31 * result + ( modules != null ? modules.hashCode() : 0 );
-        result = 31 * result + ( libraries != null ? libraries.hashCode() : 0 );
-        result = 31 * result + ( resourceExtensions != null ? resourceExtensions.hashCode() : 0 );
-        result = 31 * result + ( resourceWildcardPatterns != null ? resourceWildcardPatterns.hashCode() : 0 );
-        result = 31 * result + ( projectDescriptor != null ? projectDescriptor.hashCode() : 0 );
+        int result = this.projectRoot != null ? projectRoot.hashCode() : 0;
+        result = 31 * result + ( this.relativePaths ? 1 : 0 );
+        result = 31 * result + ( this.outputUrl != null ? outputUrl.hashCode() : 0 );
+        result = 31 * result + ( this.name != null ? name.hashCode() : 0 );
+        result = 31 * result + ( this.modules != null ? modules.hashCode() : 0 );
+        result = 31 * result + ( this.libraries != null ? libraries.hashCode() : 0 );
+        result = 31 * result + ( this.resourceExtensions != null ? resourceExtensions.hashCode() : 0 );
+        result = 31 * result + ( this.resourceWildcardPatterns != null ? resourceWildcardPatterns.hashCode() : 0 );
+        result = 31 * result + ( this.projectDescriptor != null ? projectDescriptor.hashCode() : 0 );
         return result;
     }
 }

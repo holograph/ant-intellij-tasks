@@ -17,12 +17,12 @@ import java.util.Map;
 
 public final class Module extends IntelliJParserBase {
     private final URI descriptor;
-    private String outputUrl;
-    private String testOutputUrl;
+    private String outputUrl = null;
+    private String testOutputUrl = null;
     private String contentRootUrl;
-    private Collection<String> sourceUrls;
-    private Collection<String> testSourceUrls;
-    private Collection<Dependency> depdencies;
+    private final Collection<String> sourceUrls;
+    private final Collection<String> testSourceUrls;
+    private final Collection<Dependency> depdencies;
 
     public URI getDescriptor() {
         return this.descriptor;
@@ -61,7 +61,7 @@ public final class Module extends IntelliJParserBase {
         return Collections.unmodifiableCollection( this.depdencies );
     }
 
-    private Module( URI descriptor, Handler defaultHandler ) throws IllegalArgumentException {
+    private Module( final URI descriptor, final Handler defaultHandler ) throws IllegalArgumentException {
         super( defaultHandler );
 
         final String fileName = UriUtils.getFilename( descriptor );
@@ -75,11 +75,11 @@ public final class Module extends IntelliJParserBase {
         this.depdencies = new HashSet<Dependency>();
     }
 
-    public static Module parse( URI descriptor ) throws IOException, ParseException, IllegalArgumentException {
+    public static Module parse( final URI descriptor ) throws IOException, ParseException, IllegalArgumentException {
         return parse( descriptor, throwHandler );
     }
 
-    public static Module parse( URI descriptor, Handler defaultHandler )
+    public static Module parse( final URI descriptor, final Handler defaultHandler )
             throws IOException, ParseException, IllegalArgumentException {
         if ( descriptor == null )
             throw new IllegalArgumentException( "The module descriptor URI cannot be null." );
@@ -98,17 +98,17 @@ public final class Module extends IntelliJParserBase {
         // Verify root element
         final Element root = document.getDocumentElement();
         final String moduleType = extract( document, "/module/@type", "Cannot extract module type" );
-        if ( !moduleType.equals( "JAVA_MODULE" ) )
+        if ( !"JAVA_MODULE".equals( moduleType ) )
             throw new ParseException( "Invalid module type \"" + moduleType + "\", expected \"JAVA_MODULE\"" );
 
         // Iterate components
-        for ( Node component : extractAll( root, "component", "Cannot extract module components" ) )
+        for ( final Node component : extractAll( root, "component", "Cannot extract module components" ) )
             parseComponent( component, module );
 
         return module;
     }
 
-    private static void parseComponent( Node component, Module module )
+    private static void parseComponent( final Node component, final Module module )
             throws ParseException, IllegalArgumentException {
         if ( component == null )
             throw new IllegalArgumentException( "The component node cannot be null." );
@@ -117,7 +117,7 @@ public final class Module extends IntelliJParserBase {
 
         // Test component name to see if it's supported
         final String componentName = extract( component, "@name", "Cannot extract component name" );
-        if ( componentName.equals( "NewModuleRootManager" ) ) {
+        if ( "NewModuleRootManager".equals( componentName ) ) {
 
             // Parse module descriptor
             module.outputUrl = extract( component, "output/@url", "Cannot extract compiler output path" );
@@ -126,23 +126,23 @@ public final class Module extends IntelliJParserBase {
 
             // Parse source folders
             module.contentRootUrl = extract( component, "content/@url", "Cannot extract content root path" );
-            for ( Node sourceFolder : extractAll( component, "content/sourceFolder",
+            for ( final Node sourceFolder : extractAll( component, "content/sourceFolder",
                     "Cannot extract source folders" ) ) {
                 final String url = extract( sourceFolder, "@url", "Cannot extract source folder URL" );
                 final String testFlag = extract( sourceFolder, "@isTestSource",
                         "Cannot extract isTestSource flag for source folder" );
-                final Collection<String> list = testFlag.equals( "true" ) ? module.testSourceUrls : module.sourceUrls;
+                final Collection<String> list = "true".equals( testFlag ) ? module.testSourceUrls : module.sourceUrls;
                 list.add( url );
             }
 
             // Parse dependencies
-            for ( Node dependency : extractAll( component, "orderEntry", "Cannot extract dependencies" ) ) {
+            for ( final Node dependency : extractAll( component, "orderEntry", "Cannot extract dependencies" ) ) {
                 final String type = extract( dependency, "@type", "Cannot extract dependency type" );
-                if ( type.equals( "inheritedJdk" ) ) {
+                if ( "inheritedJdk".equals( type ) ) {
                     // TODO handle JDKs properly
-                } else if ( type.equals( "sourceFolder" ) ) {
+                } else if ( "sourceFolder".equals( type ) ) {
                     // TODO handle forTests
-                } else if ( type.equals( "library" ) ) {
+                } else if ( "library".equals( type ) ) {
                     final String name = extract( dependency, "@name", "Cannot extract library dependency name" );
                     final LibraryDependency.Level level;
                     try {
@@ -153,7 +153,7 @@ public final class Module extends IntelliJParserBase {
                                 "Cannot parse library dependency level for library \"" + name + "\"" );
                     }
                     module.depdencies.add( new LibraryDependency( level, name ) );
-                } else if ( type.equals( "module" ) ) {
+                } else if ( "module".equals( type ) ) {
                     module.depdencies.add( new ModuleDependency(
                             extract( dependency, "@module-name", "Cannot extract module dependency name" ) ) );
                 } else throw new ParseException( "Unrecognized order entry type \"" + type + "\"" );
@@ -168,28 +168,28 @@ public final class Module extends IntelliJParserBase {
 
         final Module module = (Module) o;
 
-        return !( contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl )
+        return !( this.contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl )
                 : module.contentRootUrl != null ) &&
-                !( depdencies != null ? !depdencies.equals( module.depdencies ) : module.depdencies != null ) &&
-                !( descriptor != null ? descriptor.compareTo( module.descriptor ) != 0 : module.descriptor != null ) &&
-                !( outputUrl != null ? !outputUrl.equals( module.outputUrl ) : module.outputUrl != null ) &&
-                !( sourceUrls != null ? !sourceUrls.equals( module.sourceUrls ) : module.sourceUrls != null ) &&
-                !( testOutputUrl != null ? !testOutputUrl.equals( module.testOutputUrl )
+                !( this.depdencies != null ? !depdencies.equals( module.depdencies ) : module.depdencies != null ) &&
+                !( this.descriptor != null ? descriptor.compareTo( module.descriptor ) != 0 : module.descriptor != null ) &&
+                !( this.outputUrl != null ? !outputUrl.equals( module.outputUrl ) : module.outputUrl != null ) &&
+                !( this.sourceUrls != null ? !sourceUrls.equals( module.sourceUrls ) : module.sourceUrls != null ) &&
+                !( this.testOutputUrl != null ? !testOutputUrl.equals( module.testOutputUrl )
                         : module.testOutputUrl != null ) &&
-                !( testSourceUrls != null ? !testSourceUrls.equals( module.testSourceUrls )
+                !( this.testSourceUrls != null ? !testSourceUrls.equals( module.testSourceUrls )
                         : module.testSourceUrls != null );
 
     }
 
     @Override
     public int hashCode() {
-        int result = descriptor != null ? descriptor.hashCode() : 0;
-        result = 31 * result + ( outputUrl != null ? outputUrl.hashCode() : 0 );
-        result = 31 * result + ( testOutputUrl != null ? testOutputUrl.hashCode() : 0 );
-        result = 31 * result + ( contentRootUrl != null ? contentRootUrl.hashCode() : 0 );
-        result = 31 * result + ( sourceUrls != null ? sourceUrls.hashCode() : 0 );
-        result = 31 * result + ( testSourceUrls != null ? testSourceUrls.hashCode() : 0 );
-        result = 31 * result + ( depdencies != null ? depdencies.hashCode() : 0 );
+        int result = this.descriptor != null ? descriptor.hashCode() : 0;
+        result = 31 * result + ( this.outputUrl != null ? outputUrl.hashCode() : 0 );
+        result = 31 * result + ( this.testOutputUrl != null ? testOutputUrl.hashCode() : 0 );
+        result = 31 * result + ( this.contentRootUrl != null ? contentRootUrl.hashCode() : 0 );
+        result = 31 * result + ( this.sourceUrls != null ? sourceUrls.hashCode() : 0 );
+        result = 31 * result + ( this.testSourceUrls != null ? testSourceUrls.hashCode() : 0 );
+        result = 31 * result + ( this.depdencies != null ? depdencies.hashCode() : 0 );
         return result;
     }
 

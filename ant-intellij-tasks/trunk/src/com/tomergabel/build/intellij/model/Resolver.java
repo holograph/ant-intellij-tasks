@@ -27,7 +27,7 @@ public final class Resolver {
             this.properties.putAll( project.getProperties() );
             this.moduleNameMap = new HashMap<String, Module>();
             this.moduleDescriptorMap = new HashMap<URI, Lazy<Module>>();
-            for ( String moduleUrl : project.getModules() ) {
+            for ( final String moduleUrl : project.getModules() ) {
                 // Resolve URL and add to list
                 final URI resolvedDescriptor = resolveUriString( moduleUrl );
                 this.moduleDescriptorMap.put( resolvedDescriptor, new Lazy<Module>() {
@@ -53,12 +53,15 @@ public final class Resolver {
             this.properties.putAll( module.getProperties() );
     }
 
-    public URI resolveUriString( String string ) throws IllegalArgumentException, ResolutionException {
+    public URI resolveUriString( final String string ) throws IllegalArgumentException, ResolutionException {
         if ( string == null )
             return null;
 
+        System.err.println( string );
+
         // Expand embedded properties
         final String expandedString = expandProperties( string );
+        System.err.println( expandedString );
         final URI expandedUri;
         try {
             expandedUri = new URI( expandedString );
@@ -67,9 +70,12 @@ public final class Resolver {
         }
 
         // Normalize URI
-        if ( expandedUri.getScheme().equals( "file" ) )
+        if ( expandedUri.getScheme() == null )
+            throw new ResolutionException( "No scheme detected for URI '" + expandedUri + "'." );
+
+        if ( "file".equals( expandedUri.getScheme() ) )
             return expandedUri;
-        else if ( expandedUri.getScheme().equals( "jar" ) ) {
+        else if ( "jar".equals( expandedUri.getScheme() ) ) {
             // Construct new URI: replace schema with "file" and strip trailing !/
             final String newUri = expandedUri.toString().replace( "jar:", "file:" );
             try {
@@ -122,7 +128,7 @@ public final class Resolver {
         return sb.toString();
     }
 
-    public static URI resolveUri( Project project, Module module, String string )
+    public static URI resolveUri( final Project project, final Module module, final String string )
             throws IllegalArgumentException, ResolutionException {
         return new Resolver( project, module ).resolveUriString( string );
     }
@@ -135,7 +141,7 @@ public final class Resolver {
         // Iterate dependencies and process module dependencies
         final Collection<Module> modules = new ArrayList<Module>( this.module.getDependencies().size() );
         dependency:
-        for ( Dependency dependency : this.module.getDependencies() )
+        for ( final Dependency dependency : this.module.getDependencies() )
             if ( dependency instanceof ModuleDependency ) {
                 // Assert that a project was specified to resolve module dependencies
                 if ( this.project == null )
@@ -149,7 +155,7 @@ public final class Resolver {
                 }
 
                 // Iterate descriptor map. We'll have to lazy-load each module to extract its name
-                for ( Lazy<Module> candidate : this.moduleDescriptorMap.values() ) {
+                for ( final Lazy<Module> candidate : this.moduleDescriptorMap.values() ) {
                     try {
                         if ( candidate.get().getName().equals( name ) ) {
                             // Found! Update named map, add to module list
@@ -186,7 +192,7 @@ public final class Resolver {
 
         // Iterate dependencies and process library dependencies
         final Collection<String> dependencies = new HashSet<String>();
-        for ( Dependency dependency : this.module.getDependencies() )
+        for ( final Dependency dependency : this.module.getDependencies() )
             if ( dependency instanceof LibraryDependency ) {
                 final LibraryDependency library = (LibraryDependency) dependency;
 
@@ -210,7 +216,7 @@ public final class Resolver {
                                     "Cannot resolve dependency on project library \"" + library.name + "\"" );
 
                         // Resolve the library and add it to the dependency list
-                        for ( String uri : libraries.get( library.name ).getClasses() )
+                        for ( final String uri : libraries.get( library.name ).getClasses() )
                             dependencies.add( UriUtils.getPath( resolveUriString( uri ) ) );
                         break;
 
@@ -223,7 +229,7 @@ public final class Resolver {
         return Collections.unmodifiableCollection( dependencies );
     }
 
-    public static Collection<String> resolveLibraryDependencies( Project project, Module module )
+    public static Collection<String> resolveLibraryDependencies( final Project project, final Module module )
             throws ResolutionException {
         if ( module == null )
             throw new IllegalArgumentException( "The module cannot be null." );
@@ -236,7 +242,7 @@ public final class Resolver {
 
         // Iterate all module dependencies. Aggregate each dependency's classpath
         // and output directory.
-        for ( Module dependency : resolveModuleDependencies() ) {
+        for ( final Module dependency : resolveModuleDependencies() ) {
             final Resolver dependencyResolver = new Resolver( this.project, dependency );
             classpath.addAll( dependencyResolver.resolveModuleClasspath() );
             classpath.add( UriUtils.getPath( dependencyResolver.resolveUriString( dependency.getOutputUrl() ) ) );
@@ -248,7 +254,7 @@ public final class Resolver {
         return Collections.unmodifiableCollection( classpath );
     }
 
-    public static Collection<String> resolveClasspath( Project project, Module module )
+    public static Collection<String> resolveClasspath( final Project project, final Module module )
             throws IllegalArgumentException, ResolutionException {
         if ( module == null )
             throw new IllegalArgumentException( "The module cannot be null." );
