@@ -15,18 +15,23 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A base class for IntelliJ IDEA metadata file parsers (e.g. module and project files).
+ */
 public abstract class IntelliJParserBase {
 
     protected static final XPath xpath = XPathFactory.newInstance().newXPath();
     protected static DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
     protected static Handler ignoreHandler = new Handler() {
         @Override
-        public void parse( String componentName, Node componentNode ) throws IllegalArgumentException, ParseException {
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
         }
     };
     public static Handler throwHandler = new Handler() {
         @Override
-        public void parse( String componentName, Node componentNode ) throws IllegalArgumentException, ParseException {
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
             if ( componentNode == null )
                 throw new IllegalArgumentException( "The component node cannot be null." );
             throw new ParseException( "Unknown component \"" + componentName + "\"" );
@@ -41,7 +46,9 @@ public abstract class IntelliJParserBase {
         this.defaultHandler = defaultHandler;
     }
 
-    protected static String extract( Node context, String xpath, String failMessage )
+    static final String LINE_SEPERATOR = System.getProperty( "line.separator" );
+
+    protected static String extract( final Node context, final String xpath, final String failMessage )
             throws IllegalArgumentException, ParseException {
         if ( context == null )
             throw new IllegalArgumentException( "The context cannot be null." );
@@ -51,13 +58,17 @@ public abstract class IntelliJParserBase {
             throw new IllegalArgumentException( "The failure message cannot be null." );
 
         try {
-            return Module.xpath.evaluate( xpath, context );
+            final NodeList list = (NodeList) Module.xpath.evaluate( xpath, context, XPathConstants.NODESET );
+            assert list != null;
+            if ( list.getLength() > 1 ) throw new ParseException(
+                    failMessage + LINE_SEPERATOR + "More than one node matches expression '" + xpath + "'" );
+            return list.getLength() == 0 ? null : list.item( 0 ).getTextContent();     // Assumes no child nodes
         } catch ( XPathExpressionException e ) {
             throw new ParseException( failMessage, e );
         }
     }
 
-    protected static Collection<Node> extractAll( Node context, String xpath, String failMessage )
+    protected static Collection<Node> extractAll( final Node context, final String xpath, final String failMessage )
             throws IllegalArgumentException, ParseException {
         if ( context == null )
             throw new IllegalArgumentException( "The context cannot be null." );
@@ -79,7 +90,7 @@ public abstract class IntelliJParserBase {
 
     public final Map<String, String> getProperties() {
         if ( this.propertyCache == null ) {
-            HashMap<String, String> map = new HashMap<String, String>();
+            final HashMap<String, String> map = new HashMap<String, String>();
             generatePropertyMap( map );
             this.propertyCache = Collections.unmodifiableMap( map );
         }
@@ -88,7 +99,7 @@ public abstract class IntelliJParserBase {
 
     protected abstract void generatePropertyMap( Map<String, String> properties );
 
-    protected final void registerComponentHandler( String componentName, Handler handler )
+    protected final void registerComponentHandler( final String componentName, final Handler handler )
             throws IllegalArgumentException {
         if ( componentName == null )
             throw new IllegalArgumentException( "Component name cannot be null." );
@@ -99,7 +110,8 @@ public abstract class IntelliJParserBase {
     }
 
     protected final void processComponents( final Document document ) throws ParseException {
-        for ( Node component : extractAll( document, "project/component", "Cannot extract project components" ) ) {
+        for ( final Node component : extractAll( document, "project/component",
+                "Cannot extract project components" ) ) {
             final String componentName = extract( component, "@name", "Cannot extract component name" );
 
             // Resolve handler

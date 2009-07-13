@@ -18,7 +18,7 @@ public class ResolveOutputDirectoryTaskTests {
         static {
             try {
                 specified = ResolveOutputDirectoryTaskTests.class.getResource( "output-specified.ipr" ).toURI();
-                unspecified = ResolveOutputDirectoryTaskTests.class.getResource( "output-specified.ipr" ).toURI();
+                unspecified = ResolveOutputDirectoryTaskTests.class.getResource( "output-unspecified.ipr" ).toURI();
             } catch ( URISyntaxException e ) {
                 throw new RuntimeException( "Can't load test resource", e );
             }
@@ -101,7 +101,7 @@ public class ResolveOutputDirectoryTaskTests {
         this.task.setModuleDescriptor( ModuleOutputs.unspecified );
         this.task.setProjectDescriptor( ProjectOutputs.specified );
         assertEquals( "Output directory resolved incorrectly.",
-                new File( this.task.project().getOutputUrl() ).getAbsolutePath(),
+                new File( this.task.project().getProjectRoot().resolve( "out" ) ).getAbsolutePath(),
                 this.task.resolveOutputDirectory() );
     }
 
