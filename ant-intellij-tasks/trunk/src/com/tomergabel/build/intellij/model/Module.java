@@ -62,7 +62,7 @@ public final class Module extends IntelliJParserBase {
     }
 
     private Module( final URI descriptor, final Handler defaultHandler ) throws IllegalArgumentException {
-        super( defaultHandler );
+        super( "module", defaultHandler );
 
         final String fileName = UriUtils.getFilename( descriptor );
         if ( !fileName.toLowerCase().endsWith( ".iml" ) )

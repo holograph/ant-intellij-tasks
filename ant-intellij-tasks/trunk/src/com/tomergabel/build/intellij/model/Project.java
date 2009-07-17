@@ -133,7 +133,7 @@ public final class Project extends IntelliJParserBase {
     private final URI projectDescriptor;
 
     private Project( final URI projectDescriptor, final Handler defaultHandler ) throws IllegalArgumentException {
-        super( defaultHandler );
+        super( "project", defaultHandler );
 
         if ( projectDescriptor == null )
             throw new IllegalArgumentException( "Project descriptor cannot be null." );
