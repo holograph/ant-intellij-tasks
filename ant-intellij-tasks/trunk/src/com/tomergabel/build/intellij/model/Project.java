@@ -138,11 +138,14 @@ public final class Project extends IntelliJParserBase {
         if ( projectDescriptor == null )
             throw new IllegalArgumentException( "Project descriptor cannot be null." );
 
+        final String fileName = UriUtils.getFilename( projectDescriptor );
+        if ( !fileName.toLowerCase().endsWith( ".ipr" ) )
+            throw new IllegalArgumentException( "The specified project descriptor \"" + projectDescriptor +
+                    "\" does not point to a valid IDEA project file (.ipr)" );
+
         // Extract project root
         this.projectDescriptor = projectDescriptor;
         this.projectRoot = UriUtils.getParent( projectDescriptor );
-
-        // Register handlers
 
         // Register ignored components
         registerComponentHandler( "AntConfiguration", ignoreHandler );

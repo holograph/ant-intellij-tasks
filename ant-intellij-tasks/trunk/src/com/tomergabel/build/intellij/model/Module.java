@@ -2,7 +2,6 @@ package com.tomergabel.build.intellij.model;
 
 import com.tomergabel.util.UriUtils;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
@@ -16,7 +15,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 public final class Module extends IntelliJParserBase {
-    private final URI descriptor;
+    private final URI moduleDescriptor;
     private String outputUrl = null;
     private String testOutputUrl = null;
     private String contentRootUrl;
@@ -24,17 +23,17 @@ public final class Module extends IntelliJParserBase {
     private final Collection<String> testSourceUrls;
     private final Collection<Dependency> depdencies;
 
-    public URI getDescriptor() {
-        return this.descriptor;
+    public URI getModuleDescriptor() {
+        return this.moduleDescriptor;
     }
 
     public String getName() {
-        final String filename = UriUtils.getFilename( this.descriptor );
+        final String filename = UriUtils.getFilename( this.moduleDescriptor );
         return filename.lastIndexOf( '.' ) != -1 ? filename.substring( 0, filename.lastIndexOf( '.' ) ) : filename;
     }
 
     public URI getModuleRoot() {
-        return UriUtils.getParent( this.descriptor );
+        return UriUtils.getParent( this.moduleDescriptor );
     }
 
     public String getOutputUrl() {
@@ -61,18 +60,25 @@ public final class Module extends IntelliJParserBase {
         return Collections.unmodifiableCollection( this.depdencies );
     }
 
-    private Module( final URI descriptor, final Handler defaultHandler ) throws IllegalArgumentException {
+    private Module( final URI moduleDescriptor, final Handler defaultHandler ) throws IllegalArgumentException {
         super( "module", defaultHandler );
 
-        final String fileName = UriUtils.getFilename( descriptor );
+        final String fileName = UriUtils.getFilename( moduleDescriptor );
         if ( !fileName.toLowerCase().endsWith( ".iml" ) )
-            throw new IllegalArgumentException( "The specified module descriptor \"" + descriptor +
+            throw new IllegalArgumentException( "The specified module descriptor \"" + moduleDescriptor +
                     "\" does not point to a valid IDEA module file (.iml)" );
 
-        this.descriptor = descriptor;
+        this.moduleDescriptor = moduleDescriptor;
         this.sourceUrls = new HashSet<String>();
         this.testSourceUrls = new HashSet<String>();
         this.depdencies = new HashSet<Dependency>();
+
+
+        // Register ignored components
+        registerComponentHandler( "FacetManager", ignoreHandler );               // TODO
+
+        // Register handlers
+        registerComponentHandler( "NewModuleRootManager", new NewModuleRootManagerHandler() );
     }
 
     public static Module parse( final URI descriptor ) throws IOException, ParseException, IllegalArgumentException {
@@ -96,69 +102,12 @@ public final class Module extends IntelliJParserBase {
         }
 
         // Verify root element
-        final Element root = document.getDocumentElement();
         final String moduleType = extract( document, "/module/@type", "Cannot extract module type" );
         if ( !"JAVA_MODULE".equals( moduleType ) )
             throw new ParseException( "Invalid module type \"" + moduleType + "\", expected \"JAVA_MODULE\"" );
 
-        // Iterate components
-        for ( final Node component : extractAll( root, "component", "Cannot extract module components" ) )
-            parseComponent( component, module );
-
+        module.processComponents( document );
         return module;
-    }
-
-    private static void parseComponent( final Node component, final Module module )
-            throws ParseException, IllegalArgumentException {
-        if ( component == null )
-            throw new IllegalArgumentException( "The component node cannot be null." );
-        if ( module == null )
-            throw new IllegalArgumentException( "The module cannot be null." );
-
-        // Test component name to see if it's supported
-        final String componentName = extract( component, "@name", "Cannot extract component name" );
-        if ( "NewModuleRootManager".equals( componentName ) ) {
-
-            // Parse module descriptor
-            module.outputUrl = extract( component, "output/@url", "Cannot extract compiler output path" );
-            module.testOutputUrl = extract( component, "output-test/@url",
-                    "Cannot extract compiler test class output path" );
-
-            // Parse source folders
-            module.contentRootUrl = extract( component, "content/@url", "Cannot extract content root path" );
-            for ( final Node sourceFolder : extractAll( component, "content/sourceFolder",
-                    "Cannot extract source folders" ) ) {
-                final String url = extract( sourceFolder, "@url", "Cannot extract source folder URL" );
-                final String testFlag = extract( sourceFolder, "@isTestSource",
-                        "Cannot extract isTestSource flag for source folder" );
-                final Collection<String> list = "true".equals( testFlag ) ? module.testSourceUrls : module.sourceUrls;
-                list.add( url );
-            }
-
-            // Parse dependencies
-            for ( final Node dependency : extractAll( component, "orderEntry", "Cannot extract dependencies" ) ) {
-                final String type = extract( dependency, "@type", "Cannot extract dependency type" );
-                if ( "inheritedJdk".equals( type ) ) {
-                    // TODO handle JDKs properly
-                } else if ( "sourceFolder".equals( type ) ) {
-                    // TODO handle forTests
-                } else if ( "library".equals( type ) ) {
-                    final String name = extract( dependency, "@name", "Cannot extract library dependency name" );
-                    final LibraryDependency.Level level;
-                    try {
-                        level = LibraryDependency.Level
-                                .parse( extract( dependency, "@level", "Cannot extract library dependency level" ) );
-                    } catch ( IllegalArgumentException e ) {
-                        throw new ParseException(
-                                "Cannot parse library dependency level for library \"" + name + "\"" );
-                    }
-                    module.depdencies.add( new LibraryDependency( level, name ) );
-                } else if ( "module".equals( type ) ) {
-                    module.depdencies.add( new ModuleDependency(
-                            extract( dependency, "@module-name", "Cannot extract module dependency name" ) ) );
-                } else throw new ParseException( "Unrecognized order entry type \"" + type + "\"" );
-            }
-        }
     }
 
     @Override
@@ -171,7 +120,8 @@ public final class Module extends IntelliJParserBase {
         return !( this.contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl )
                 : module.contentRootUrl != null ) &&
                 !( this.depdencies != null ? !depdencies.equals( module.depdencies ) : module.depdencies != null ) &&
-                !( this.descriptor != null ? descriptor.compareTo( module.descriptor ) != 0 : module.descriptor != null ) &&
+                !( this.moduleDescriptor != null ? moduleDescriptor.compareTo( module.moduleDescriptor ) != 0
+                        : module.moduleDescriptor != null ) &&
                 !( this.outputUrl != null ? !outputUrl.equals( module.outputUrl ) : module.outputUrl != null ) &&
                 !( this.sourceUrls != null ? !sourceUrls.equals( module.sourceUrls ) : module.sourceUrls != null ) &&
                 !( this.testOutputUrl != null ? !testOutputUrl.equals( module.testOutputUrl )
@@ -183,7 +133,7 @@ public final class Module extends IntelliJParserBase {
 
     @Override
     public int hashCode() {
-        int result = this.descriptor != null ? descriptor.hashCode() : 0;
+        int result = this.moduleDescriptor != null ? moduleDescriptor.hashCode() : 0;
         result = 31 * result + ( this.outputUrl != null ? outputUrl.hashCode() : 0 );
         result = 31 * result + ( this.testOutputUrl != null ? testOutputUrl.hashCode() : 0 );
         result = 31 * result + ( this.contentRootUrl != null ? contentRootUrl.hashCode() : 0 );
@@ -201,5 +151,53 @@ public final class Module extends IntelliJParserBase {
     @Override
     public String toString() {
         return "IntelliJ IDEA module \"" + getName() + "\"";
+    }
+
+    private class NewModuleRootManagerHandler implements IntelliJParserBase.Handler {
+        @Override
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
+            // Parse module descriptor
+            Module.this.outputUrl = extract( componentNode, "output/@url", "Cannot extract compiler output path" );
+            Module.this.testOutputUrl = extract( componentNode, "output-test/@url",
+                    "Cannot extract compiler test class output path" );
+
+            // Parse source folders
+            Module.this.contentRootUrl = extract( componentNode, "content/@url", "Cannot extract content root path" );
+            for ( final Node sourceFolder : extractAll( componentNode, "content/sourceFolder",
+                    "Cannot extract source folders" ) ) {
+                final String url = extract( sourceFolder, "@url", "Cannot extract source folder URL" );
+                final String testFlag = extract( sourceFolder, "@isTestSource",
+                        "Cannot extract isTestSource flag for source folder" );
+                final Collection<String> list =
+                        "true".equals( testFlag ) ? Module.this.testSourceUrls : Module.this.sourceUrls;
+                list.add( url );
+            }
+
+            // Parse dependencies
+            for ( final Node dependency : extractAll( componentNode, "orderEntry", "Cannot extract dependencies" ) ) {
+                final String type = extract( dependency, "@type", "Cannot extract dependency type" );
+                if ( "inheritedJdk".equals( type ) ) {
+                    // TODO handle JDKs properly
+                } else if ( "sourceFolder".equals( type ) ) {
+                    // TODO handle forTests
+                } else if ( "library".equals( type ) ) {
+                    final String name = extract( dependency, "@name", "Cannot extract library dependency name" );
+                    final LibraryDependency.Level level;
+                    try {
+                        level = LibraryDependency.Level
+                                .parse( extract( dependency, "@level", "Cannot extract library dependency level" ) );
+                    } catch ( IllegalArgumentException ignored ) {
+                        throw new ParseException(
+                                "Cannot parse library dependency level for library \"" + name + "\"" );
+                    }
+                    Module.this.depdencies.add( new LibraryDependency( level, name ) );
+                } else if ( "module".equals( type ) ) {
+                    Module.this.depdencies.add( new ModuleDependency(
+                            extract( dependency, "@module-name",
+                                    "Cannot extract module dependency name" ) ) );
+                } else throw new ParseException( "Unrecognized order entry type \"" + type + "\"" );
+            }
+        }
     }
 }

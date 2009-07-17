@@ -40,7 +40,7 @@ public final class Resolver {
 
             // Override current module with preloaded instance
             if ( module != null ) {
-                this.moduleDescriptorMap.put( module.getDescriptor(), Lazy.from( module ) );
+                this.moduleDescriptorMap.put( module.getModuleDescriptor(), Lazy.from( module ) );
                 this.moduleNameMap.put( module.getName(), module );
             }
         } else {

@@ -25,7 +25,7 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
     protected Modes mode = Modes.names;
 
     public Modes getMode() {
-        return mode;
+        return this.mode;
     }
 
     public void setMode( final Modes mode ) throws IllegalArgumentException {
@@ -36,7 +36,7 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
     }
 
     public String getProperty() {
-        return property;
+        return this.property;
     }
 
     public void setProperty( final String property ) {
@@ -75,7 +75,7 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
                 mapper = new Mapper<Module, Object>() {
                     @Override
                     public Object map( final Module source ) {
-                        return new File( source.getDescriptor() ).getAbsolutePath();
+                        return new File( source.getModuleDescriptor() ).getAbsolutePath();
                     }
                 };
                 break;

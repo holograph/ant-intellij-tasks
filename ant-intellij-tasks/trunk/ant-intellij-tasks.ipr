@@ -22,6 +22,7 @@
         <option name="SPACE_WITHIN_BRACKETS" value="true" />
         <option name="SPACE_WITHIN_ARRAY_INITIALIZER_BRACES" value="true" />
         <option name="SPACE_BEFORE_ARRAY_INITIALIZER_LBRACE" value="true" />
+        <option name="OPTIMIZE_IMPORTS_ON_THE_FLY" value="true" />
         <option name="CALL_PARAMETERS_WRAP" value="1" />
         <option name="METHOD_PARAMETERS_WRAP" value="1" />
         <option name="EXTENDS_LIST_WRAP" value="1" />
