@@ -197,32 +197,32 @@ public final class Resolver {
                 final LibraryDependency library = (LibraryDependency) dependency;
 
                 // Resolve URI according to library level
-                switch ( library.level ) {
+                switch ( library.getLevel() ) {
                     case MODULE:
                         // TODO add support for module dependencies
                         throw new ResolutionException(
-                                "Module library dependencies not supported (dependee=\"" + library.name + "\")." );
+                                "Module library dependencies not supported (dependee=\"" + library.getName() + "\")." );
 
                     case PROJECT:
                         // Assert that a project was specified (we're dealing with project-level libraries)
                         if ( this.project == null )
                             throw new ResolutionException( "Project not specified but module contains " +
-                                    "project library dependencies (dependee=" + library.name + "\")." );
+                                    "project library dependencies (dependee=" + library.getName() + "\")." );
 
                         // Ensure that the project contains the required library
                         final Map<String, Project.Library> libraries = this.project.getLibraries();
-                        if ( !libraries.containsKey( library.name ) )
+                        if ( !libraries.containsKey( library.getName() ) )
                             throw new ResolutionException(
-                                    "Cannot resolve dependency on project library \"" + library.name + "\"" );
+                                    "Cannot resolve dependency on project library \"" + library.getName() + "\"" );
 
                         // Resolve the library and add it to the dependency list
-                        for ( final String uri : libraries.get( library.name ).getClasses() )
+                        for ( final String uri : libraries.get( library.getName() ).getClasses() )
                             dependencies.add( UriUtils.getPath( resolveUriString( uri ) ) );
                         break;
 
                     default:
                         // Safety net (should never happen)
-                        throw new ResolutionException( "Unknown library level \"" + library.level + "\"" );
+                        throw new ResolutionException( "Unknown library level \"" + library.getLevel() + "\"" );
                 }
             }
 
