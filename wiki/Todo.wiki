@@ -1,0 +1,11 @@
+#summary Project to-do list
+
+* JavaDocs for all present code
+* Run on major codebase (e.g. Delver) to test real-world behavior (done on simple codebase)
+* Add packaging support
+** Web facet
+** Project "build JARs on make"
+
+Down the road:
+
+* Obtain samples of non-Java projects and add support
