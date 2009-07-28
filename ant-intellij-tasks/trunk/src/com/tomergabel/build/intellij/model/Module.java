@@ -9,10 +9,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 public final class Module extends IntelliJParserBase {
     private final URI moduleDescriptor;
@@ -22,14 +19,15 @@ public final class Module extends IntelliJParserBase {
     private final Collection<String> sourceUrls;
     private final Collection<String> testSourceUrls;
     private final Collection<Dependency> depdencies;
+    private final Collection<Library> libraries = new HashSet<Library>();
+    private final String name;
 
     public URI getModuleDescriptor() {
         return this.moduleDescriptor;
     }
 
     public String getName() {
-        final String filename = UriUtils.getFilename( this.moduleDescriptor );
-        return filename.lastIndexOf( '.' ) != -1 ? filename.substring( 0, filename.lastIndexOf( '.' ) ) : filename;
+        return this.name;
     }
 
     public URI getModuleRoot() {
@@ -60,6 +58,10 @@ public final class Module extends IntelliJParserBase {
         return Collections.unmodifiableCollection( this.depdencies );
     }
 
+    public Collection<Library> getLibraries() {
+        return this.libraries;
+    }
+
     private Module( final URI moduleDescriptor, final Handler defaultHandler ) throws IllegalArgumentException {
         super( "module", defaultHandler );
 
@@ -68,14 +70,15 @@ public final class Module extends IntelliJParserBase {
             throw new IllegalArgumentException( "The specified module descriptor \"" + moduleDescriptor +
                     "\" does not point to a valid IDEA module file (.iml)" );
 
+        this.name = fileName.lastIndexOf( '.' ) != -1 ? fileName.substring( 0, fileName.lastIndexOf( '.' ) ) : fileName;
         this.moduleDescriptor = moduleDescriptor;
         this.sourceUrls = new HashSet<String>();
         this.testSourceUrls = new HashSet<String>();
         this.depdencies = new HashSet<Dependency>();
 
-
         // Register ignored components
         registerComponentHandler( "FacetManager", ignoreHandler );               // TODO
+        registerComponentHandler( "BuildJarSettings", ignoreHandler );          // TODO
 
         // Register handlers
         registerComponentHandler( "NewModuleRootManager", new NewModuleRootManagerHandler() );
@@ -179,8 +182,14 @@ public final class Module extends IntelliJParserBase {
                 final String type = extract( dependency, "@type", "Cannot extract dependency type" );
                 if ( "inheritedJdk".equals( type ) ) {
                     // TODO handle JDKs properly
+                } else if ( "jdk".equals( type ) ) {
+                    // TODO handle JDKs properly
                 } else if ( "sourceFolder".equals( type ) ) {
                     // TODO handle forTests
+                } else if ( "module-library".equals( type ) ) {
+                    for ( final Node libraryNode : extractAll( dependency, "library",
+                            "Cannot extract module library descriptor" ) )
+                        Module.this.libraries.add( new Library( libraryNode ) );
                 } else if ( "library".equals( type ) ) {
                     final String name = extract( dependency, "@name", "Cannot extract library dependency name" );
                     final LibraryDependency.Level level;

@@ -4,6 +4,7 @@ import com.tomergabel.util.Lazy;
 import com.tomergabel.util.LazyInitializationException;
 import com.tomergabel.util.UriUtils;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -57,11 +58,8 @@ public final class Resolver {
         if ( string == null )
             return null;
 
-        System.err.println( string );
-
         // Expand embedded properties
         final String expandedString = expandProperties( string );
-        System.err.println( expandedString );
         final URI expandedUri;
         try {
             expandedUri = new URI( expandedString );
@@ -155,18 +153,20 @@ public final class Resolver {
                 }
 
                 // Iterate descriptor map. We'll have to lazy-load each module to extract its name
-                for ( final Lazy<Module> candidate : this.moduleDescriptorMap.values() ) {
+                for ( final Map.Entry<URI, Lazy<Module>> candidate : this.moduleDescriptorMap.entrySet() ) {
                     try {
-                        if ( candidate.get().getName().equals( name ) ) {
+                        if ( candidate.getValue().get().getName().equals( name ) ) {
                             // Found! Update named map, add to module list
-                            this.moduleNameMap.put( name, candidate.get() );
-                            modules.add( candidate.get() );
+                            this.moduleNameMap.put( name, candidate.getValue().get() );
+                            modules.add( candidate.getValue().get() );
                             continue dependency;
                         }
                     } catch ( LazyInitializationException e ) {
                         // An error has occured during lazy initialization; since only the module
                         // loader is invoked this can only be a parse error.
-                        throw new ResolutionException( "Failed to parse a project module.", e.getCause() );
+                        throw new ResolutionException(
+                                "Failed to parse module file \"" + new File( candidate.getKey() ).getAbsolutePath() +
+                                        "\".", e.getCause() );
                     }
                 }
 
@@ -210,7 +210,7 @@ public final class Resolver {
                                     "project library dependencies (dependee=" + library.getName() + "\")." );
 
                         // Ensure that the project contains the required library
-                        final Map<String, Project.Library> libraries = this.project.getLibraries();
+                        final Map<String, Library> libraries = this.project.getLibraries();
                         if ( !libraries.containsKey( library.getName() ) )
                             throw new ResolutionException(
                                     "Cannot resolve dependency on project library \"" + library.getName() + "\"" );

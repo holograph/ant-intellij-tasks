@@ -1,6 +1,5 @@
 package com.tomergabel.build.intellij.ant;
 
-import com.tomergabel.build.intellij.model.ResolutionException;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.Path;
 
@@ -21,17 +20,25 @@ public class ResolveModuleClasspathTask extends ModuleTaskBase {
         }
 
         // Resolve classpath
+        final String moduleName;
+        try {
+            moduleName = module().getName();
+        } catch ( Exception e ) {
+            error( "Cannot resolve module name.", e );
+            return;
+        }
+
         final Collection<String> resolved;
         try {
             resolved = resolver().resolveModuleClasspath();
-        } catch ( ResolutionException e ) {
-            error( "Cannot resolve module classpath.", e );
+        } catch ( Exception e ) {
+            error( "Cannot resolve module classpath for module \"" + moduleName + "\".", e );
             return;
         }
 
         // Create path object and add reference by name
         final Path classpath = new Path( getProject() );
-        for ( String path : resolved )
+        for ( final String path : resolved )
             classpath.append( new Path( getProject(), path ) );
         getProject().addReference( this.pathId, classpath );
     }

@@ -13,6 +13,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * A parser for IntelliJ IDEA project (.ipr) files.
+ */
 public final class Project extends IntelliJParserBase {
     private final URI projectRoot;
     private boolean relativePaths;
@@ -22,32 +25,6 @@ public final class Project extends IntelliJParserBase {
     private final Map<String, Library> libraries = new HashMap<String, Library>();
     private final Collection<String> resourceExtensions = new HashSet<String>();
     private final Collection<String> resourceWildcardPatterns = new HashSet<String>();
-
-    public static class Library {
-        private final String name;
-        private final Collection<String> classes;
-        private final Collection<String> javadoc;
-        private final Collection<String> sources;
-
-        public Library( final String name ) {
-            this.name = name;
-            this.classes = new HashSet<String>();
-            this.javadoc = new HashSet<String>();
-            this.sources = new HashSet<String>();
-        }
-
-        public Collection<String> getClasses() {
-            return Collections.unmodifiableCollection( this.classes );
-        }
-
-        public Collection<String> getJavadoc() {
-            return Collections.unmodifiableCollection( this.javadoc );
-        }
-
-        public Collection<String> getSources() {
-            return Collections.unmodifiableCollection( this.sources );
-        }
-    }
 
     private class ProjectRootManagerHandler implements Handler {
         @Override
@@ -83,24 +60,13 @@ public final class Project extends IntelliJParserBase {
         public void parse( final String componentName, final Node componentNode )
                 throws IllegalArgumentException, ParseException {
             for ( final Node libraryNode : extractAll( componentNode, "library", "Cannot extract libraries" ) ) {
-                // Parse library data
-                final Library library = new Library( extract( libraryNode, "@name", "Cannot extract library name" ) );
-                iterateRoots( libraryNode, library.name, "CLASSES", library.classes );
-                iterateRoots( libraryNode, library.name, "JAVADOC", library.javadoc );
-                iterateRoots( libraryNode, library.name, "SOURCES", library.sources );
-                Project.this.libraries.put( library.name, library );
+                final Library library = new Library( libraryNode );
+                if ( library.getName() == null )
+                    throw new ParseException( "Anonymous libraries cannot be specified on the project level." );
+                Project.this.libraries.put( library.getName(), library );
             }
         }
 
-        private void iterateRoots( final Node libraryNode, final String libraryName, final String node,
-                                   final Collection<String> target )
-                throws ParseException {
-            for ( final Node root : extractAll( libraryNode, node + "/root",
-                    "Cannot extract " + node.toLowerCase() + " root paths for library \"" + libraryName + "\"" ) )
-                target.add( extract( root, "@url",
-                        "Cannot extract " + node.toLowerCase() + " root path URL for library \"" + libraryName +
-                                "\"" ) );
-        }
     }
 
     static final Pattern extensionPattern = Pattern.compile( "\\.\\+\\\\\\.\\((.*)\\)" );
