@@ -36,18 +36,31 @@ public class TaskBase extends Task {
 
     public static final String NEWLINE_SEPARATOR = System.getProperty( "line.separator" );
 
-    public String formatErrorMessage( final String message, final Throwable cause ) {
+    public String formatErrorMessage( final String message, Throwable cause ) {
         final StringWriter sw = new StringWriter();
+        boolean first = true;
         if ( message != null ) {
             sw.write( message );
-            if ( cause != null ) {
+            first = false;
+        }
+
+        while ( cause != null ) {
+            if ( first )
+                first = false;
+            else {
                 sw.write( NEWLINE_SEPARATOR );
                 sw.write( "Caused by: " );
             }
+
+            if ( cause instanceof RuntimeException ) {
+                cause.printStackTrace( new PrintWriter( sw, true ) );
+                break;
+            }
+
+            sw.write( cause.getMessage() );
+            cause = cause.getCause();
         }
-        if ( cause != null )
-            cause.printStackTrace( new PrintWriter( sw, true ) );
-        
+
         return sw.toString();
     }
 }

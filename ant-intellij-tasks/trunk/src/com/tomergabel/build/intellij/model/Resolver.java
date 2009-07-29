@@ -238,6 +238,10 @@ public final class Resolver {
     }
 
     public Collection<String> resolveModuleClasspath() throws ResolutionException {
+        // Assert that a module has been specified
+        if ( this.module == null )
+            throw new ResolutionException( "Cannot resolve module dependencies, module not specified" );
+
         final Collection<String> classpath = new HashSet<String>();
 
         // Iterate all module dependencies. Aggregate each dependency's classpath
@@ -245,13 +249,29 @@ public final class Resolver {
         for ( final Module dependency : resolveModuleDependencies() ) {
             final Resolver dependencyResolver = new Resolver( this.project, dependency );
             classpath.addAll( dependencyResolver.resolveModuleClasspath() );
-            classpath.add( UriUtils.getPath( dependencyResolver.resolveUriString( dependency.getOutputUrl() ) ) );
+            classpath.add( dependencyResolver.resolveModuleOutput() );
         }
 
         // Iterate all library dependencies add add them to the classpath. 
         classpath.addAll( resolveLibraryDependencies() );
 
         return Collections.unmodifiableCollection( classpath );
+    }
+
+    public String resolveModuleOutput() throws ResolutionException {
+        // Assert that a module has been specified
+        if ( this.module == null )
+            throw new ResolutionException( "Cannot resolve module dependencies, module not specified" );
+
+        if ( this.module.getOutputUrl() != null )
+            return UriUtils.getPath( resolveUriString( this.module.getOutputUrl() ) );
+        if ( this.project == null )
+            throw new ResolutionException(
+                    "Module does not specify an output directory and project was not specified." );
+        if ( this.project.getOutputUrl() == null )
+            throw new ResolutionException(
+                    "Module does not specify an output directory and the project does not specify a default." );
+        return UriUtils.getPath( resolveUriString( this.project.getOutputUrl() ) );
     }
 
     public static Collection<String> resolveClasspath( final Project project, final Module module )

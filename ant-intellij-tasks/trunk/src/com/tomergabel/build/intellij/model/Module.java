@@ -18,9 +18,10 @@ public final class Module extends IntelliJParserBase {
     private String contentRootUrl;
     private final Collection<String> sourceUrls;
     private final Collection<String> testSourceUrls;
-    private final Collection<Dependency> depdencies;
+    private final Collection<Dependency> dependencies;
     private final Collection<Library> libraries = new HashSet<Library>();
     private final String name;
+    private boolean inheritOutput = true;
 
     public URI getModuleDescriptor() {
         return this.moduleDescriptor;
@@ -46,6 +47,10 @@ public final class Module extends IntelliJParserBase {
         return this.contentRootUrl;
     }
 
+    public boolean isOutputInherited() {
+        return this.inheritOutput;
+    }
+
     public Collection<String> getSourceUrls() {
         return Collections.unmodifiableCollection( this.sourceUrls );
     }
@@ -55,7 +60,7 @@ public final class Module extends IntelliJParserBase {
     }
 
     public Collection<Dependency> getDependencies() {
-        return Collections.unmodifiableCollection( this.depdencies );
+        return Collections.unmodifiableCollection( this.dependencies );
     }
 
     public Collection<Library> getLibraries() {
@@ -74,7 +79,7 @@ public final class Module extends IntelliJParserBase {
         this.moduleDescriptor = moduleDescriptor;
         this.sourceUrls = new HashSet<String>();
         this.testSourceUrls = new HashSet<String>();
-        this.depdencies = new HashSet<Dependency>();
+        this.dependencies = new HashSet<Dependency>();
 
         // Register ignored components
         registerComponentHandler( "FacetManager", ignoreHandler );               // TODO
@@ -113,6 +118,7 @@ public final class Module extends IntelliJParserBase {
         return module;
     }
 
+    @SuppressWarnings( { "RedundantIfStatement" } )
     @Override
     public boolean equals( final Object o ) {
         if ( this == o ) return true;
@@ -120,18 +126,23 @@ public final class Module extends IntelliJParserBase {
 
         final Module module = (Module) o;
 
-        return !( this.contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl )
-                : module.contentRootUrl != null ) &&
-                !( this.depdencies != null ? !depdencies.equals( module.depdencies ) : module.depdencies != null ) &&
-                !( this.moduleDescriptor != null ? moduleDescriptor.compareTo( module.moduleDescriptor ) != 0
-                        : module.moduleDescriptor != null ) &&
-                !( this.outputUrl != null ? !outputUrl.equals( module.outputUrl ) : module.outputUrl != null ) &&
-                !( this.sourceUrls != null ? !sourceUrls.equals( module.sourceUrls ) : module.sourceUrls != null ) &&
-                !( this.testOutputUrl != null ? !testOutputUrl.equals( module.testOutputUrl )
-                        : module.testOutputUrl != null ) &&
-                !( this.testSourceUrls != null ? !testSourceUrls.equals( module.testSourceUrls )
-                        : module.testSourceUrls != null );
+        if ( this.inheritOutput != module.inheritOutput ) return false;
+        if ( this.contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl ) : module.contentRootUrl != null )
+            return false;
+        if ( this.dependencies != null ? !dependencies.equals( module.dependencies ) : module.dependencies != null )
+            return false;
+        if ( this.libraries != null ? !libraries.equals( module.libraries ) : module.libraries != null ) return false;
+        if ( this.moduleDescriptor != null ? !moduleDescriptor.equals( module.moduleDescriptor )
+                : module.moduleDescriptor != null ) return false;
+        if ( this.name != null ? !name.equals( module.name ) : module.name != null ) return false;
+        if ( this.outputUrl != null ? !outputUrl.equals( module.outputUrl ) : module.outputUrl != null ) return false;
+        if ( this.sourceUrls != null ? !sourceUrls.equals( module.sourceUrls ) : module.sourceUrls != null ) return false;
+        if ( this.testOutputUrl != null ? !testOutputUrl.equals( module.testOutputUrl ) : module.testOutputUrl != null )
+            return false;
+        if ( this.testSourceUrls != null ? !testSourceUrls.equals( module.testSourceUrls ) : module.testSourceUrls != null )
+            return false;
 
+        return true;
     }
 
     @Override
@@ -142,7 +153,10 @@ public final class Module extends IntelliJParserBase {
         result = 31 * result + ( this.contentRootUrl != null ? contentRootUrl.hashCode() : 0 );
         result = 31 * result + ( this.sourceUrls != null ? sourceUrls.hashCode() : 0 );
         result = 31 * result + ( this.testSourceUrls != null ? testSourceUrls.hashCode() : 0 );
-        result = 31 * result + ( this.depdencies != null ? depdencies.hashCode() : 0 );
+        result = 31 * result + ( this.dependencies != null ? dependencies.hashCode() : 0 );
+        result = 31 * result + ( this.libraries != null ? libraries.hashCode() : 0 );
+        result = 31 * result + ( this.name != null ? name.hashCode() : 0 );
+        result = 31 * result + ( this.inheritOutput ? 1 : 0 );
         return result;
     }
 
@@ -160,10 +174,22 @@ public final class Module extends IntelliJParserBase {
         @Override
         public void parse( final String componentName, final Node componentNode )
                 throws IllegalArgumentException, ParseException {
+
             // Parse module descriptor
+            Module.this.inheritOutput = "true".equals( extract( componentNode, "@inherit-compiler-output",
+                    "Cannot extract output inheritence attribute" ) );
             Module.this.outputUrl = extract( componentNode, "output/@url", "Cannot extract compiler output path" );
             Module.this.testOutputUrl = extract( componentNode, "output-test/@url",
                     "Cannot extract compiler test class output path" );
+
+            // Ensure module output can be resolved
+            if ( Module.this.outputUrl == null && !Module.this.inheritOutput )
+                throw new ParseException( "Module output not specified and project output inheritence " +
+                        "is disabled, cannot resolve module output directory." );
+
+            // Normalize test output
+            if ( Module.this.testOutputUrl == null && !Module.this.inheritOutput )
+                    Module.this.testOutputUrl = Module.this.outputUrl;
 
             // Parse source folders
             Module.this.contentRootUrl = extract( componentNode, "content/@url", "Cannot extract content root path" );
@@ -200,9 +226,9 @@ public final class Module extends IntelliJParserBase {
                         throw new ParseException(
                                 "Cannot parse library dependency level for library \"" + name + "\"" );
                     }
-                    Module.this.depdencies.add( new LibraryDependency( level, name ) );
+                    Module.this.dependencies.add( new LibraryDependency( level, name ) );
                 } else if ( "module".equals( type ) ) {
-                    Module.this.depdencies.add( new ModuleDependency(
+                    Module.this.dependencies.add( new ModuleDependency(
                             extract( dependency, "@module-name",
                                     "Cannot extract module dependency name" ) ) );
                 } else throw new ParseException( "Unrecognized order entry type \"" + type + "\"" );

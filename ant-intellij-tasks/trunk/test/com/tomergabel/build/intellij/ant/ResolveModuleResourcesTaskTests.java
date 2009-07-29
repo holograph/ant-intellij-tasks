@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import java.io.File;
 
+@SuppressWarnings( { "ConstantConditions" } )
 public class ResolveModuleResourcesTaskTests {
     @Test
     public void execute_ModuleNotSpecified_ThrowsBuildException() {
@@ -33,7 +34,7 @@ public class ResolveModuleResourcesTaskTests {
     @Test
     public void execute_PathIdNotSpecified_ThrowsBuildException() throws Exception {
         final ResolveModuleResourcesTask task = new ResolveModuleResourcesTask();
-        task.setModule( MockModel.selfContained.get() );
+        task.setModule( MockModel.Modules.selfContained.get() );
         try {
             task.execute();
             fail( "Module not specified, BuildException expected." );
@@ -46,7 +47,7 @@ public class ResolveModuleResourcesTaskTests {
     public void execute_PathIdNotSpecified_NoFailOnError_NothingHappens() throws Exception {
         final ResolveModuleResourcesTask task = new ResolveModuleResourcesTask();
         task.setFailonerror( false );
-        task.setModule( MockModel.selfContained.get() );
+        task.setModule( MockModel.Modules.selfContained.get() );
         task.execute();
     }
 

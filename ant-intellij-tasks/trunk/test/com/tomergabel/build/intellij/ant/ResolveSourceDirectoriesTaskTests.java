@@ -46,7 +46,7 @@ public class ResolveSourceDirectoriesTaskTests {
     public void resolveSourceDirectories_OutputProjectRelativeAndProjectSpecified_Both_DirectoriesResolvedCorrectly()
             throws Exception {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
-        task.setProject( MockModel.project.get() );
+        task.setProject( MockModel.Projects.allModules.get() );
         task.setModuleDescriptor( this.getClass().getResource( "output-project-relative.iml" ).toURI() );
         assertSetEquality( "Source directories not resolved correctly.", new String[] {
                 new File( task.project().getProjectRoot().resolve( "src" ) ).getAbsolutePath(),

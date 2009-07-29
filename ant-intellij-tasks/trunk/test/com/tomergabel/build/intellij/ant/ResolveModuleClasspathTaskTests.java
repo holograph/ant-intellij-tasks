@@ -1,6 +1,8 @@
 package com.tomergabel.build.intellij.ant;
 
-import com.tomergabel.build.intellij.model.MockModel;
+import static com.tomergabel.build.intellij.model.MockModel.*;
+import static com.tomergabel.build.intellij.model.MockModel.Modules.*;
+import static com.tomergabel.build.intellij.model.MockModel.Projects.*;
 import com.tomergabel.build.intellij.model.Resolver;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import static junit.framework.Assert.assertNotNull;
@@ -14,6 +16,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 
+@SuppressWarnings( { "ConstantConditions" } )
 public class ResolveModuleClasspathTaskTests {
 
     @Test
@@ -31,7 +34,7 @@ public class ResolveModuleClasspathTaskTests {
     public void testExecute_DependantModuleWithNoProjectSpecified_ThrowsBuildException() throws Exception {
         // Build task
         final ResolveModuleClasspathTask task = new ResolveModuleClasspathTask();
-        task.setModule( MockModel.dependantModule.get() );
+        task.setModule( dependantModule.get() );
         try {
             execute( task );
             fail( "Module not specified, expected BuildException" );
@@ -44,7 +47,7 @@ public class ResolveModuleClasspathTaskTests {
     public void testExecute_ProjectLibraryDependencyWithNoProjectSpecified_ThrowsBuildException() throws Exception {
         // Build task
         final ResolveModuleClasspathTask task = new ResolveModuleClasspathTask();
-        task.setModule( MockModel.dependantLibrary.get() );
+        task.setModule( dependantLibrary.get() );
         try {
             execute( task );
             fail( "Module not specified, expected BuildException" );
@@ -56,8 +59,8 @@ public class ResolveModuleClasspathTaskTests {
     @Test
     public void testExecute_DependantModuleWithProjectSpecifiedButNoPathId_ThrowsBuildException() throws Exception {
         final ResolveModuleClasspathTask task = new ResolveModuleClasspathTask();
-        task.setModule( MockModel.dependantModule.get() );
-        task.setProject( MockModel.project.get() );
+        task.setModule( dependantModule.get() );
+        task.setProject( allModules.get() );
         try {
             execute( task );
             fail( "Module not specified, expected BuildException" );
@@ -69,8 +72,8 @@ public class ResolveModuleClasspathTaskTests {
     @Test
     public void testExecute_ProjectLibraryDependencyWithProjectSpecifiedButNoPathId_ThrowsBuildException() throws Exception {
         final ResolveModuleClasspathTask task = new ResolveModuleClasspathTask();
-        task.setModule( MockModel.dependantLibrary.get() );
-        task.setProject( MockModel.project.get() );
+        task.setModule( dependantLibrary.get() );
+        task.setProject( allModules.get() );
         try {
             execute( task );
             fail( "Module not specified, expected BuildException" );
@@ -82,8 +85,8 @@ public class ResolveModuleClasspathTaskTests {
     @Test
     public void testExecute_DependantModuleWithProjectAndPathIdSpecified_CorrectClasspathResolved() throws Exception {
         final ResolveModuleClasspathTask task = new ResolveModuleClasspathTask();
-        task.setModule( MockModel.dependantModule.get() );
-        task.setProject( MockModel.project.get() );
+        task.setModule( dependantModule.get() );
+        task.setProject( allModules.get() );
         task.setPathId( "testpath" );
         final Project project = execute( task );
 
@@ -92,15 +95,15 @@ public class ResolveModuleClasspathTaskTests {
         assertNotNull( "Classpath was not generated.", object );
         assertTrue( "Generated object is not a Path.", object instanceof Path );
         assertSetEquality( "Classpath generated incorrectly.",
-                new Resolver( MockModel.project.get(), MockModel.dependantModule.get() ).resolveModuleClasspath(),
+                new Resolver( allModules.get(), dependantModule.get() ).resolveModuleClasspath(),
                 ( (Path) object ).list() );
     }
 
     @Test
     public void testExecute_ProjectLibraryDependencyWithProjectAndPathIdSpecified_CorrectClasspathResolved() throws Exception {
         final ResolveModuleClasspathTask task = new ResolveModuleClasspathTask();
-        task.setModule( MockModel.dependantLibrary.get() );
-        task.setProject( MockModel.project.get() );
+        task.setModule( dependantLibrary.get() );
+        task.setProject( allModules.get() );
         task.setPathId( "testpath" );
         final Project project = execute( task );
 
@@ -109,7 +112,7 @@ public class ResolveModuleClasspathTaskTests {
         assertNotNull( "Classpath was not generated.", object );
         assertTrue( "Generated object is not a Path.", object instanceof Path );
         assertSetEquality( "Classpath generated incorrectly.",
-                Collections.singleton( MockModel.junitLibraryPath.get() ),
+                Collections.singleton( junitLibraryPath.get() ),
                 ( (Path) object ).list() );
     }
 

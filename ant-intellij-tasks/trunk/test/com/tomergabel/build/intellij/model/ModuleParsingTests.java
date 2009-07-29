@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import java.net.URI;
 
-public class ModuleFileParseTests {
+public class ModuleParsingTests {
     private URI resource;
     private Module module;
 
@@ -52,5 +52,10 @@ public class ModuleFileParseTests {
                 this.module.getOutputUrl() );
         assertEquals( "Compiler test class output URL incorrectly parsed.", "file://$MODULE_DIR$/bin",
                 this.module.getTestOutputUrl() );
+    }
+
+    @Test
+    public void testOutputInheritenceExtraction() {
+        assertEquals( "Module output inheritence incorrectly parsed.", true, this.module.isOutputInherited() );
     }
 }

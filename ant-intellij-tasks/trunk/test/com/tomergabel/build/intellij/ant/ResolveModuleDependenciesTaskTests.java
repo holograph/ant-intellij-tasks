@@ -1,6 +1,8 @@
 package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.MockModel;
+import static com.tomergabel.build.intellij.model.MockModel.Modules.dependantModule;
+import static com.tomergabel.build.intellij.model.MockModel.Modules.dependee;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import org.apache.tools.ant.BuildException;
 import static org.junit.Assert.assertEquals;
@@ -14,7 +16,7 @@ public class ResolveModuleDependenciesTaskTests {
     public void testDepdencyResolution_ProjectNotSpecifiedWithNoModuleDependencies_EmptyCollectionReturned()
             throws Exception {
         final ResolveModuleDependenciesTask task = new ResolveModuleDependenciesTask();
-        task.setModule( MockModel.dependee.get() );
+        task.setModule( dependee.get() );
         assertEquals( "Depdency list incorrectly parsed.", 0, task.resolveModules().size() );
     }
 
@@ -22,7 +24,7 @@ public class ResolveModuleDependenciesTaskTests {
     public void testDepdencyResolution_ProjectNotSpecifiedWithModuleDependencies_BuildExceptionIsThrown()
             throws Exception {
         final ResolveModuleDependenciesTask task = new ResolveModuleDependenciesTask();
-        task.setModule( MockModel.dependantModule.get() );
+        task.setModule( dependantModule.get() );
         try {
             task.resolveModules();
             fail( "Resolution did not fail even though project file was not specified and " +
@@ -37,7 +39,7 @@ public class ResolveModuleDependenciesTaskTests {
             throws Exception {
         final ResolveModuleDependenciesTask task = new ResolveModuleDependenciesTask();
         task.setFailonerror( false );
-        task.setModule( MockModel.dependantModule.get() );
+        task.setModule( dependantModule.get() );
         task.resolveModules();
     }
     
@@ -45,9 +47,9 @@ public class ResolveModuleDependenciesTaskTests {
     public void testDepdencyResolution_ProjectSpecifiedWithModuleDependencies_DependenciesResolvedCorrectly()
             throws Exception {
         final ResolveModuleDependenciesTask task = new ResolveModuleDependenciesTask();
-        task.setModule( MockModel.dependantModule.get() );
-        task.setProject( MockModel.project.get() );
-        assertSetEquality( "Model dependency resolution failed.", Collections.singleton( MockModel.dependee.get() ),
+        task.setModule( dependantModule.get() );
+        task.setProject( MockModel.Projects.allModules.get() );
+        assertSetEquality( "Model dependency resolution failed.", Collections.singleton( dependee.get() ),
                 task.resolveModules() );
     }
 }
