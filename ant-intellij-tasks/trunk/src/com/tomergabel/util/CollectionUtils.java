@@ -1,9 +1,6 @@
 package com.tomergabel.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 
 public final class CollectionUtils {
     private static final Object DEFAULT_JOIN_SEPARATOR = ',';
@@ -16,11 +13,11 @@ public final class CollectionUtils {
         private final Iterator<T> iterator;
         private final Mapper<T, U> mapper;
 
-        public MappingIterator( Iterable<T> source, Mapper<T, U> mapper ) {
+        public MappingIterator( final Iterable<T> source, final Mapper<T, U> mapper ) {
             this( source.iterator(), mapper );
         }
 
-        public MappingIterator( Iterator<T> iterator, Mapper<T, U> mapper ) {
+        public MappingIterator( final Iterator<T> iterator, final Mapper<T, U> mapper ) {
             this.iterator = iterator;
             this.mapper = mapper;
         }
@@ -55,7 +52,7 @@ public final class CollectionUtils {
 
             @Override
             public boolean contains( final Object o ) {
-                for ( U item : this )
+                for ( final U item : this )
                     if ( item == null ? o == null : item.equals( o ) )
                         return true;
                 return false;
@@ -78,7 +75,7 @@ public final class CollectionUtils {
                     return (V[]) toArray();
                 int index = 0;
                 try {
-                    for ( T item : source )
+                    for ( final T item : source )
                         a[ index++ ] = (V) mapper.map( item );
                 } catch ( ClassCastException e ) {
                     throw new ArrayStoreException( e.getMessage() );
@@ -100,7 +97,7 @@ public final class CollectionUtils {
 
             @Override
             public boolean containsAll( final Collection<?> c ) {
-                for ( Object o : c )
+                for ( final Object o : c )
                     if ( !contains( o ) )
                         return false;
                 return true;
@@ -137,15 +134,15 @@ public final class CollectionUtils {
         };
     }
 
-    public static <T> String join( boolean renderNulls, T[]... values ) {
+    public static <T> String join( final boolean renderNulls, final T[]... values ) {
         return join( Arrays.asList( values ), DEFAULT_JOIN_SEPARATOR, renderNulls );
     }
 
-    public static <T> String join( Object separator, T[]... values ) {
+    public static <T> String join( final Object separator, final T[]... values ) {
         return join( Arrays.asList( values ), separator, DEFAULT_JOIN_NULL_BEHAVIOR );
     }
 
-    public static <T> String join( boolean renderNulls, Object separator, T[]... values ) {
+    public static <T> String join( final boolean renderNulls, final Object separator, final T[]... values ) {
         return join( Arrays.asList( values ), separator, renderNulls );
     }
 
@@ -165,7 +162,7 @@ public final class CollectionUtils {
         final StringBuilder sb = new StringBuilder();
         boolean first = true;
 
-        for ( T value : source ) {
+        for ( final T value : source ) {
             if ( value == null && !renderNulls )
                 continue;
             
@@ -177,5 +174,44 @@ public final class CollectionUtils {
             sb.append( value );
         }
         return sb.toString();
+    }
+
+    public static <T> List<T> toList( final Iterator<T> iterator ) {
+        final List<T> list = new ArrayList<T>();
+        while ( iterator.hasNext() )
+            list.add( iterator.next() );
+        return list;
+    }
+
+    public static <T> boolean setEquals( final T[] expected, final Iterator<T> actual ) {
+        return setEquals( Arrays.asList( expected ), toList( actual ) );
+    }
+
+    public static <T> boolean setEquals( final T[] expected, final Collection<T> actual ) {
+        return setEquals( Arrays.asList( expected ), actual );
+    }
+
+    public static <T> boolean setEquals( final T[] expected, final T[] actual ) {
+        return setEquals( Arrays.asList( expected ), Arrays.asList( actual ) );
+    }
+
+    public static <T> boolean setEquals( final Collection<T> expected, final Collection<T> actual ) {
+        if ( expected == null )
+            return actual == null;
+        if ( actual == null )
+            return false;
+
+        final HashSet<T> expectedSet = new HashSet<T>( expected );
+        final HashSet<T> actualSet = new HashSet<T>( actual );
+        expectedSet.removeAll( actual );
+        actualSet.removeAll( expected );
+        return expectedSet.size() == 0 && actualSet.size() == 0;
+    }
+
+    public static <T> int deepHashCode( final Iterable<T> stream ) {
+        int hash = 0;
+        for ( final T next : stream )
+            hash = 31 * hash + ( next == null ? 0 : next.hashCode() );
+        return hash;
     }
 }

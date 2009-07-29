@@ -6,50 +6,43 @@ public final class TestUtils {
     private TestUtils() {
     }
 
-    private static <T> Collection<T> toCollection( final Iterator<T> iterator ) {
-        final List<T> list = new ArrayList<T>();
-        while ( iterator.hasNext() )
-            list.add( iterator.next() );
-        return list;
+    public static <T> void assertSetEquality( final T[] expected, final Iterator<T> actual ) {
+        assertSetEquality( null, expected, CollectionUtils.toList( actual ) );
     }
 
-    public static <T> void assertSetEquality( T[] expected, Iterator<T> actual ) {
-        assertSetEquality( null, expected, toCollection( actual ) );
+    public static <T> void assertSetEquality( final String message, final T[] expected, final Iterator<T> actual ) {
+        assertSetEquality( message, expected, CollectionUtils.toList( actual ) );
     }
 
-    public static <T> void assertSetEquality( String message, T[] expected, Iterator<T> actual ) {
-        assertSetEquality( null, expected, toCollection( actual ) );
-    }
-
-    public static <T> void assertSetEquality( Collection<T> expected, T[] actual ) {
+    public static <T> void assertSetEquality( final Collection<T> expected, final T[] actual ) {
         assertSetEquality( null, expected, actual );
     }
 
-    public static <T> void assertSetEquality( T[] expected, Collection<T> actual ) {
+    public static <T> void assertSetEquality( final T[] expected, final Collection<T> actual ) {
         assertSetEquality( null, expected, actual );
     }
 
-    public static <T> void assertSetEquality( T[] expected, T[] actual ) {
+    public static <T> void assertSetEquality( final T[] expected, final T[] actual ) {
         assertSetEquality( null, expected, actual );
     }
 
-    public static <T> void assertSetEquality( String message, Collection<T> expected, T[] actual ) {
+    public static <T> void assertSetEquality( final String message, final Collection<T> expected, final T[] actual ) {
         assertSetEquality( message, expected, Arrays.asList( actual ) );
     }
 
-    public static <T> void assertSetEquality( String message, T[] expected, Collection<T> actual ) {
+    public static <T> void assertSetEquality( final String message, final T[] expected, final Collection<T> actual ) {
         assertSetEquality( message, Arrays.asList( expected ), actual );
     }
 
-    public static <T> void assertSetEquality( String message, T[] expected, T[] actual ) {
+    public static <T> void assertSetEquality( final String message, final T[] expected, final T[] actual ) {
         assertSetEquality( message, Arrays.asList( expected ), Arrays.asList( actual ) );
     }
 
-    public static <T> void assertSetEquality( Collection<T> expected, Collection<T> actual ) {
+    public static <T> void assertSetEquality( final Collection<T> expected, final Collection<T> actual ) {
         assertSetEquality( null, expected, actual );
     }
 
-    public static <T> void assertSetEquality( String message, Collection<T> expected, Collection<T> actual ) {
+    public static <T> void assertSetEquality( final String message, final Collection<T> expected, final Collection<T> actual ) {
         final HashSet<T> expectedSet = new HashSet<T>( expected );
         final HashSet<T> actualSet = new HashSet<T>( actual );
         expectedSet.removeAll( actual );

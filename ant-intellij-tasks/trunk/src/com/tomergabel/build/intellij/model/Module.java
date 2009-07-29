@@ -1,5 +1,7 @@
 package com.tomergabel.build.intellij.model;
 
+import static com.tomergabel.util.CollectionUtils.setEquals;
+import static com.tomergabel.util.CollectionUtils.deepHashCode;
 import com.tomergabel.util.UriUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -9,7 +11,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
 
 public final class Module extends IntelliJParserBase {
     private final URI moduleDescriptor;
@@ -129,17 +134,16 @@ public final class Module extends IntelliJParserBase {
         if ( this.inheritOutput != module.inheritOutput ) return false;
         if ( this.contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl ) : module.contentRootUrl != null )
             return false;
-        if ( this.dependencies != null ? !dependencies.equals( module.dependencies ) : module.dependencies != null )
-            return false;
-        if ( this.libraries != null ? !libraries.equals( module.libraries ) : module.libraries != null ) return false;
+        if ( !setEquals( this.libraries, module.libraries )  ) return false;
+        if ( !setEquals( this.dependencies, module.dependencies ) ) return false;
         if ( this.moduleDescriptor != null ? !moduleDescriptor.equals( module.moduleDescriptor )
                 : module.moduleDescriptor != null ) return false;
         if ( this.name != null ? !name.equals( module.name ) : module.name != null ) return false;
         if ( this.outputUrl != null ? !outputUrl.equals( module.outputUrl ) : module.outputUrl != null ) return false;
-        if ( this.sourceUrls != null ? !sourceUrls.equals( module.sourceUrls ) : module.sourceUrls != null ) return false;
+        if ( !setEquals( this.sourceUrls, module.sourceUrls ) ) return false;
         if ( this.testOutputUrl != null ? !testOutputUrl.equals( module.testOutputUrl ) : module.testOutputUrl != null )
             return false;
-        if ( this.testSourceUrls != null ? !testSourceUrls.equals( module.testSourceUrls ) : module.testSourceUrls != null )
+        if ( !setEquals( this.testSourceUrls, module.testSourceUrls ) )
             return false;
 
         return true;
@@ -151,10 +155,10 @@ public final class Module extends IntelliJParserBase {
         result = 31 * result + ( this.outputUrl != null ? outputUrl.hashCode() : 0 );
         result = 31 * result + ( this.testOutputUrl != null ? testOutputUrl.hashCode() : 0 );
         result = 31 * result + ( this.contentRootUrl != null ? contentRootUrl.hashCode() : 0 );
-        result = 31 * result + ( this.sourceUrls != null ? sourceUrls.hashCode() : 0 );
-        result = 31 * result + ( this.testSourceUrls != null ? testSourceUrls.hashCode() : 0 );
-        result = 31 * result + ( this.dependencies != null ? dependencies.hashCode() : 0 );
-        result = 31 * result + ( this.libraries != null ? libraries.hashCode() : 0 );
+        result = 31 * result + deepHashCode( this.sourceUrls );
+        result = 31 * result + deepHashCode( this.testSourceUrls );
+        result = 31 * result + deepHashCode( this.dependencies );
+        result = 31 * result + deepHashCode( this.libraries );
         result = 31 * result + ( this.name != null ? name.hashCode() : 0 );
         result = 31 * result + ( this.inheritOutput ? 1 : 0 );
         return result;
