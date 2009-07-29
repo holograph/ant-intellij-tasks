@@ -132,7 +132,10 @@ public final class Project extends IntelliJParserBase {
         registerComponentHandler( "VcsDirectoryMappings", ignoreHandler );                  // TODO
         registerComponentHandler( "IdProvider", ignoreHandler );
         registerComponentHandler( "Palette2", ignoreHandler );
+        registerComponentHandler( "EntryPointsManager", ignoreHandler );
+        registerComponentHandler( "UMLDiagramComponent", ignoreHandler );
         registerComponentHandler( "ResourceManagerContainer", ignoreHandler );              // TODO
+        registerComponentHandler( "FacetAutodetectingManager", ignoreHandler );             // TODO
         registerComponentHandler( "WebServicesPlugin", ignoreHandler );                     // TODO for package
 
         // Register handlers
