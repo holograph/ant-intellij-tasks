@@ -62,7 +62,7 @@ public final class Resolver {
         final String expandedString = expandProperties( string );
         final URI expandedUri;
         try {
-            expandedUri = new URI( expandedString );
+            expandedUri = new URI( expandedString ).normalize();
         } catch ( URISyntaxException e ) {
             throw new ResolutionException( "Invalid expanded URI generated: " + expandedString, e );
         }

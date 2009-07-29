@@ -1,6 +1,9 @@
 package com.tomergabel.build.intellij.ant;
 
-import com.tomergabel.build.intellij.model.MockModel;
+import static com.tomergabel.build.intellij.model.MockModel.Modules.outputModuleRelative;
+import static com.tomergabel.build.intellij.model.MockModel.Modules.outputProjectRelative;
+import static com.tomergabel.build.intellij.model.MockModel.Projects;
+import com.tomergabel.util.LazyInitializationException;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import static junit.framework.Assert.assertNull;
 import org.apache.tools.ant.BuildException;
@@ -21,9 +24,9 @@ public class ResolveSourceDirectoriesTaskTests {
 
     @Test
     public void resolveSourceDirectories_OutputProjectRelativeButProjectNotSpecified_BuildExceptionThrown()
-            throws URISyntaxException {
+            throws URISyntaxException, LazyInitializationException {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
-        task.setModuleDescriptor( this.getClass().getResource( "output-project-relative.iml" ).toURI() );
+        task.setModule( outputProjectRelative.get() );
         try {
             task.resolveSourceDirectories();
             fail( "Resolution did not fail even though project file was not specified and " +
@@ -35,9 +38,9 @@ public class ResolveSourceDirectoriesTaskTests {
 
     @Test
     public void resolveSourceDirectories_OutputProjectRelativeButProjectNotSpecified_NoFailOnError_ReturnsNull()
-            throws URISyntaxException {
+            throws URISyntaxException, LazyInitializationException {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
-        task.setModuleDescriptor( this.getClass().getResource( "output-project-relative.iml" ).toURI() );
+        task.setModule( outputProjectRelative.get() );
         task.setFailonerror( false );
         assertNull( task.resolveSourceDirectories() );
     }
@@ -46,8 +49,8 @@ public class ResolveSourceDirectoriesTaskTests {
     public void resolveSourceDirectories_OutputProjectRelativeAndProjectSpecified_Both_DirectoriesResolvedCorrectly()
             throws Exception {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
-        task.setProject( MockModel.Projects.allModules.get() );
-        task.setModuleDescriptor( this.getClass().getResource( "output-project-relative.iml" ).toURI() );
+        task.setProject( Projects.allModules.get() );
+        task.setModule( outputProjectRelative.get() );
         assertSetEquality( "Source directories not resolved correctly.", new String[] {
                 new File( task.project().getProjectRoot().resolve( "src" ) ).getAbsolutePath(),
                 new File( task.project().getProjectRoot().resolve( "test" ) ).getAbsolutePath(),
@@ -56,9 +59,9 @@ public class ResolveSourceDirectoriesTaskTests {
 
     @Test
     public void resolveSourceDirectories_OutputNotProjectRelativeAndProjectNotSpecified_DirectoriesResolvedCorrectly()
-            throws URISyntaxException {
+            throws URISyntaxException, LazyInitializationException {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
-        task.setModuleDescriptor( this.getClass().getResource( "output-module-relative.iml" ).toURI() );
+        task.setModule( outputModuleRelative.get() );
         assertSetEquality( "Source directories not resolved correctly.", new String[] {
                 new File( task.module().getModuleRoot().resolve( "src" ) ).getAbsolutePath(),
                 new File( task.module().getModuleRoot().resolve( "test" ) ).getAbsolutePath(),
@@ -67,34 +70,36 @@ public class ResolveSourceDirectoriesTaskTests {
 
     @Test
     public void resolveSourceDirectories_ProjectWithTestFilesAndSourceFilterSpecified_OnlySourceDirectoriesReturned()
-            throws URISyntaxException {
+            throws URISyntaxException, LazyInitializationException {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
-        task.setModuleDescriptor( this.getClass().getResource( "output-module-relative.iml" ).toURI() );
+        task.setModule( outputModuleRelative.get() );
         assertSetEquality( "Source directories not resolved correctly.", new String[] {
                 new File( task.module().getModuleRoot().resolve( "src" ) ).getAbsolutePath(),
         }, task.resolveSourceDirectories( Filter.source ) );
     }
 
     @Test
-    public void resolveSourceDirectories_ProjectWithTestFilesAndTestFilterSpecified_OnlyTestDirectoriesReturned()
-            throws URISyntaxException {
+    public void resolveSourceDirectories_ModuleWithTestFilesAndTestFilterSpecified_OnlyTestDirectoriesReturned()
+            throws URISyntaxException, LazyInitializationException {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
-        task.setModuleDescriptor( this.getClass().getResource( "output-module-relative.iml" ).toURI() );
+        task.setModule( outputModuleRelative.get() );
         assertSetEquality( "Source directories not resolved correctly.", new String[] {
                 new File( task.module().getModuleRoot().resolve( "test" ) ).getAbsolutePath(),
         }, task.resolveSourceDirectories( Filter.test ) );
     }
 
     @Test
-    public void resolveSourceDirectories_ProjectWithTestFilesAndBothFilterSpecified_SourceAndTestDirectoriesReturned()
-            throws URISyntaxException {
+    public void resolveSourceDirectories_ModuleWithTestFilesAndBothFilterSpecified_SourceAndTestDirectoriesReturned()
+            throws URISyntaxException, LazyInitializationException {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
-        task.setModuleDescriptor( this.getClass().getResource( "output-module-relative.iml" ).toURI() );
+        task.setModule( outputModuleRelative.get() );
         assertSetEquality( "Source directories not resolved correctly.", new String[] {
                 new File( task.module().getModuleRoot().resolve( "src" ) ).getAbsolutePath(),
                 new File( task.module().getModuleRoot().resolve( "test" ) ).getAbsolutePath(),
         }, task.resolveSourceDirectories( Filter.both ) );
     }
+
+    // TODO finish tests!
 
     @Test
     public void execute_NoModuleSpecified_ThrowsBuildException() {

@@ -55,6 +55,13 @@ public class ResolverTests {
                 Resolver.resolveUri( null, selfContained.get(), "jar://$MODULE_DIR$/some.jar!/" ) );
     }
 
+    @Test
+    public void testResolveUri_InlineRelativePathSpecified_UriResolvedCorrectly() throws Exception {
+        assertEquals( "Inline relative URI incorrectly resolved.",
+                this.getClass().getResource( "." ).toURI(),
+                Resolver.resolveUri( null, selfContained.get(), "jar://$MODULE_DIR$/../" ) );
+    }
+
     // ------------------------------------------------------
     // Specific property resolution tests
     // ------------------------------------------------------
