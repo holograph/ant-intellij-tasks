@@ -33,6 +33,7 @@ public final class MockModel {
 
     public static class Projects {
         public static Lazy<Project> allModules;
+        public static Lazy<Project> buildOrderTest;
         public static Lazy<Project> outputSpecified;
         public static Lazy<Project> outputUnspecified;
 
@@ -49,6 +50,7 @@ public final class MockModel {
 
         static {
             allModules = new LazyProjectLoader( "projects/all-modules.ipr" );
+            buildOrderTest = new LazyProjectLoader( "projects/build-order-test.ipr" );
             outputSpecified = new LazyProjectLoader( "projects/output-specified.ipr" );
             outputUnspecified = new LazyProjectLoader( "projects/output-unspecified.ipr" );
         }
@@ -63,6 +65,10 @@ public final class MockModel {
         public static Lazy<Module> outputModuleRelative;
         public static Lazy<Module> outputProjectRelative;
         public static Lazy<Module> outputUnspecified;
+        public static Lazy<Module> buildOrderTestA;
+        public static Lazy<Module> buildOrderTestB;
+        public static Lazy<Module> buildOrderTestC;
+        public static Lazy<Module> buildOrderTestD;
 
         static class LazyModuleLoader extends LazyLoader<Module> {
             LazyModuleLoader( final String file ) {
@@ -84,6 +90,10 @@ public final class MockModel {
             outputModuleRelative = new LazyModuleLoader( "modules/output-module-relative.iml" );
             outputProjectRelative = new LazyModuleLoader( "modules/output-project-relative.iml" );
             outputUnspecified = new LazyModuleLoader( "modules/output-unspecified.iml" );
+            buildOrderTestA = new LazyModuleLoader( "modules/build-order-test-a.iml" );
+            buildOrderTestB = new LazyModuleLoader( "modules/build-order-test-b.iml" );
+            buildOrderTestC = new LazyModuleLoader( "modules/build-order-test-c.iml" );
+            buildOrderTestD = new LazyModuleLoader( "modules/build-order-test-d.iml" );
         }
     }
 

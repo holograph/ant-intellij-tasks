@@ -1,5 +1,6 @@
 package com.tomergabel.build.intellij.ant;
 
+import com.tomergabel.build.intellij.model.ModelException;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
@@ -52,7 +53,7 @@ public class TaskBase extends Task {
                 sw.write( "Caused by: " );
             }
 
-            if ( cause instanceof RuntimeException ) {
+            if ( !( cause instanceof ModelException ) ) {
                 cause.printStackTrace( new PrintWriter( sw, true ) );
                 break;
             }

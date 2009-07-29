@@ -1,18 +1,19 @@
 package com.tomergabel.build.intellij.model;
 
-public class ParseException extends Exception {
+public class ParseException extends ModelException {
     public ParseException() {
+        super();
     }
 
-    public ParseException( String message ) {
+    public ParseException( final String message ) {
         super( message );
     }
 
-    public ParseException( String message, Throwable cause ) {
+    public ParseException( final String message, final Throwable cause ) {
         super( message, cause );
     }
 
-    public ParseException( Throwable cause ) {
+    public ParseException( final Throwable cause ) {
         super( cause );
     }
 }

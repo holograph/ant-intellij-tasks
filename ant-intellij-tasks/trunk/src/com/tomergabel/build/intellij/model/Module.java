@@ -87,7 +87,7 @@ public final class Module extends IntelliJParserBase {
         this.dependencies = new HashSet<Dependency>();
 
         // Register ignored components
-        registerComponentHandler( "FacetManager", ignoreHandler );               // TODO
+        registerComponentHandler( "FacetManager", ignoreHandler );              // TODO
         registerComponentHandler( "BuildJarSettings", ignoreHandler );          // TODO
 
         // Register handlers

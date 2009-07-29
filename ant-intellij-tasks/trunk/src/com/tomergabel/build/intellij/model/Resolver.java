@@ -108,11 +108,8 @@ public final class Resolver {
 
             // Expand property
             final String propertyValue = this.properties.get( propertyName );
-            if ( propertyValue == null ) {
-                final ResolutionException e = new ResolutionException();
-                e.setProperty( propertyName );
-                throw e;
-            }
+            if ( propertyValue == null )
+                throw new ResolutionException( propertyName );
 
             // Append property and skip trailing backslashes
             sb.append( propertyValue );
@@ -280,5 +277,59 @@ public final class Resolver {
             throw new IllegalArgumentException( "The module cannot be null." );
 
         return new Resolver( project, module ).resolveModuleClasspath();
+    }
+
+    public Collection<Module> resolveModuleBuildOrder() throws ResolutionException {
+        // Assert that a project has been specified
+        if ( this.project == null )
+            throw new ResolutionException( "Cannot resolve module build order, project not specified" );
+
+        // Iterate descriptor map. We'll have to lazy-load each module to extract its dependencies
+        final Map<Module, Integer> nesting = new HashMap<Module, Integer>();
+        preloadModules();
+        processModuleDependencyTree( nesting, this.moduleNameMap.values(), 1 );
+
+        // Resolve according to dependency tree depth and render into priority queue
+        final PriorityQueue<Module> pq = new PriorityQueue<Module>( nesting.size(), new Comparator<Module>() {
+            @Override
+            public int compare( final Module o1, final Module o2 ) {
+                if ( o1 == null || o2 == null )
+                    // Safety net, should never happen
+                    throw new IllegalArgumentException( "Null module encountered?" );
+                return nesting.get( o2 ) - nesting.get( o1 );
+            }
+        } );
+        pq.addAll( nesting.keySet() );
+
+        // Return queue
+        return Collections.unmodifiableCollection( pq );
+    }
+
+    private void preloadModules() throws ResolutionException {
+        for ( final Lazy<Module> module : this.moduleDescriptorMap.values() ) {
+            try {
+                this.moduleNameMap.put( module.get().getName(), module.get() );
+            } catch ( LazyInitializationException e ) {
+                // An error has occured during lazy initialization; since only the module
+                // loader is invoked this can only be a parse error.
+                throw new ResolutionException( e );
+            }
+        }
+    }
+
+    private void processModuleDependencyTree( final Map<Module, Integer> nesting, final Collection<Module> modules,
+                                              final int level ) throws ResolutionException {
+        for ( final Module currentModule : modules ) {
+            nesting.put( currentModule,
+                    Math.max( level, nesting.containsKey( currentModule ) ? nesting.get( currentModule ) : 1 ) );
+            processModuleDependencyTree( nesting, resolveModuleDependencies( this.project, currentModule ), level + 1 );
+        }
+    }
+
+    public static Collection<Module> resolveModuleBuildOrder( final Project project ) throws ResolutionException {
+        if ( project == null )
+            throw new IllegalArgumentException( "The project cannot be null." );
+
+        return new Resolver( project, null ).resolveModuleBuildOrder();
     }
 }
