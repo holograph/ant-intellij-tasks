@@ -13,7 +13,7 @@ public class ResolveModuleClasspathTask extends ModuleTaskBase {
     }
 
     @Override
-    public void execute() throws BuildException {
+    public void executeTask() throws BuildException {
         if ( this.pathId == null ) {
             error( "Target path ID (attribute 'pathId') not specified." );
             return;

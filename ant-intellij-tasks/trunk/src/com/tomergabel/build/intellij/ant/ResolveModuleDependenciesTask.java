@@ -44,7 +44,7 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
     }
 
     @Override
-    public void execute() throws BuildException {
+    public void executeTask() throws BuildException {
         if ( this.property == null ) {
             error( "Target property (attribute 'property') not specified." );
             return;

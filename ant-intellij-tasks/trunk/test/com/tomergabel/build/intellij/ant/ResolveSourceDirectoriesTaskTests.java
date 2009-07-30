@@ -49,7 +49,7 @@ public class ResolveSourceDirectoriesTaskTests {
     public void resolveSourceDirectories_OutputProjectRelativeAndProjectSpecified_Both_DirectoriesResolvedCorrectly()
             throws Exception {
         final ResolveSourceDirectoriesTask task = new ResolveSourceDirectoriesTask();
-        task.setProject( Projects.allModules.get() );
+        task.setProject( Projects.outputSpecified.get() );
         task.setModule( outputProjectRelative.get() );
         assertSetEquality( "Source directories not resolved correctly.", new String[] {
                 new File( task.project().getProjectRoot().resolve( "src" ) ).getAbsolutePath(),

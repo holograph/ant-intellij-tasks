@@ -14,7 +14,7 @@ public class ResolveModuleResourcesTask extends ModuleTaskBase {
     protected Filter filter = Filter.both;
 
     public String getPathId() {
-        return pathId;
+        return this.pathId;
     }
 
     public void setPathId( final String pathId ) {
@@ -22,7 +22,7 @@ public class ResolveModuleResourcesTask extends ModuleTaskBase {
     }
 
     public Filter getFilter() {
-        return filter;
+        return this.filter;
     }
 
     public void setFilter( final Filter filter ) {
@@ -30,7 +30,7 @@ public class ResolveModuleResourcesTask extends ModuleTaskBase {
     }
 
     @Override
-    public void execute() throws BuildException {
+    public void executeTask() throws BuildException {
         if ( this.pathId == null ) {
             error( "Target path (attribute 'pathid') not specified." );
             return;
@@ -52,11 +52,11 @@ public class ResolveModuleResourcesTask extends ModuleTaskBase {
                     project.getResourceExtensions().size() + project.getResourceWildcardPatterns().size() );
 
             // Process resource extensions
-            for ( String extension : project.getResourceExtensions() )
+            for ( final String extension : project.getResourceExtensions() )
                 includes.add( "**/*." + extension );
 
             // Process wildcard patterns
-            for ( String pattern : project.getResourceWildcardPatterns() )
+            for ( final String pattern : project.getResourceWildcardPatterns() )
                 includes.add( "**/" + pattern );
 
             fileset.appendIncludes( includes.toArray( new String[ includes.size() ] ) );

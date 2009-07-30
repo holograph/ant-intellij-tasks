@@ -15,16 +15,18 @@ import java.net.URI;
 @Suite.SuiteClasses( value = { ModuleTaskBaseTests.FailOnError.class, ModuleTaskBaseTests.NoFailOnError.class } )
 public class ModuleTaskBaseTests {
 
-    public static abstract class BaseTest {
+    public abstract static class BaseTest {
         ModuleTaskBase task;
 
         @Before
         public void testSetup() {
             this.task = new ModuleTaskBase() {
+                @Override
+                protected void executeTask() throws BuildException {}
             };
         }
 
-        private void assertFailure( String message ) {
+        private void assertFailure( final String message ) {
             if ( message == null )
                 throw new IllegalArgumentException( "Invalid test case: assertion failure message not specified" );
 

@@ -1,8 +1,8 @@
 package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.Module;
+import com.tomergabel.build.intellij.model.ModuleResolver;
 import com.tomergabel.build.intellij.model.ResolutionException;
-import com.tomergabel.build.intellij.model.Resolver;
 import static com.tomergabel.util.CollectionUtils.join;
 import static com.tomergabel.util.CollectionUtils.map;
 import com.tomergabel.util.Mapper;
@@ -21,7 +21,7 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
     protected Filter filter = Filter.both;
 
     public String getProperty() {
-        return property;
+        return this.property;
     }
 
     public void setProperty( final String property ) {
@@ -29,7 +29,7 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
     }
 
     public String getPathId() {
-        return pathId;
+        return this.pathId;
     }
 
     public void setPathId( final String pathId ) {
@@ -48,7 +48,7 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
     }
 
     @Override
-    public void execute() throws BuildException {
+    public void executeTask() throws BuildException {
         if ( this.property == null && this.pathId == null ) {
             error( "Target property or path (attributes 'property' and 'pathid' respectively) not specified." );
             return;
@@ -66,7 +66,7 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
         // Set target path ID, if specified
         if ( this.pathId != null ) {
             final Path path = new Path( getProject() );
-            for ( String sourceDirectory : sourceDirectories )
+            for ( final String sourceDirectory : sourceDirectories )
                 path.append( new Path( getProject(), sourceDirectory ) );
             getProject().addReference( this.pathId, path );
         }
@@ -76,16 +76,16 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
         return resolveSourceDirectories( this.filter );
     }
 
-    public Collection<String> resolveSourceDirectories( Filter filter )
+    public Collection<String> resolveSourceDirectories( final Filter filter )
             throws IllegalArgumentException, BuildException {
         if ( filter == null )
             throw new IllegalArgumentException( "The filter cannot be null." );
 
         // Load module and create resolver
         final Module module = module();
-        if ( module == null )
+        final ModuleResolver resolver = resolver();
+        if ( module == null || resolver == null )
             return null;
-        final Resolver resolver = resolver();
 
         // Create directory set and URI string resolution mapper
         final Collection<String> directories = new HashSet<String>();

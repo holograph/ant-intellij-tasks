@@ -1,9 +1,10 @@
 package com.tomergabel.build.intellij.ant;
 
-import static com.tomergabel.build.intellij.model.MockModel.*;
-import static com.tomergabel.build.intellij.model.MockModel.Modules.*;
-import static com.tomergabel.build.intellij.model.MockModel.Projects.*;
-import com.tomergabel.build.intellij.model.Resolver;
+import static com.tomergabel.build.intellij.model.MockModel.Modules.dependantLibrary;
+import static com.tomergabel.build.intellij.model.MockModel.Modules.dependantModule;
+import static com.tomergabel.build.intellij.model.MockModel.Projects.allModules;
+import static com.tomergabel.build.intellij.model.MockModel.junitLibraryPath;
+import com.tomergabel.build.intellij.model.ModuleResolver;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import static junit.framework.Assert.assertNotNull;
 import org.apache.tools.ant.BuildException;
@@ -95,7 +96,7 @@ public class ResolveModuleClasspathTaskTests {
         assertNotNull( "Classpath was not generated.", object );
         assertTrue( "Generated object is not a Path.", object instanceof Path );
         assertSetEquality( "Classpath generated incorrectly.",
-                new Resolver( allModules.get(), dependantModule.get() ).resolveModuleClasspath(),
+                new ModuleResolver( allModules.get(), dependantModule.get() ).resolveModuleClasspath(),
                 ( (Path) object ).list() );
     }
 
