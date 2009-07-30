@@ -1,5 +1,6 @@
 package com.tomergabel.build.intellij.ant;
 
+import com.tomergabel.build.intellij.model.ProjectResolver;
 import com.tomergabel.build.intellij.model.Module;
 import com.tomergabel.build.intellij.model.ResolutionException;
 import static com.tomergabel.util.CollectionUtils.join;
@@ -8,9 +9,8 @@ import org.apache.tools.ant.BuildException;
 
 import java.util.Collection;
 
-public class ResolveModuleDependenciesTask extends ModuleTaskBase {
+public class ResolveBuildOrderTask extends ProjectTaskBase {
     protected static final String LIST_SEPARATOR = ",";
-
     protected String property;
     protected ResolutionModes mode = ResolutionModes.names;
 
@@ -34,31 +34,26 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
     }
 
     @Override
-    public void executeTask() throws BuildException {
+    protected void executeTask() throws BuildException {
         if ( this.property == null ) {
             error( "Target property (attribute 'property') not specified." );
             return;
         }
 
-        // Resolve module dependencies
-        final Collection<Module> modules;
+        final ProjectResolver resolver = projectResolver();
+        if ( resolver == null )
+            return;
+
+        // Resolve build order
+        final Collection<Module> buildOrder;
         try {
-            modules = resolveModules();
-        } catch ( BuildException e ) {
+            buildOrder = resolver.resolveModuleBuildOrder();
+        } catch ( ResolutionException e ) {
             error( e );
             return;
         }
 
         // Set the target property
-        getProject().setProperty( this.property, join( map( modules, this.mode.mapper ), LIST_SEPARATOR ) );
-    }
-
-    public Collection<Module> resolveModules() throws BuildException {
-        try {
-            return resolver().resolveModuleDependencies();
-        } catch ( ResolutionException e ) {
-            error( "Failed to resolve module dependencies.", e );
-            return null;
-        }
+        getProject().setProperty( this.property, join( map( buildOrder, this.mode.mapper ), LIST_SEPARATOR ) );
     }
 }

@@ -8,10 +8,11 @@ import org.apache.tools.ant.Task;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public class TaskBase extends Task {
+public abstract class TaskBase extends Task {
     protected boolean failOnError = true;
+    protected boolean executed = false;
 
-    // Ant-facing tasks
+    // Ant-facing properties
 
     // See http://ant.apache.org/manual/develop.html#writingowntask
     // Ant convention specifies property setters should have first letter capitalized
@@ -64,4 +65,18 @@ public class TaskBase extends Task {
 
         return sw.toString();
     }
+
+    @Override
+    public final void execute() throws BuildException {
+        assertNotExecuted();
+        this.executed = true;
+        executeTask();
+    }
+
+    protected void assertNotExecuted() throws IllegalStateException {
+        if ( this.executed )
+            throw new IllegalStateException( "Task has already been executed." );
+    }
+
+    protected abstract void executeTask() throws BuildException;
 }

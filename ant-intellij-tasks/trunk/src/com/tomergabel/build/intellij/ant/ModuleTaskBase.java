@@ -1,17 +1,18 @@
 package com.tomergabel.build.intellij.ant;
 
-import com.tomergabel.build.intellij.model.*;
+import com.tomergabel.build.intellij.model.Module;
+import com.tomergabel.build.intellij.model.ModuleResolver;
+import com.tomergabel.build.intellij.model.ParseException;
+import com.tomergabel.build.intellij.model.ProjectResolver;
 import com.tomergabel.util.Lazy;
 import com.tomergabel.util.LazyInitializationException;
 import org.apache.tools.ant.BuildException;
-import org.w3c.dom.Node;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
-public abstract class ModuleTaskBase extends TaskBase {
-    private boolean executed = false;
+public abstract class ModuleTaskBase extends ProjectTaskBase {
     private Lazy<Module> module = new Lazy<Module>() {
         @Override
         public Module call() throws Exception {
@@ -20,16 +21,6 @@ public abstract class ModuleTaskBase extends TaskBase {
             // should also be supported, but it doesn't mean I have promote it :-)
             throw new BuildException( "Module descriptor or file ('moduledescriptor' and 'modulefile' " +
                     "attributes respectively) not specified." );
-        }
-    };
-
-    private Lazy<Project> project = Lazy.from( null );
-
-    private final Lazy<ProjectResolver> projectResolver = new Lazy<ProjectResolver>() {
-        @Override
-        public ProjectResolver call() throws Exception {
-            final Project project = ModuleTaskBase.this.project.get();
-            return project != null ? new ProjectResolver( project ) : null;
         }
     };
 
@@ -55,21 +46,11 @@ public abstract class ModuleTaskBase extends TaskBase {
         setModuleDescriptor( srcfile.toURI() );
     }
 
-    private void assertNotExecuted() throws IllegalStateException {
-        if ( this.executed )
-            throw new IllegalStateException( "Task has already been executed." );
-    }
-
     public void setModuleFile( final File moduleFile ) {
         if ( moduleFile == null )
             throw new IllegalArgumentException( "Null module file ('modulefile' attribute) cannot be specified." );
         assertNotExecuted();
         setModuleDescriptor( moduleFile.toURI() );
-    }
-
-    public void setProjectFile( final File projectFile ) {
-        assertNotExecuted();
-        setProjectDescriptor( projectFile.toURI() );
     }
 
     // Code-facing properties
@@ -93,53 +74,7 @@ public abstract class ModuleTaskBase extends TaskBase {
         };
     }
 
-    public void setProject( final Project project ) {
-        assertNotExecuted();
-        this.project = Lazy.from( project );
-    }
-
-    public void setProjectDescriptor( final URI projectDescriptor ) {
-        assertNotExecuted();
-        this.project = new Lazy<Project>() {
-            @Override
-            public Project call() throws IOException, ParseException {
-                return Project.parse( projectDescriptor, new WarnHandler( "project" ) );
-            }
-        };
-    }
-
-    @Override
-    public final void execute() throws BuildException {
-        assertNotExecuted();
-        this.executed = true;
-        executeTask();
-    }
-
-    protected abstract void executeTask() throws BuildException;
-
     // Helper methods
-
-    class WarnHandler implements IntelliJParserBase.Handler {
-        private final String contextName;
-
-        public WarnHandler( final String contextName ) {
-            if ( contextName == null )
-                throw new IllegalArgumentException( "The context name cannot be null." );
-            this.contextName = contextName;
-        }
-
-        @Override
-        public void parse( final String componentName, final Node componentNode )
-                throws IllegalArgumentException, ParseException {
-            if ( componentName == null )
-                throw new IllegalArgumentException( "Component name cannot be null." );
-            if ( componentNode == null )
-                throw new IllegalArgumentException( "Component node cannot be null." );
-
-            ModuleTaskBase.this.log( "Unrecognized " + this.contextName + " component \"" + componentName + "\"",
-                    org.apache.tools.ant.Project.MSG_WARN );
-        }
-    }
 
     protected Module module() throws BuildException {
         try {
@@ -150,27 +85,9 @@ public abstract class ModuleTaskBase extends TaskBase {
         }
     }
 
-    protected Project project() throws BuildException {
-        try {
-            return this.project.get();
-        } catch ( LazyInitializationException e ) {
-            error( e.getCause() );
-            return null;
-        }
-    }
-
     protected ModuleResolver resolver() throws BuildException {
         try {
             return this.moduleResolver.get();
-        } catch ( LazyInitializationException e ) {
-            error( e.getCause() );
-            return null;
-        }
-    }
-
-    protected ProjectResolver projectResolver() {
-        try {
-            return this.projectResolver.get();
         } catch ( LazyInitializationException e ) {
             error( e.getCause() );
             return null;
