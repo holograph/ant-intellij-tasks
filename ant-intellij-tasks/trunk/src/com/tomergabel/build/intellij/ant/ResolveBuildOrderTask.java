@@ -40,9 +40,13 @@ public class ResolveBuildOrderTask extends ProjectTaskBase {
             return;
         }
 
-        final ProjectResolver resolver = projectResolver();
-        if ( resolver == null )
+        if ( !assertProjectSpecified() )
             return;
+        final ProjectResolver resolver = projectResolver();
+        if ( resolver == null ) {
+            error( "Project not specified" );
+            return;
+        }
 
         // Resolve build order
         final Collection<Module> buildOrder;

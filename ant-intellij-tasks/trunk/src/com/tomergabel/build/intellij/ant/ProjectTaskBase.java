@@ -87,4 +87,13 @@ public abstract class ProjectTaskBase extends TaskBase {
                     org.apache.tools.ant.Project.MSG_WARN );
         }
     }
+
+    public boolean assertProjectSpecified() {
+        if ( project() == null ) {
+            error( "Project descriptor or file ('projectdescriptor' and 'projectfile' " +
+                "attributes respectively) not specified." );
+            return false;
+        }
+        return true;
+    }
 }

@@ -5,6 +5,7 @@ import com.tomergabel.util.UriUtils;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 
 public final class MockModel {
     private MockModel() {
@@ -24,7 +25,10 @@ public final class MockModel {
 
         @Override
         public T call() throws Exception {
-            final URI uri = MockModel.class.getResource( this.file ).toURI();
+            final URL resource = MockModel.class.getResource( this.file );
+            if ( resource == null )
+                throw new Exception( "Resource \"" + this.file + "\" not found!" );
+            final URI uri = resource.toURI();
             return parse( uri );
         }
 
