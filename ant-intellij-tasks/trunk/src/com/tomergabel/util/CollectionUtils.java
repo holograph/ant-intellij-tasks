@@ -134,15 +134,15 @@ public final class CollectionUtils {
         };
     }
 
-    public static <T> String join( final boolean renderNulls, final T[]... values ) {
+    public static <T> String join( final boolean renderNulls, final T... values ) {
         return join( Arrays.asList( values ), DEFAULT_JOIN_SEPARATOR, renderNulls );
     }
 
-    public static <T> String join( final Object separator, final T[]... values ) {
+    public static <T> String join( final Object separator, final T... values ) {
         return join( Arrays.asList( values ), separator, DEFAULT_JOIN_NULL_BEHAVIOR );
     }
 
-    public static <T> String join( final boolean renderNulls, final Object separator, final T[]... values ) {
+    public static <T> String join( final boolean renderNulls, final Object separator, final T... values ) {
         return join( Arrays.asList( values ), separator, renderNulls );
     }
 

@@ -1,8 +1,6 @@
 package com.tomergabel.build.intellij.model;
 
-import com.tomergabel.util.Lazy;
-import com.tomergabel.util.LazyInitializationException;
-import com.tomergabel.util.UriUtils;
+import com.tomergabel.util.*;
 
 import java.net.URI;
 import java.util.*;
@@ -62,7 +60,11 @@ public class ProjectResolver extends PropertyResolver {
     }
 
     private void preloadModules() throws ResolutionException {
-        for ( final Lazy<Module> module : this.moduleDescriptorMap.values() ) {
+        preloadModules( this.moduleDescriptorMap.values() );
+    }
+
+    private void preloadModules( final Iterable<Lazy<Module>> modules ) throws ResolutionException {
+        for ( final Lazy<Module> module : modules ) {
             try {
                 // Load module
                 module.get();
@@ -83,14 +85,26 @@ public class ProjectResolver extends PropertyResolver {
     }
 
     public Collection<Module> resolveModuleBuildOrder() throws ResolutionException {
+        preloadModules();
+        return resolveModuleBuildOrder( this.moduleResolverMap.keySet() );
+    }
+
+    public Collection<Module> resolveModuleBuildOrderByName( final Iterable<String> moduleNames )
+            throws ResolutionException {
+        final Collection<Module> modules = new HashSet<Module>();
+        for ( final String name : moduleNames )
+            modules.add( getModule( name ) );
+        return resolveModuleBuildOrder( modules );
+    }
+
+    public Collection<Module> resolveModuleBuildOrder( final Iterable<Module> modules ) throws ResolutionException {
         // Assert that a project has been specified
         if ( this.project == null )
             throw new ResolutionException( "Cannot resolve module build order, project not specified" );
 
         // Iterate descriptor map. We'll have to lazy-load each module to extract its dependencies
-        preloadModules();
         final Map<Module, Integer> nesting = new HashMap<Module, Integer>();
-        processModuleDependencyTree( nesting, new ArrayDeque<Module>(), this.moduleResolverMap.keySet() );
+        processModuleDependencyTree( nesting, new ArrayDeque<Module>(), modules );
 
         // Resolve according to dependency tree depth and render into priority queue
         final PriorityQueue<Module> pq = new PriorityQueue<Module>( nesting.size(), new Comparator<Module>() {
@@ -150,7 +164,7 @@ public class ProjectResolver extends PropertyResolver {
             throw new IllegalArgumentException( "The module name cannot be null." );
         final Lazy<Module> m = this.moduleNameMap.get( moduleName );
         if ( m == null )
-            throw new IllegalArgumentException( "No module \"" + moduleName + "\" found in project." );
+            throw new ResolutionException( "No module \"" + moduleName + "\" found in project." );
         try {
             return m.get();
         } catch ( LazyInitializationException e ) {
