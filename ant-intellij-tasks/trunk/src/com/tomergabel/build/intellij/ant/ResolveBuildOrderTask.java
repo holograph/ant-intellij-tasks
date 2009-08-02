@@ -5,7 +5,6 @@ import com.tomergabel.build.intellij.model.ResolutionException;
 import static com.tomergabel.util.CollectionUtils.join;
 import static com.tomergabel.util.CollectionUtils.map;
 import org.apache.tools.ant.BuildException;
-import sun.plugin.dom.exception.InvalidStateException;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -84,7 +83,7 @@ public class ResolveBuildOrderTask extends ProjectTaskBase {
 
                 default:
                     // Safety net, should never happen
-                    throw new InvalidStateException( "Unknown input mode '" + this.inputMode + "'" );
+                    throw new IllegalStateException( "Unknown input mode '" + this.inputMode + "'" );
             }
         } catch ( ResolutionException e ) {
             throw new BuildException( e );
