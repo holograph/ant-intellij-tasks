@@ -25,7 +25,7 @@ public class ResolveBuildOrderTaskTests {
     }
 
     @Test
-    public void test_NoProjectSpecified_BuildExceptionIsThrown() {
+    public void execute_NoProjectSpecified_BuildExceptionIsThrown() {
         try {
             task.setProperty( "property" );
             task.execute();
@@ -36,7 +36,7 @@ public class ResolveBuildOrderTaskTests {
     }
 
     @Test
-    public void test_NoProjectSpecified_NoFailOnError_NothingHappens() {
+    public void execute_NoProjectSpecified_NoFailOnError_NothingHappens() {
         task.setProperty( "property" );
         task.setFailonerror( false );
         task.execute();
@@ -44,7 +44,7 @@ public class ResolveBuildOrderTaskTests {
     }
 
     @Test
-    public void test_NoPropertySpecified_BuildExceptionIsThrown() throws LazyInitializationException {
+    public void execute_NoPropertySpecified_BuildExceptionIsThrown() throws LazyInitializationException {
         try {
             task.setProject( MockModel.Projects.buildOrderTest.get() );
             task.execute();
@@ -55,7 +55,7 @@ public class ResolveBuildOrderTaskTests {
     }
 
     @Test
-    public void test_NoPropertySpecified_NoFailOnError_NothingHappens() throws LazyInitializationException {
+    public void execute_NoPropertySpecified_NoFailOnError_NothingHappens() throws LazyInitializationException {
         task.setProject( MockModel.Projects.buildOrderTest.get() );
         task.setFailonerror( false );
         task.execute();
@@ -63,7 +63,7 @@ public class ResolveBuildOrderTaskTests {
     }
 
     @Test
-    public void test_ProjectPropertyAndNamesModeSpecified_PropertyGeneratedCorrectly()
+    public void execute_ProjectPropertyAndNamesModeSpecified_PropertyGeneratedCorrectly()
             throws LazyInitializationException {
         task.setProject( MockModel.Projects.buildOrderTest.get() );
         task.setProperty( "property" );
@@ -78,7 +78,7 @@ public class ResolveBuildOrderTaskTests {
     }
 
     @Test
-    public void test_ProjectPropertyAndDescriptorsModeSpecified_PropertyGeneratedCorrectly()
+    public void execute_ProjectPropertyAndDescriptorsModeSpecified_PropertyGeneratedCorrectly()
             throws LazyInitializationException {
         task.setProject( MockModel.Projects.buildOrderTest.get() );
         task.setProperty( "property" );
