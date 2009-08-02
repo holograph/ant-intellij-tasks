@@ -97,7 +97,11 @@ public class ProjectResolver extends PropertyResolver {
         return resolveModuleBuildOrder( modules );
     }
 
-    public Collection<Module> resolveModuleBuildOrder( final Iterable<Module> modules ) throws ResolutionException {
+    public Collection<Module> resolveModuleBuildOrder( final Collection<Module> modules )
+            throws IllegalArgumentException, ResolutionException {
+        if ( modules == null )
+            throw new IllegalArgumentException( "The module list cannot be null." );
+
         // Assert that a project has been specified
         if ( this.project == null )
             throw new ResolutionException( "Cannot resolve module build order, project not specified" );
@@ -107,7 +111,7 @@ public class ProjectResolver extends PropertyResolver {
         processModuleDependencyTree( nesting, new ArrayDeque<Module>(), modules );
 
         // Resolve according to dependency tree depth and render into priority queue
-        final PriorityQueue<Module> pq = new PriorityQueue<Module>( nesting.size(), new Comparator<Module>() {
+        final PriorityQueue<Module> pq = new PriorityQueue<Module>( modules.size(), new Comparator<Module>() {
             @Override
             public int compare( final Module o1, final Module o2 ) {
                 if ( o1 == null || o2 == null )
@@ -116,7 +120,7 @@ public class ProjectResolver extends PropertyResolver {
                 return nesting.get( o2 ) - nesting.get( o1 );
             }
         } );
-        pq.addAll( nesting.keySet() );
+        pq.addAll( modules );
 
         // Return queue
         return Collections.unmodifiableCollection( pq );

@@ -6,11 +6,13 @@ import static com.tomergabel.util.CollectionUtils.join;
 import static com.tomergabel.util.CollectionUtils.map;
 import org.apache.tools.ant.BuildException;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 public class ResolveBuildOrderTask extends ProjectTaskBase {
     protected static final String LIST_SEPARATOR = ",";
     protected String property;
+    protected Collection<String> moduleNames;
     protected ResolutionModes mode = ResolutionModes.names;
 
     public ResolutionModes getMode() {
@@ -29,7 +31,17 @@ public class ResolveBuildOrderTask extends ProjectTaskBase {
     }
 
     public void setProperty( final String property ) {
+        if ( property == null )
+            throw new IllegalArgumentException( "The property name cannot be null." );
+
         this.property = property;
+    }
+
+    public void setModules( final String names ) {
+        if ( names == null )
+            throw new IllegalArgumentException( "The name list cannot be null." );
+
+        this.moduleNames = Arrays.asList( names.split( LIST_SEPARATOR ) );
     }
 
     @Override
@@ -42,7 +54,8 @@ public class ResolveBuildOrderTask extends ProjectTaskBase {
         // Resolve build order
         final Collection<Module> buildOrder;
         try {
-            buildOrder = projectResolver().resolveModuleBuildOrder();
+            buildOrder = this.moduleNames != null ? projectResolver().resolveModuleBuildOrderByName( this.moduleNames )
+                    : projectResolver().resolveModuleBuildOrder();
         } catch ( ResolutionException e ) {
             throw new BuildException( e );
         }

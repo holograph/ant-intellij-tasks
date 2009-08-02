@@ -95,4 +95,18 @@ public class ResolveBuildOrderTaskTests {
                         UriUtils.getPath( MockModel.Modules.buildOrderTestA.get().getModuleDescriptor() )
                 ), property );
     }
+
+    public void execute_ModuleNamesSpecified_PropertyGeneratedCorrectly() throws LazyInitializationException {
+        task.setProject( MockModel.Projects.buildOrderTest.get() );
+        task.setProperty( "property" );
+        task.setMode( ResolutionModes.names );
+        task.setFailonerror( false );
+        task.setModules( "build-order-test-a,build-order-test-b" );
+        task.execute();
+        final String property = project.getProperty( "property" );
+        assertNotNull( "Property was not generated.", property );
+        assertEquals( "Build order incorrectly resolved.",
+                "build-order-test-b,build-order-test-a",
+                property );
+    }
 }
