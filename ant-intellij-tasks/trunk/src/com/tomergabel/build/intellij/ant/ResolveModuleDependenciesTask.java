@@ -35,30 +35,18 @@ public class ResolveModuleDependenciesTask extends ModuleTaskBase {
 
     @Override
     public void executeTask() throws BuildException {
-        if ( this.property == null ) {
-            error( "Target property (attribute 'property') not specified." );
-            return;
-        }
+        if ( this.property == null )
+            throw new BuildException( "Target property (attribute 'property') not specified." );
 
         // Resolve module dependencies
         final Collection<Module> modules;
         try {
-            modules = resolveModules();
-        } catch ( BuildException e ) {
-            error( e );
-            return;
+            modules = resolver().resolveModuleDependencies();
+        } catch ( ResolutionException e ) {
+            throw new BuildException( e );
         }
 
         // Set the target property
         getProject().setProperty( this.property, join( map( modules, this.mode.mapper ), LIST_SEPARATOR ) );
-    }
-
-    public Collection<Module> resolveModules() throws BuildException {
-        try {
-            return resolver().resolveModuleDependencies();
-        } catch ( ResolutionException e ) {
-            error( "Failed to resolve module dependencies.", e );
-            return null;
-        }
     }
 }

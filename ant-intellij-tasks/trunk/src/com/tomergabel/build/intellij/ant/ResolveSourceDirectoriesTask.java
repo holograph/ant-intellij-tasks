@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.HashSet;
 
 public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
-
     protected String property;
     protected String pathId;
     protected Filter filter = Filter.both;
@@ -49,10 +48,9 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
 
     @Override
     public void executeTask() throws BuildException {
-        if ( this.property == null && this.pathId == null ) {
-            error( "Target property or path (attributes 'property' and 'pathid' respectively) not specified." );
-            return;
-        }
+        if ( this.property == null && this.pathId == null )
+            throw new BuildException(
+                    "Target property or path (attributes 'property' and 'pathid' respectively) not specified." );
 
         // Resolve source directories
         final Collection<String> sourceDirectories = resolveSourceDirectories();
@@ -72,11 +70,11 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
         }
     }
 
-    public Collection<String> resolveSourceDirectories() throws BuildException {
+    private Collection<String> resolveSourceDirectories() throws BuildException {
         return resolveSourceDirectories( this.filter );
     }
 
-    public Collection<String> resolveSourceDirectories( final Filter filter )
+    private Collection<String> resolveSourceDirectories( final Filter filter )
             throws IllegalArgumentException, BuildException {
         if ( filter == null )
             throw new IllegalArgumentException( "The filter cannot be null." );
@@ -101,15 +99,10 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
         };
 
         // Add the appropriate lists according to the filter
-        try {
-            if ( filter == Filter.source || filter == Filter.both )
-                directories.addAll( map( module.getSourceUrls(), mapper ) );
-            if ( filter == Filter.test || filter == Filter.both )
-                directories.addAll( map( module.getTestSourceUrls(), mapper ) );
-        } catch ( BuildException e ) {
-            error( e );
-            return null;
-        }
+        if ( filter == Filter.source || filter == Filter.both )
+            directories.addAll( map( module.getSourceUrls(), mapper ) );
+        if ( filter == Filter.test || filter == Filter.both )
+            directories.addAll( map( module.getTestSourceUrls(), mapper ) );
 
         // Return the collection
         return Collections.unmodifiableCollection( directories );

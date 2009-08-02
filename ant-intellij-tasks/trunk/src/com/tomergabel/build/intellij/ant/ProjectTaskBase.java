@@ -13,10 +13,23 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
+/**
+ * A base task which provides a convenient way for subtasks to access a project file.
+ * <p/>
+ * This task allows a project to be specified in one of three ways: <ul> <li>Project file location (i.e. a file system
+ * path to an <tt>.ipr</tt> file) via {@link #setProjectFile(java.io.File)} or via the <tt>projectFile</tt> Ant
+ * property.</li> <li>Project descriptor URI (i.e. a URI which points to an <tt>.ipr</tt> file resource) via {@link
+ * #setProjectDescriptor(java.net.URI)} or via the <tt>projectDescriptor</tt> Ant property.</li> <li>Project instance
+ * via the {@link #setProject(com.tomergabel.build.intellij.model.Project)}. This API is intended for tests or for
+ * automating this task via code, and cannot be directly accessed from within Ant.</li></ul>
+ * <p/>
+ * Inheritors can access the project instance via {@link #project()} or {@link #projectResolver()} TODO complete
+ * documentation
+ */
 public abstract class ProjectTaskBase extends TaskBase {
-    protected Lazy<Project> project = Lazy.from( null );
+    private Lazy<Project> project = Lazy.from( null );
 
-    protected final Lazy<ProjectResolver> projectResolver = new Lazy<ProjectResolver>() {
+    private final Lazy<ProjectResolver> projectResolver = new Lazy<ProjectResolver>() {
         @Override
         public ProjectResolver call() throws Exception {
             final Project project = ProjectTaskBase.this.project.get();
@@ -32,7 +45,7 @@ public abstract class ProjectTaskBase extends TaskBase {
     }
 
     // Code-facing properties
-    
+
     public void setProject( final Project project ) {
         assertNotExecuted();
         this.project = Lazy.from( project );
@@ -52,8 +65,7 @@ public abstract class ProjectTaskBase extends TaskBase {
         try {
             return this.project.get();
         } catch ( LazyInitializationException e ) {
-            error( e.getCause() );
-            return null;
+            throw new BuildException( e.getCause() );
         }
     }
 
@@ -61,8 +73,7 @@ public abstract class ProjectTaskBase extends TaskBase {
         try {
             return this.projectResolver.get();
         } catch ( LazyInitializationException e ) {
-            error( e.getCause() );
-            return null;
+            throw new BuildException( e.getCause() );
         }
     }
 
@@ -88,12 +99,9 @@ public abstract class ProjectTaskBase extends TaskBase {
         }
     }
 
-    public boolean assertProjectSpecified() {
-        if ( project() == null ) {
-            error( "Project descriptor or file ('projectdescriptor' and 'projectfile' " +
-                "attributes respectively) not specified." );
-            return false;
-        }
-        return true;
+    public final void assertProjectSpecified() throws BuildException {
+        if ( project() == null )
+            throw new BuildException( "Project descriptor or file ('projectdescriptor' and 'projectfile' " +
+                    "attributes respectively) not specified." );
     }
 }

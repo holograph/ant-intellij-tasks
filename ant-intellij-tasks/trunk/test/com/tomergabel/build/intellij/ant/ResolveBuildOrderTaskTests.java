@@ -28,7 +28,7 @@ public class ResolveBuildOrderTaskTests {
     public void test_NoProjectSpecified_BuildExceptionIsThrown() {
         try {
             task.setProperty( "property" );
-            task.executeTask();
+            task.execute();
             fail( "Project not specified but no exception was thrown." );
         } catch ( BuildException e ) {
             // Expected, all is well
@@ -39,7 +39,7 @@ public class ResolveBuildOrderTaskTests {
     public void test_NoProjectSpecified_NoFailOnError_NothingHappens() {
         task.setProperty( "property" );
         task.setFailonerror( false );
-        task.executeTask();
+        task.execute();
         assertNull( "Property generated, no such behavior expected.", project.getProperty( "property" ) );
     }
 
@@ -47,7 +47,7 @@ public class ResolveBuildOrderTaskTests {
     public void test_NoPropertySpecified_BuildExceptionIsThrown() throws LazyInitializationException {
         try {
             task.setProject( MockModel.Projects.buildOrderTest.get() );
-            task.executeTask();
+            task.execute();
             fail( "Property not specified but no exception was thrown." );
         } catch ( BuildException e ) {
             // Expected, all is well
@@ -58,7 +58,7 @@ public class ResolveBuildOrderTaskTests {
     public void test_NoPropertySpecified_NoFailOnError_NothingHappens() throws LazyInitializationException {
         task.setProject( MockModel.Projects.buildOrderTest.get() );
         task.setFailonerror( false );
-        task.executeTask();
+        task.execute();
         assertNull( "Property generated, no such behavior expected.", project.getProperty( "property" ) );
     }
 
@@ -69,7 +69,7 @@ public class ResolveBuildOrderTaskTests {
         task.setProperty( "property" );
         task.setMode( ResolutionModes.names );
         task.setFailonerror( false );
-        task.executeTask();
+        task.execute();
         final String property = project.getProperty( "property" );
         assertNotNull( "Property was not generated.", property );
         assertEquals( "Build order incorrectly resolved.",
@@ -84,7 +84,7 @@ public class ResolveBuildOrderTaskTests {
         task.setProperty( "property" );
         task.setMode( ResolutionModes.descriptors );
         task.setFailonerror( false );
-        task.executeTask();
+        task.execute();
         final String property = project.getProperty( "property" );
         assertNotNull( "Property was not generated.", property );
         assertEquals( "Build order incorrectly resolved.",

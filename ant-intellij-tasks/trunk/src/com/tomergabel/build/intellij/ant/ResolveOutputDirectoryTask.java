@@ -14,10 +14,8 @@ public class ResolveOutputDirectoryTask extends ModuleTaskBase {
 
     @Override
     public void executeTask() throws BuildException {
-        if ( this.property == null ) {
-            error( "Target property (attribute 'property') not specified." );
-            return;
-        }
+        if ( this.property == null )
+            throw new BuildException( "Target property (attribute 'property') not specified." );
 
         log( "Attempting to resolve output URL '" +
                 ( module().getOutputUrl() != null ? module().getOutputUrl() : "null" ) + "'", Project.MSG_VERBOSE );
@@ -25,8 +23,7 @@ public class ResolveOutputDirectoryTask extends ModuleTaskBase {
         try {
             outputDirectory = resolver().resolveModuleOutput();
         } catch ( ResolutionException e ) {
-            error( "Failed to resolve module output directory.", e );
-            return;
+            throw new BuildException( "Failed to resolve module output directory.", e );
         }
 
         log( "Output URL resolved to '" + outputDirectory + "'", Project.MSG_VERBOSE );

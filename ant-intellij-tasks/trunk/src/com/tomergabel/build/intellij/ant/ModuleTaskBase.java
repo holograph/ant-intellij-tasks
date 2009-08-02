@@ -19,7 +19,7 @@ public abstract class ModuleTaskBase extends ProjectTaskBase {
             // I prefer the more accurate 'moduledescriptor' attribute, hence the error
             // message does not mention 'srcfile'. Ant conventions require that 'srcfile'
             // should also be supported, but it doesn't mean I have promote it :-)
-            throw new BuildException( "Module descriptor or file ('moduledescriptor' and 'modulefile' " +
+            throw new BuildException( "Module descriptor or file ('moduleDescriptor' and 'moduleFile' " +
                     "attributes respectively) not specified." );
         }
     };
@@ -27,7 +27,7 @@ public abstract class ModuleTaskBase extends ProjectTaskBase {
     private final Lazy<ModuleResolver> moduleResolver = new Lazy<ModuleResolver>() {
         @Override
         public ModuleResolver call() throws Exception {
-            final ProjectResolver projectResolver = ModuleTaskBase.this.projectResolver.get();
+            final ProjectResolver projectResolver = ModuleTaskBase.this.projectResolver();
             final Module module = ModuleTaskBase.this.module.get();
             return projectResolver != null ? projectResolver.getModuleResolver( module ) : new ModuleResolver( module );
         }
@@ -80,8 +80,7 @@ public abstract class ModuleTaskBase extends ProjectTaskBase {
         try {
             return this.module.get();
         } catch ( LazyInitializationException e ) {
-            error( e.getCause() );
-            return null;
+            throw new BuildException( e.getCause() );
         }
     }
 
@@ -89,8 +88,7 @@ public abstract class ModuleTaskBase extends ProjectTaskBase {
         try {
             return this.moduleResolver.get();
         } catch ( LazyInitializationException e ) {
-            error( e.getCause() );
-            return null;
+            throw new BuildException( e.getCause() );
         }
     }
 }

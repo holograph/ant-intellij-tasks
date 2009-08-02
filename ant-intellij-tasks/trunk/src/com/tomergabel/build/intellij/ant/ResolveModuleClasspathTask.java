@@ -14,26 +14,16 @@ public class ResolveModuleClasspathTask extends ModuleTaskBase {
 
     @Override
     public void executeTask() throws BuildException {
-        if ( this.pathId == null ) {
-            error( "Target path ID (attribute 'pathId') not specified." );
-            return;
-        }
+        if ( this.pathId == null )
+            throw new BuildException( "Target path ID (attribute 'pathId') not specified." );
 
         // Resolve classpath
-        final String moduleName;
-        try {
-            moduleName = module().getName();
-        } catch ( Exception e ) {
-            error( "Cannot resolve module name.", e );
-            return;
-        }
-
+        final String moduleName = module().getName();
         final Collection<String> resolved;
         try {
             resolved = resolver().resolveModuleClasspath();
         } catch ( Exception e ) {
-            error( "Cannot resolve module classpath for module \"" + moduleName + "\".", e );
-            return;
+            throw new BuildException( "Cannot resolve module classpath for module \"" + moduleName + "\".", e );
         }
 
         // Create path object and add reference by name

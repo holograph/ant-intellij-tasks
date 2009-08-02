@@ -1,6 +1,5 @@
 package com.tomergabel.build.intellij.ant;
 
-import com.tomergabel.build.intellij.model.Module;
 import com.tomergabel.build.intellij.model.Project;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.FileSet;
@@ -31,14 +30,8 @@ public class ResolveModuleResourcesTask extends ModuleTaskBase {
 
     @Override
     public void executeTask() throws BuildException {
-        if ( this.pathId == null ) {
-            error( "Target path (attribute 'pathid') not specified." );
-            return;
-        }
-
-        final Module module = module();
-        if ( module == null )
-            return;
+        if ( this.pathId == null )
+            throw new BuildException( "Target path (attribute 'pathid') not specified." );
 
         // Resolve resources
         final Path path = new Path( getProject() );
@@ -46,7 +39,7 @@ public class ResolveModuleResourcesTask extends ModuleTaskBase {
         if ( project != null ) {
             // Derive resource patterns from project
             final FileSet fileset = new FileSet();
-            fileset.setDir( new File( module.getModuleRoot() ) );
+            fileset.setDir( new File( module().getModuleRoot() ) );
 
             final ArrayList<String> includes = new ArrayList<String>(
                     project.getResourceExtensions().size() + project.getResourceWildcardPatterns().size() );

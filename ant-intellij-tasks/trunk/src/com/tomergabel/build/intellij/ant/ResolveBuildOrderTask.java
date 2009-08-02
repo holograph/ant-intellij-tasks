@@ -1,6 +1,5 @@
 package com.tomergabel.build.intellij.ant;
 
-import com.tomergabel.build.intellij.model.ProjectResolver;
 import com.tomergabel.build.intellij.model.Module;
 import com.tomergabel.build.intellij.model.ResolutionException;
 import static com.tomergabel.util.CollectionUtils.join;
@@ -35,26 +34,17 @@ public class ResolveBuildOrderTask extends ProjectTaskBase {
 
     @Override
     protected void executeTask() throws BuildException {
-        if ( this.property == null ) {
-            error( "Target property (attribute 'property') not specified." );
-            return;
-        }
+        if ( this.property == null )
+            throw new BuildException( "Target property (attribute 'property') not specified." );
 
-        if ( !assertProjectSpecified() )
-            return;
-        final ProjectResolver resolver = projectResolver();
-        if ( resolver == null ) {
-            error( "Project not specified" );
-            return;
-        }
+        assertProjectSpecified();
 
         // Resolve build order
         final Collection<Module> buildOrder;
         try {
-            buildOrder = resolver.resolveModuleBuildOrder();
+            buildOrder = projectResolver().resolveModuleBuildOrder();
         } catch ( ResolutionException e ) {
-            error( e );
-            return;
+            throw new BuildException( e );
         }
 
         // Set the target property

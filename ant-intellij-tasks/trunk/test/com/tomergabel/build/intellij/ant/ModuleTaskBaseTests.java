@@ -1,6 +1,5 @@
 package com.tomergabel.build.intellij.ant;
 
-import static junit.framework.Assert.assertNull;
 import org.apache.tools.ant.BuildException;
 import static org.junit.Assert.fail;
 import org.junit.Before;
@@ -30,15 +29,12 @@ public class ModuleTaskBaseTests {
             if ( message == null )
                 throw new IllegalArgumentException( "Invalid test case: assertion failure message not specified" );
 
-            if ( this.task.failOnError )
-                try {
-                    this.task.module();
-                    fail( message + ", BuildException expected" );
-                } catch ( BuildException e ) {
-                    // Expected, all is well
-                }
-            else
-                assertNull( message + "but non-null value returned (say what?!)", this.task.module() );
+            try {
+                this.task.module();
+                fail( message + ", BuildException expected" );
+            } catch ( BuildException e ) {
+                // Expected, all is well
+            }
         }
 
         @Test
