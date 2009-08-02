@@ -111,19 +111,20 @@ public class ProjectResolver extends PropertyResolver {
         processModuleDependencyTree( nesting, new ArrayDeque<Module>(), modules );
 
         // Resolve according to dependency tree depth and render into priority queue
-        final PriorityQueue<Module> pq = new PriorityQueue<Module>( modules.size(), new Comparator<Module>() {
+        final List<Module> buildOrder = new ArrayList<Module>( modules );
+        Collections.sort( buildOrder, new Comparator<Module>() {
             @Override
             public int compare( final Module o1, final Module o2 ) {
                 if ( o1 == null || o2 == null )
                     // Safety net, should never happen
                     throw new IllegalArgumentException( "Null module encountered?" );
-                return nesting.get( o2 ) - nesting.get( o1 );
-            }
-        } );
-        pq.addAll( modules );
-
-        // Return queue
-        return Collections.unmodifiableCollection( pq );
+                final int delta = nesting.get( o2 ) - nesting.get( o1 );
+                if ( delta == 0 )
+                    return o1.getName().compareTo( o2.getName() );  // Module name as tie-breaker
+                else
+                    return delta;
+            } } );
+        return Collections.unmodifiableCollection( buildOrder );
     }
 
     private void processModuleDependencyTree( final Map<Module, Integer> nesting, final Deque<Module> ancestry,

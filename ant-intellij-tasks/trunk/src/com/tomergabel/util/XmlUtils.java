@@ -48,9 +48,9 @@ public final class XmlUtils {
 
                     @Override
                     public Node next() {
-                        if ( index >= nodeList.getLength() )
+                        if ( this.index >= nodeList.getLength() )
                             throw new NoSuchElementException();
-                        return nodeList.item( index++ );
+                        return nodeList.item( this.index++ );
                     }
 
                     @Override
@@ -98,7 +98,7 @@ public final class XmlUtils {
 
             @Override
             public boolean containsAll( final Collection<?> c ) {
-                for ( Object o : c )
+                for ( final Object o : c )
                     if ( !this.contains( o ) )
                         return false;
                 return true;

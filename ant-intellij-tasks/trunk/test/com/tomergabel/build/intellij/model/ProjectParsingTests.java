@@ -14,8 +14,8 @@ public class ProjectParsingTests {
 
     @Before
     public void testSetup() throws Exception {
-        resource = this.getClass().getResource( "parsing-test.ipr" ).toURI();
-        project = Project.parse( resource );
+        this.resource = this.getClass().getResource( "parsing-test.ipr" ).toURI();
+        this.project = Project.parse( this.resource );
     }
 
     @Test
@@ -72,7 +72,7 @@ public class ProjectParsingTests {
         // Assert correct property extraction
         assertSetEquality( "Project properties incorrectly generated.", new String[] { "PROJECT_DIR" },
                 this.project.getProperties().keySet() );
-        assertEquals( "Project directory incorrectly set.", UriUtils.getParent( resource ).getPath(),
+        assertEquals( "Project directory incorrectly set.", UriUtils.getParent( this.resource ).getPath(),
                 this.project.getProperties().get( "PROJECT_DIR" ) );
     }
 

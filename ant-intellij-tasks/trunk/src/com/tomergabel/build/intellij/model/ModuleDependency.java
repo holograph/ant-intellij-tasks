@@ -3,7 +3,8 @@ package com.tomergabel.build.intellij.model;
 public class ModuleDependency extends Dependency {
     public final String name;
 
-    public ModuleDependency( String name ) throws IllegalArgumentException {
+    public ModuleDependency( final String name ) throws IllegalArgumentException {
+        super();
         if ( name == null )
             throw new IllegalArgumentException( "Module name cannot be null." );
         this.name = name;
@@ -16,13 +17,13 @@ public class ModuleDependency extends Dependency {
 
         final ModuleDependency that = (ModuleDependency) o;
 
-        return !( name != null ? !name.equals( that.name ) : that.name != null );
+        return !( this.name != null ? !name.equals( that.name ) : that.name != null );
 
     }
 
     @Override
     public int hashCode() {
-        return name != null ? name.hashCode() : 0;
+        return this.name != null ? name.hashCode() : 0;
     }
 
     @Override
