@@ -365,7 +365,9 @@
       <JAVADOC>
         <root url="http://api.dpml.net/org/apache/ant/1.7.0" />
       </JAVADOC>
-      <SOURCES />
+      <SOURCES>
+        <root url="file://$PROJECT_DIR$/../../Sources/apache-ant-1.7.1/src/main" />
+      </SOURCES>
     </library>
     <library name="junit">
       <CLASSES>

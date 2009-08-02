@@ -176,6 +176,19 @@ public class ProjectResolver extends PropertyResolver {
         }
     }
 
+    public Module getModule( final URI moduleDescriptor ) throws IllegalArgumentException, ResolutionException {
+        if ( moduleDescriptor == null )
+            throw new IllegalArgumentException( "The module descriptor UIRI cannot be null." );
+        final Lazy<Module> m = this.moduleDescriptorMap.get( moduleDescriptor );
+        if ( m == null )
+            throw new ResolutionException( "No module found in project for URI \"" + moduleDescriptor + "\"." );
+        try {
+            return m.get();
+        } catch ( LazyInitializationException e ) {
+            throw new ResolutionException( e.getCause() );
+        }
+    }
+
     public ModuleResolver getModuleResolver( final Module module )
             throws IllegalArgumentException, ResolutionException {
         if ( module == null )

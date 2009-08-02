@@ -72,13 +72,21 @@ public abstract class TaskBase extends Task {
             if ( this.failOnError )
                 throw e;
             else
-                this.log( e, Project.MSG_ERR );
+                logError( e );
         } catch ( Exception e ) {
             if ( this.failOnError )
                 throw new BuildException( e );
             else
-                this.log( e, Project.MSG_ERR );
+                logError( e );
         }
+    }
+
+    protected void logError( final Throwable error ) {
+        // Workaround for Ant bug https://issues.apache.org/bugzilla/show_bug.cgi?id=47623
+        if ( error.getMessage() == null )
+            this.log( "", error, Project.MSG_ERR );
+        else
+            this.log( error, Project.MSG_ERR );
     }
 
     protected void assertNotExecuted() throws IllegalStateException {

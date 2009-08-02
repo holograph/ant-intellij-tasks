@@ -5,25 +5,39 @@ import com.tomergabel.build.intellij.model.ResolutionException;
 import static com.tomergabel.util.CollectionUtils.join;
 import static com.tomergabel.util.CollectionUtils.map;
 import org.apache.tools.ant.BuildException;
+import sun.plugin.dom.exception.InvalidStateException;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 
 public class ResolveBuildOrderTask extends ProjectTaskBase {
     protected static final String LIST_SEPARATOR = ",";
     protected String property;
-    protected Collection<String> moduleNames;
-    protected ResolutionModes mode = ResolutionModes.names;
+    protected Collection<String> modules;
+    protected ResolutionModes inputMode = ResolutionModes.names;
+    protected ResolutionModes outputMode = null;
 
-    public ResolutionModes getMode() {
-        return this.mode;
+    public ResolutionModes getInputMode() {
+        return this.inputMode;
     }
 
-    public void setMode( final ResolutionModes mode ) throws IllegalArgumentException {
-        if ( mode == null )
+    public void setInputMode( final ResolutionModes inputMode ) throws IllegalArgumentException {
+        if ( inputMode == null )
             throw new IllegalArgumentException( "Mode value cannot be null." );
 
-        this.mode = mode;
+        this.inputMode = inputMode;
+    }
+
+    public ResolutionModes getOutputMode() {
+        return this.outputMode;
+    }
+
+    public void setOutputMode( final ResolutionModes outputMode ) {
+        if ( outputMode == null )
+            throw new IllegalArgumentException( "Mode value cannot be null." );
+
+        this.outputMode = outputMode;
     }
 
     public String getProperty() {
@@ -41,7 +55,7 @@ public class ResolveBuildOrderTask extends ProjectTaskBase {
         if ( names == null )
             throw new IllegalArgumentException( "The name list cannot be null." );
 
-        this.moduleNames = Arrays.asList( names.split( LIST_SEPARATOR ) );
+        this.modules = Arrays.asList( names.split( LIST_SEPARATOR ) );
     }
 
     @Override
@@ -54,13 +68,31 @@ public class ResolveBuildOrderTask extends ProjectTaskBase {
         // Resolve build order
         final Collection<Module> buildOrder;
         try {
-            buildOrder = this.moduleNames != null ? projectResolver().resolveModuleBuildOrderByName( this.moduleNames )
-                    : projectResolver().resolveModuleBuildOrder();
+            if ( this.modules == null )
+                buildOrder = projectResolver().resolveModuleBuildOrder();
+            else switch ( this.inputMode ) {
+                case names:
+                    buildOrder = projectResolver().resolveModuleBuildOrderByName( this.modules );
+                    break;
+
+                case descriptors:
+                    buildOrder = new HashSet<Module>();
+                    for ( final String descriptor : this.modules )
+                        buildOrder
+                                .add( projectResolver().getModule( projectResolver().resolveUriString( descriptor ) ) );
+                    break;
+
+                default:
+                    // Safety net, should never happen
+                    throw new InvalidStateException( "Unknown input mode '" + this.inputMode + "'" );
+            }
         } catch ( ResolutionException e ) {
             throw new BuildException( e );
         }
 
         // Set the target property
-        getProject().setProperty( this.property, join( map( buildOrder, this.mode.mapper ), LIST_SEPARATOR ) );
+        getProject().setProperty( this.property,
+                join( map( buildOrder, ( this.outputMode == null ? this.inputMode : this.outputMode ).mapper ),
+                        LIST_SEPARATOR ) );
     }
 }

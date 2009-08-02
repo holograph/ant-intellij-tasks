@@ -1,9 +1,11 @@
 package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.MockModel;
-import com.tomergabel.util.CollectionUtils;
+import static com.tomergabel.build.intellij.model.MockModel.Modules.*;
+import com.tomergabel.build.intellij.model.Module;
+import static com.tomergabel.util.CollectionUtils.join;
+import static com.tomergabel.util.CollectionUtils.map;
 import com.tomergabel.util.LazyInitializationException;
-import com.tomergabel.util.UriUtils;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import org.apache.tools.ant.BuildException;
@@ -11,11 +13,27 @@ import org.apache.tools.ant.Project;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 public class ResolveBuildOrderTaskTests {
     ResolveBuildOrderTask task;
     Project project;
+
+    static Collection<Module> buildOrder;
+    static String nameBuildOrder;
+    static String descriptorBuildOrder;
+
+    @BeforeClass
+    public static void fixtureSetup() throws LazyInitializationException {
+        buildOrder = Arrays
+                .asList( buildOrderTestD.get(), buildOrderTestC.get(), buildOrderTestB.get(), buildOrderTestA.get() );
+        nameBuildOrder = join( map( buildOrder, ResolutionModes.names.mapper ) );
+        descriptorBuildOrder = join( map( buildOrder, ResolutionModes.descriptors.mapper ) );
+    }
 
     @Before
     public void testSetup() {
@@ -63,44 +81,120 @@ public class ResolveBuildOrderTaskTests {
     }
 
     @Test
-    public void execute_ProjectPropertyAndNamesModeSpecified_PropertyGeneratedCorrectly()
+    public void execute_ProjectProperty_InputUnspecified_NameOutput_PropertyGeneratedCorrectly()
             throws LazyInitializationException {
         task.setProject( MockModel.Projects.buildOrderTest.get() );
         task.setProperty( "property" );
-        task.setMode( ResolutionModes.names );
-        task.setFailonerror( false );
+        task.setOutputMode( ResolutionModes.names );
         task.execute();
         final String property = project.getProperty( "property" );
         assertNotNull( "Property was not generated.", property );
-        assertEquals( "Build order incorrectly resolved.",
-                "build-order-test-d,build-order-test-c,build-order-test-b,build-order-test-a",
-                property );
+        assertEquals( "Build order incorrectly resolved.", nameBuildOrder, property );
     }
 
     @Test
-    public void execute_ProjectPropertyAndDescriptorsModeSpecified_PropertyGeneratedCorrectly()
+    public void execute_ProjectProperty_InputUnspecified_DescriptorOutput_PropertyGeneratedCorrectly()
             throws LazyInitializationException {
         task.setProject( MockModel.Projects.buildOrderTest.get() );
         task.setProperty( "property" );
-        task.setMode( ResolutionModes.descriptors );
-        task.setFailonerror( false );
+        task.setOutputMode( ResolutionModes.descriptors );
         task.execute();
         final String property = project.getProperty( "property" );
         assertNotNull( "Property was not generated.", property );
-        assertEquals( "Build order incorrectly resolved.",
-                CollectionUtils.join( ResolveBuildOrderTask.LIST_SEPARATOR,
-                        UriUtils.getPath( MockModel.Modules.buildOrderTestD.get().getModuleDescriptor() ),
-                        UriUtils.getPath( MockModel.Modules.buildOrderTestC.get().getModuleDescriptor() ),
-                        UriUtils.getPath( MockModel.Modules.buildOrderTestB.get().getModuleDescriptor() ),
-                        UriUtils.getPath( MockModel.Modules.buildOrderTestA.get().getModuleDescriptor() )
-                ), property );
+        assertEquals( "Build order incorrectly resolved.", descriptorBuildOrder, property );
+    }
+
+    @Test
+    public void execute_ProjectProperty_InputUnspecified_OutputUnspecified_PropertyGeneratedCorrectly()
+            throws LazyInitializationException {
+        task.setProject( MockModel.Projects.buildOrderTest.get() );
+        task.setProperty( "property" );
+        task.execute();
+        final String property = project.getProperty( "property" );
+        assertNotNull( "Property was not generated.", property );
+        assertEquals( "Build order incorrectly resolved.", nameBuildOrder, property );
+    }
+
+    @Test
+    public void execute_ProjectProperty_NameInput_NameOutput_PropertyGeneratedCorrectly()
+            throws LazyInitializationException {
+        task.setProject( MockModel.Projects.buildOrderTest.get() );
+        task.setProperty( "property" );
+        task.setInputMode( ResolutionModes.names );
+        task.setOutputMode( ResolutionModes.names );
+        task.execute();
+        final String property = project.getProperty( "property" );
+        assertNotNull( "Property was not generated.", property );
+        assertEquals( "Build order incorrectly resolved.", nameBuildOrder, property );
+    }
+
+    @Test
+    public void execute_ProjectProperty_NamesInput_DescriptorOutput_PropertyGeneratedCorrectly()
+            throws LazyInitializationException {
+        task.setProject( MockModel.Projects.buildOrderTest.get() );
+        task.setProperty( "property" );
+        task.setInputMode( ResolutionModes.names );
+        task.setOutputMode( ResolutionModes.descriptors );
+        task.execute();
+        final String property = project.getProperty( "property" );
+        assertNotNull( "Property was not generated.", property );
+        assertEquals( "Build order incorrectly resolved.", descriptorBuildOrder, property );
+    }
+
+    @Test
+    public void execute_ProjectProperty_NamesInput_OutputUnspecified_PropertyGeneratedCorrectly()
+            throws LazyInitializationException {
+        task.setProject( MockModel.Projects.buildOrderTest.get() );
+        task.setProperty( "property" );
+        task.setInputMode( ResolutionModes.names );
+        task.execute();
+        final String property = project.getProperty( "property" );
+        assertNotNull( "Property was not generated.", property );
+        assertEquals( "Build order incorrectly resolved.", nameBuildOrder, property );
+    }
+
+    @Test
+    public void execute_ProjectProperty_DescriptorInput_NameOutput_PropertyGeneratedCorrectly()
+            throws LazyInitializationException {
+        task.setProject( MockModel.Projects.buildOrderTest.get() );
+        task.setProperty( "property" );
+        task.setInputMode( ResolutionModes.descriptors );
+        task.setOutputMode( ResolutionModes.names );
+        task.execute();
+        final String property = project.getProperty( "property" );
+        assertNotNull( "Property was not generated.", property );
+        assertEquals( "Build order incorrectly resolved.", nameBuildOrder, property );
+    }
+
+    @Test
+    public void execute_ProjectProperty_DescriptorInput_DescriptorOutput_PropertyGeneratedCorrectly()
+            throws LazyInitializationException {
+        task.setProject( MockModel.Projects.buildOrderTest.get() );
+        task.setProperty( "property" );
+        task.setInputMode( ResolutionModes.descriptors );
+        task.setOutputMode( ResolutionModes.descriptors );
+        task.execute();
+        final String property = project.getProperty( "property" );
+        assertNotNull( "Property was not generated.", property );
+        assertEquals( "Build order incorrectly resolved.", descriptorBuildOrder, property );
+    }
+
+    @Test
+    public void execute_ProjectProperty_DescriptorInput_OutputUnspecified_PropertyGeneratedCorrectly()
+            throws LazyInitializationException {
+        task.setProject( MockModel.Projects.buildOrderTest.get() );
+        task.setProperty( "property" );
+        task.setInputMode( ResolutionModes.descriptors );
+        task.execute();
+        final String property = project.getProperty( "property" );
+        assertNotNull( "Property was not generated.", property );
+        assertEquals( "Build order incorrectly resolved.", descriptorBuildOrder, property );
     }
 
     public void execute_ModuleNamesSpecified_PropertyGeneratedCorrectly() throws LazyInitializationException {
         task.setProject( MockModel.Projects.buildOrderTest.get() );
         task.setProperty( "property" );
-        task.setMode( ResolutionModes.names );
-        task.setFailonerror( false );
+        task.setInputMode( ResolutionModes.names );
         task.setModules( "build-order-test-a,build-order-test-b" );
         task.execute();
         final String property = project.getProperty( "property" );
