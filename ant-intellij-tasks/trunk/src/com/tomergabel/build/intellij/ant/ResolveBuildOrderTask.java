@@ -6,9 +6,9 @@ import static com.tomergabel.util.CollectionUtils.join;
 import static com.tomergabel.util.CollectionUtils.map;
 import org.apache.tools.ant.BuildException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 
 public class ResolveBuildOrderTask extends ProjectTaskBase {
     protected static final String LIST_SEPARATOR = ",";
@@ -75,7 +75,7 @@ public class ResolveBuildOrderTask extends ProjectTaskBase {
                     break;
 
                 case descriptors:
-                    buildOrder = new HashSet<Module>();
+                    buildOrder = new ArrayList<Module>();   // Make sure order is maintained
                     for ( final String descriptor : this.modules )
                         buildOrder
                                 .add( projectResolver().getModule( projectResolver().resolveUriString( descriptor ) ) );

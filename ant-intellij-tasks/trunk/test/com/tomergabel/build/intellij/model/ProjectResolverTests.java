@@ -1,10 +1,10 @@
 package com.tomergabel.build.intellij.model;
 
+import static com.tomergabel.build.intellij.model.MockModel.Modules.*;
 import com.tomergabel.util.LazyInitializationException;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.fail;
 import org.junit.Test;
-import static com.tomergabel.build.intellij.model.MockModel.Modules.*;
 
 import java.util.Arrays;
 import java.util.Collection;
