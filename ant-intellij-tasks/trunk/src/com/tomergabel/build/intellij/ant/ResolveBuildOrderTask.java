@@ -50,11 +50,11 @@ public class ResolveBuildOrderTask extends ProjectTaskBase {
         this.property = property;
     }
 
-    public void setModules( final String names ) {
-        if ( names == null )
+    public void setModules( final String modules ) {
+        if ( modules == null )
             throw new IllegalArgumentException( "The name list cannot be null." );
 
-        this.modules = Arrays.asList( names.split( LIST_SEPARATOR ) );
+        this.modules = Arrays.asList( modules.split( LIST_SEPARATOR ) );
     }
 
     @Override
