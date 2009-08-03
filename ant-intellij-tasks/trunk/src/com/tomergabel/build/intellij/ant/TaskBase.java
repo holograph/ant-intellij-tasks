@@ -37,7 +37,7 @@ public abstract class TaskBase extends Task {
                 sw.write( "Caused by: " );
             }
 
-            if ( !( error instanceof ModelException ) ) {
+            if ( !( error instanceof ModelException ) && !( error instanceof BuildException ) ) {
                 error.printStackTrace( new PrintWriter( sw, true ) );
                 break;
             }
