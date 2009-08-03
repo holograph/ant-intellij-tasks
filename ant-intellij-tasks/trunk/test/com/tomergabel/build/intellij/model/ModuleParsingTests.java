@@ -29,9 +29,9 @@ public class ModuleParsingTests {
     @Test
     public void testDependencyExtraction() {
         assertSetEquality( "Dependencies incorrectly parsed.", new Dependency[] {
-                new LibraryDependency( LibraryDependency.Level.PROJECT, "servlet-api" ),
-                new LibraryDependency( LibraryDependency.Level.PROJECT, "log4j" ),
-                new LibraryDependency( LibraryDependency.Level.PROJECT, "junit" ),
+                new ProjectLibraryDependency( "servlet-api" ),
+                new ProjectLibraryDependency( "log4j" ),
+                new ProjectLibraryDependency( "junit" ),
                 new ModuleDependency( "dependee" )
         }, this.module.getDependencies() );
     }

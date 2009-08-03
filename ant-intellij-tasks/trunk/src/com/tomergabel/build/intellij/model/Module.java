@@ -11,9 +11,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
 
-public final class Module extends IntelliJParserBase implements LibraryContainer {
+public final class Module extends IntelliJParserBase {
     private final URI moduleDescriptor;
     private String outputUrl = null;
     private String testOutputUrl = null;
@@ -21,7 +24,6 @@ public final class Module extends IntelliJParserBase implements LibraryContainer
     private final Collection<String> sourceUrls;
     private final Collection<String> testSourceUrls;
     private final Collection<Dependency> dependencies;
-    private final Map<String, Library> libraries = new HashMap<String, Library>();
     private final String name;
     private boolean inheritOutput = true;
 
@@ -63,11 +65,6 @@ public final class Module extends IntelliJParserBase implements LibraryContainer
 
     public Collection<Dependency> getDependencies() {
         return Collections.unmodifiableCollection( this.dependencies );
-    }
-
-    @Override
-    public Map<String, Library> getLibraries() {
-        return this.libraries;
     }
 
     private Module( final URI moduleDescriptor, final Handler defaultHandler ) throws IllegalArgumentException {
@@ -133,7 +130,6 @@ public final class Module extends IntelliJParserBase implements LibraryContainer
         if ( this.contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl )
                 : module.contentRootUrl != null )
             return false;
-        if ( !setEquals( this.libraries.entrySet(), module.libraries.entrySet() ) ) return false;
         if ( !setEquals( this.dependencies, module.dependencies ) ) return false;
         if ( this.moduleDescriptor != null ? !moduleDescriptor.equals( module.moduleDescriptor )
                 : module.moduleDescriptor != null ) return false;
@@ -157,7 +153,6 @@ public final class Module extends IntelliJParserBase implements LibraryContainer
         result = 31 * result + deepHashCode( this.sourceUrls );
         result = 31 * result + deepHashCode( this.testSourceUrls );
         result = 31 * result + deepHashCode( this.dependencies );
-        result = 31 * result + deepHashCode( this.libraries.entrySet() );
         result = 31 * result + ( this.name != null ? name.hashCode() : 0 );
         result = 31 * result + ( this.inheritOutput ? 1 : 0 );
         return result;
@@ -217,11 +212,8 @@ public final class Module extends IntelliJParserBase implements LibraryContainer
                     // TODO handle forTests
                 } else if ( "module-library".equals( type ) ) {
                     for ( final Node libraryNode : extractAll( dependency, "library",
-                            "Cannot extract module library descriptor" ) ) {
-                        final Library library = new Library( libraryNode );
-                        if ( Module.this.libraries.put( library.getName(), library ) != null )
-                            throw new ParseException( "Library \"" + library.getName() + "\" defined more than once." );
-                    }
+                            "Cannot extract module library descriptor" ) )
+                        Module.this.dependencies.add( new ModuleLibraryDependency( new Library( libraryNode ) ) );
                 } else if ( "library".equals( type ) ) {
                     final String name = extract( dependency, "@name", "Cannot extract library dependency name" );
                     final LibraryDependency.Level level;
@@ -232,7 +224,11 @@ public final class Module extends IntelliJParserBase implements LibraryContainer
                         throw new ParseException(
                                 "Cannot parse library dependency level for library \"" + name + "\"" );
                     }
-                    Module.this.dependencies.add( new LibraryDependency( level, name ) );
+
+                    if ( level != LibraryDependency.Level.PROJECT )
+                        throw new ParseException( "Named " + level + "-level library dependencies are not supported." );
+
+                    Module.this.dependencies.add( new ProjectLibraryDependency( name ) );
                 } else if ( "module".equals( type ) ) {
                     Module.this.dependencies.add( new ModuleDependency(
                             extract( dependency, "@module-name",

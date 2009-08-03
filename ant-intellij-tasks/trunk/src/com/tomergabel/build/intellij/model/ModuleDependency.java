@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
-public class ModuleDependency extends Dependency {
+public class ModuleDependency implements Dependency {
     public final String name;
 
     public ModuleDependency( final String name ) throws IllegalArgumentException {
@@ -36,7 +36,7 @@ public class ModuleDependency extends Dependency {
     }
 
     @Override
-    Collection<String> resolveClasspath( final ModuleResolver resolver ) throws ResolutionException {
+    public Collection<String> resolveClasspath( final ModuleResolver resolver ) throws ResolutionException {
         // Resolve the depenendee against the project
         final ProjectResolver project = resolver.getProjectResolver();
         if ( project == null )

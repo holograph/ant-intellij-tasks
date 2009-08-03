@@ -5,7 +5,7 @@ import java.util.Collection;
 /**
  * An abstract class providing a common base object for dependencies within an IntelliJ IDEA project.
  */
-public abstract class Dependency {
+public interface Dependency {
     /**
      * Resolves the entries this dependency contributes to a dependent module's classpath.
      *
@@ -14,5 +14,5 @@ public abstract class Dependency {
      * @return The classpath entries resolved against the specified module.
      * @throws ResolutionException An error has occurred while resolving the classpath.
      */
-    abstract Collection<String> resolveClasspath( ModuleResolver resolver ) throws ResolutionException;
+    Collection<String> resolveClasspath( final ModuleResolver resolver ) throws ResolutionException;
 }
