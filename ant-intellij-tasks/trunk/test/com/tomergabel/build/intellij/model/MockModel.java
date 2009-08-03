@@ -69,6 +69,7 @@ public final class MockModel {
         public static Lazy<Module> buildOrderTestD = new LazyModuleLoader( "modules/build-order-test-d.iml" );
         public static Lazy<Module> circualrDependencyTestA = new LazyModuleLoader( "modules/circular-dependency-test-a.iml" );
         public static Lazy<Module> circualrDependencyTestB = new LazyModuleLoader( "modules/circular-dependency-test-b.iml" );
+        public static Lazy<Module> withModuleLibrary = new LazyModuleLoader( "modules/with-module-library.iml" );
 
         static class LazyModuleLoader extends LazyLoader<Module> {
             LazyModuleLoader( final String file ) {

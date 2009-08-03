@@ -12,6 +12,17 @@ public final class Library extends ParserBase {
     private final Collection<String> javadoc = new HashSet<String>();
     private final Collection<String> sources = new HashSet<String>();
 
+    /**
+     * Package-only c'tor for testing purposes.
+     * @param name The library name.
+     * @param classes The library's classpath.
+     */
+    Library( final String name, final Collection<String> classes ) {
+        super();
+        this.name = name;
+        this.classes.addAll( classes );
+    }
+
     public Library( final Node libraryNode ) throws ParseException {
         super();
 

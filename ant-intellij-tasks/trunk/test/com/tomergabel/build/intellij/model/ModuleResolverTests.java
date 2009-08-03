@@ -125,6 +125,16 @@ public class ModuleResolverTests {
                         Modules.dependantLibrary.get() ).resolveLibraryDependencies() );
     }
 
+    @Test
+    public void testResolveLibraryDependencies_WithModuleLibraries_LibrariesResolvedCorrectly()
+            throws Exception {
+        assertSetEquality( "Project dependencies resolved incorrectly.",
+                Collections.singleton(
+                        UriUtils.getPath( MockModel.class.getResource( "." ).toURI().resolve( "modules/library/" ) ) ),
+                new ModuleResolver( (ProjectResolver) null,
+                        Modules.withModuleLibrary.get() ).resolveLibraryDependencies() );
+    }
+
     // ------------------------------------------------------
     // resolveModuleClasspath tests
     // ------------------------------------------------------
@@ -189,5 +199,13 @@ public class ModuleResolverTests {
         } catch ( ResolutionException e ) {
             // Expected, all is well
         }
+    }
+
+    @Test
+    public void testResolveClasspath_WithModuleLevelLibraryDependenciesAndNoProjectSpecified_ClasspathResolvedCorrectly()
+            throws Exception {
+        assertSetEquality( "Classpath resolved incorrectly.", Collections.singleton(
+                UriUtils.getPath( MockModel.class.getResource( "." ).toURI().resolve( "modules/library/" ) ) ),
+                resolveModuleClasspath( null, Modules.withModuleLibrary.get() ) );
     }
 }
