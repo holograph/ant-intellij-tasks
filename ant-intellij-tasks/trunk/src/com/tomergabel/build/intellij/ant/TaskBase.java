@@ -1,8 +1,12 @@
 package com.tomergabel.build.intellij.ant;
 
+import com.tomergabel.build.intellij.model.ModelException;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public abstract class TaskBase extends Task {
     protected boolean failOnError = true;
@@ -17,50 +21,33 @@ public abstract class TaskBase extends Task {
         this.failOnError = failonerror;
     }
 
-//    protected void error( final String message ) throws BuildException {
-//        error( message, null );
-//    }
-//
-//    protected void error( final Throwable cause ) throws BuildException {
-//        error( null, cause );
-//    }
-//
-//    protected void error( final String message, final Throwable cause ) throws BuildException {
-//        if ( this.failOnError )
-//            throw new BuildException( formatErrorMessage( message, cause ) );
-//        else
-//            this.log( message, cause, Project.MSG_ERR );
-//    }
-//
-//    public static final String NEWLINE_SEPARATOR = System.getProperty( "line.separator" );
-//
-//    public String formatErrorMessage( final String message, Throwable cause ) {
-//        final StringWriter sw = new StringWriter();
-//        boolean first = true;
-//        if ( message != null ) {
-//            sw.write( message );
-//            first = false;
-//        }
-//
-//        while ( cause != null ) {
-//            if ( first )
-//                first = false;
-//            else {
-//                sw.write( NEWLINE_SEPARATOR );
-//                sw.write( "Caused by: " );
-//            }
-//
-//            if ( !( cause instanceof ModelException ) ) {
-//                cause.printStackTrace( new PrintWriter( sw, true ) );
-//                break;
-//            }
-//
-//            sw.write( cause.getMessage() );
-//            cause = cause.getCause();
-//        }
-//
-//        return sw.toString();
-//    }
+    public static final String NEWLINE_SEPARATOR = System.getProperty( "line.separator" );
+
+    public String formatErrorMessage( Throwable error ) {
+        if ( error == null )
+            throw new IllegalArgumentException( "The error cannot be null." );
+
+        final StringWriter sw = new StringWriter();
+        boolean first = true;
+        while ( error != null ) {
+            if ( first )
+                first = false;
+            else {
+                sw.write( NEWLINE_SEPARATOR );
+                sw.write( "Caused by: " );
+            }
+
+            if ( !( error instanceof ModelException ) ) {
+                error.printStackTrace( new PrintWriter( sw, true ) );
+                break;
+            }
+
+            sw.write( error.getMessage() );
+            error = error.getCause();
+        }
+
+        return sw.toString();
+    }
 
     @Override
     public final void execute() throws BuildException {
@@ -68,25 +55,14 @@ public abstract class TaskBase extends Task {
         this.executed = true;
         try {
             executeTask();
-        } catch ( BuildException e ) {
-            if ( this.failOnError )
-                throw e;
-            else
-                logError( e );
         } catch ( Exception e ) {
+            final String message = formatErrorMessage( e );
             if ( this.failOnError )
-                throw new BuildException( e );
+                throw new BuildException( message );
             else
-                logError( e );
+                // Workaround for Ant bug https://issues.apache.org/bugzilla/show_bug.cgi?id=47623
+                this.log( message, Project.MSG_ERR );
         }
-    }
-
-    protected void logError( final Throwable error ) {
-        // Workaround for Ant bug https://issues.apache.org/bugzilla/show_bug.cgi?id=47623
-        if ( error.getMessage() == null )
-            this.log( "", error, Project.MSG_ERR );
-        else
-            this.log( error, Project.MSG_ERR );
     }
 
     protected void assertNotExecuted() throws IllegalStateException {
