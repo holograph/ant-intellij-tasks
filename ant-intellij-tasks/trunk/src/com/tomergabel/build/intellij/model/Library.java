@@ -90,7 +90,7 @@ public final class Library extends ParserBase {
                 return ( recursive && pathname.isDirectory() ) || pathname.getName().toLowerCase().endsWith( ".jar" );
             }
         } ) ) {
-            if ( file.isDirectory() )
+            if ( recursive && file.isDirectory() )
                 resolveJarDirectory( file, recursive, bag );
             else
                 bag.add( file.getAbsolutePath() );
@@ -109,6 +109,6 @@ public final class Library extends ParserBase {
 
     @Override
     public String toString() {
-        return this.name == null ? "anonymous library" : "library \"" + this.name + "\"";
+        return this.name == null ? "an anonymous library" : "library \"" + this.name + "\"";
     }
 }

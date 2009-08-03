@@ -129,9 +129,8 @@ public class ModuleResolverTests {
     @Test
     public void testResolveLibraryDependencies_WithModuleLibraries_LibrariesResolvedCorrectly()
             throws Exception {
-        assertSetEquality( "Project dependencies resolved incorrectly.",
-                Collections.singleton(
-                        UriUtils.getPath( MockModel.class.getResource( "." ).toURI().resolve( "modules/library/" ) ) ),
+        assertSetEquality( "Project dependencies resolved incorrectly.", Arrays.asList(
+                UriUtils.getPath( MockModel.class.getResource( "." ).toURI().resolve( "modules/library/" ) ) ),
                 new ModuleResolver( (ProjectResolver) null,
                         Modules.withModuleLibrary.get() ).resolveLibraryDependencies() );
     }
@@ -213,9 +212,15 @@ public class ModuleResolverTests {
     @Test
     public void testResolveClasspath_WithModuleLevelLibraryDependenciesWithJarDirectories_ClasspathResolvedCorrectly()
             throws Exception {
+        assertSetEquality( "Classpath resolved incorrectly.", Collections.singleton( MockModel.Jars.outerMock ),
+                resolveModuleClasspath( null, Modules.withJarDirectory.get() ) );
+    }
+
+    @Test
+    public void testResolveClasspath_WithModuleLevelLibraryDependenciesWithRecursiveJarDirectories_ClasspathResolvedCorrectly()
+            throws Exception {
         assertSetEquality( "Classpath resolved incorrectly.",
-                Arrays.asList( MockModel.Jars.innerMock, MockModel.Jars.outerMock,
-                        UriUtils.getPath( MockModel.class.getResource( "." ).toURI().resolve( "modules/library/" ) ) ),
-                resolveModuleClasspath( null, Modules.withModuleLibraryRecursive.get() ) );
+                Arrays.asList( MockModel.Jars.innerMock, MockModel.Jars.outerMock ),
+                resolveModuleClasspath( null, Modules.withJarDirectoryRecursive.get() ) );
     }
 }

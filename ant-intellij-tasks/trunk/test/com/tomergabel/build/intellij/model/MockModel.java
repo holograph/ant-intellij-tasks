@@ -71,7 +71,8 @@ public final class MockModel {
         public static final Lazy<Module> circualrDependencyTestA = new LazyModuleLoader( "modules/circular-dependency-test-a.iml" );
         public static final Lazy<Module> circualrDependencyTestB = new LazyModuleLoader( "modules/circular-dependency-test-b.iml" );
         public static final Lazy<Module> withModuleLibrary = new LazyModuleLoader( "modules/with-module-library.iml" );
-        public static final Lazy<Module> withModuleLibraryRecursive = new LazyModuleLoader( "modules/with-module-library-recursive.iml" );
+        public static final Lazy<Module> withJarDirectory = new LazyModuleLoader( "modules/with-jar-directory.iml" );
+        public static final Lazy<Module> withJarDirectoryRecursive = new LazyModuleLoader( "modules/with-jar-directory-recursive.iml" );
 
         static class LazyModuleLoader extends LazyLoader<Module> {
             LazyModuleLoader( final String file ) {
@@ -99,8 +100,8 @@ public final class MockModel {
 
         static {
             try {
-                innerMock = UriUtils.getPath( MockModel.class.getResource( "jars/inner-mock.jar" ).toURI() );
-                outerMock = UriUtils.getPath( MockModel.class.getResource( "jars/inner-mock.jar" ).toURI() );
+                outerMock = UriUtils.getPath( MockModel.class.getResource( "jars/outer-mock.jar" ).toURI() );
+                innerMock = UriUtils.getPath( MockModel.class.getResource( "jars/recursive/inner-mock.jar" ).toURI() );
             } catch ( URISyntaxException e ) {
                 throw new RuntimeException( e );
             }

@@ -1,10 +1,6 @@
 package com.tomergabel.build.intellij.model;
 
-import com.tomergabel.util.UriUtils;
-
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 
 /**
  * Specifies a dependency on a library.
@@ -63,32 +59,4 @@ public abstract class LibraryDependency implements Dependency {
      * @throws ResolutionException An error has occurred while resolving the library.
      */
     public abstract Library resolveLibrary( final ModuleResolver resolver ) throws ResolutionException;
-
-//        // First, see if a library was specifically specified. If not we'll have to fallback to a library
-//        // container.
-//        if ( this.library != null )
-//            return this.library;
-//
-//        // Resolve library container
-//        final Map<String, Library> libraries;
-//        switch ( this.level ) {
-//            case MODULE:
-//                libraries = resolver.getModule().getLibraries();
-//                break;
-//            case PROJECT:
-//                final ProjectResolver project = resolver.getProjectResolver();
-//                if ( project == null )
-//                    throw new ResolutionException( "Cannot resolve project-level library \"" + this.name +
-//                            "\" because no project was specified." );
-//                libraries = project.getProject().getLibraries();
-//                break;
-//            default:
-//                throw new IllegalStateException( "Unrecognized library level \"" + this.level + "\"" );
-//        }
-//
-//        // Resolve library
-//        if ( !libraries.containsKey( this.name ) )
-//            throw new ResolutionException(
-//                    "Cannot find " + this.level.toString().toLowerCase() + "-level library \"" + this.name + "\"." );
-//        return libraries.get( this.name );
 }
