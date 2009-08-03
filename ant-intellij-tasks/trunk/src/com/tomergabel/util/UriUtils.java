@@ -81,13 +81,28 @@ public final class UriUtils {
      * @throws IllegalArgumentException <ul><li>The URI cannot be null.</li><li>Wrong URI scheme for path resolution;
      *                                  only file:// URIs are supported.</li></ul>
      */
-    public static String getPath( final URI uri ) throws IllegalArgumentException {
+    public static String getPath( URI uri ) throws IllegalArgumentException {
         if ( uri == null )
             throw new IllegalArgumentException( "The URI cannot be null." );
         if ( !"file".equals( uri.getScheme() ) )
             throw new IllegalArgumentException(
                     "Wrong URI scheme for path resolution, expected \"file\" " + "and got \"" + uri.getScheme() +
                             "\"" );
-        return new File( uri ).getAbsolutePath();
+
+        // Workaround for the following bug: http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5086147
+        // Remove (or add, take your pick...) extra slashes after the scheme part.
+        if ( uri.getAuthority() != null )
+            try {
+                uri = new URI( uri.toString().replace( "file://", "file:/" ) );
+            } catch ( URISyntaxException e ) {
+                throw new IllegalArgumentException( "The specified URI contains an authority, but could not be " +
+                        "normalized.", e );
+            }
+
+        try {
+            return new File( uri ).getAbsolutePath();
+        } catch ( IllegalArgumentException e ) {
+            throw new IllegalArgumentException( "URI \"" + uri + "\" is invalid", e );
+        }
     }
 }

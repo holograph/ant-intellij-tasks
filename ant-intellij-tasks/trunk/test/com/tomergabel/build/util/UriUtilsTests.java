@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.MalformedURLException;
 
 public class UriUtilsTests {
     @Test
@@ -39,7 +40,8 @@ public class UriUtilsTests {
     }
 
     @Test
-    public void testGetFilename_WithTrailingSlash_ThrowsIllegalArgumentException() throws URISyntaxException {
+    public void testGetFilename_WithTrailingSlash_ThrowsIllegalArgumentException()
+            throws URISyntaxException, MalformedURLException {
         final URI uri = new URI( "file://c:/temp/test/" );
         try {
             UriUtils.getFilename( uri );
@@ -53,5 +55,11 @@ public class UriUtilsTests {
     public void testGetFilename_ProperFileURI_FilenameReturned() throws URISyntaxException {
         final URI uri = new URI( "file://c:/temp/test/ham.and.eggs" );
         assertEquals( "Get filename failed on file.", "ham.and.eggs", UriUtils.getFilename( uri ) );
+    }
+
+    @Test
+    public void testGetPath_AbsoluteFileURI_PathReturned() throws URISyntaxException, MalformedURLException {
+        final URI uri = new URI( "file://c:/temp/test/ham.and.eggs" );
+        assertEquals( "Get filename failed on file.", "c:\\temp\\test\\ham.and.eggs", UriUtils.getPath( uri ) );
     }
 }
