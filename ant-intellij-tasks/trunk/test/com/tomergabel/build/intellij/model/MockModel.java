@@ -6,6 +6,7 @@ import com.tomergabel.util.UriUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.net.URISyntaxException;
 
 public final class MockModel {
     private MockModel() {
@@ -36,11 +37,11 @@ public final class MockModel {
     }
 
     public static class Projects {
-        public static Lazy<Project> allModules = new LazyProjectLoader( "projects/all-modules.ipr" );
-        public static Lazy<Project> buildOrderTest = new LazyProjectLoader( "projects/build-order-test.ipr" );
-        public static Lazy<Project> outputSpecified = new LazyProjectLoader( "projects/output-specified.ipr" );
-        public static Lazy<Project> outputUnspecified = new LazyProjectLoader( "projects/output-unspecified.ipr" );
-        public static Lazy<Project> circularDependencyTest = new LazyProjectLoader( "projects/circular-dependency-test.ipr" );
+        public static final Lazy<Project> allModules = new LazyProjectLoader( "projects/all-modules.ipr" );
+        public static final Lazy<Project> buildOrderTest = new LazyProjectLoader( "projects/build-order-test.ipr" );
+        public static final Lazy<Project> outputSpecified = new LazyProjectLoader( "projects/output-specified.ipr" );
+        public static final Lazy<Project> outputUnspecified = new LazyProjectLoader( "projects/output-unspecified.ipr" );
+        public static final Lazy<Project> circularDependencyTest = new LazyProjectLoader( "projects/circular-dependency-test.ipr" );
 
         static class LazyProjectLoader extends LazyLoader<Project> {
             LazyProjectLoader( final String file ) {
@@ -55,21 +56,22 @@ public final class MockModel {
     }
 
     public static class Modules {
-        public static Lazy<Module> selfContained = new LazyModuleLoader( "modules/self-contained.iml" );
-        public static Lazy<Module> dependantModule = new LazyModuleLoader( "modules/dependant-module.iml" );
-        public static Lazy<Module> dependantLibrary = new LazyModuleLoader( "modules/dependant-library.iml" );
-        public static Lazy<Module> dependantBoth = new LazyModuleLoader( "modules/dependant-both.iml" );
-        public static Lazy<Module> dependee = new LazyModuleLoader( "modules/dependee.iml" );
-        public static Lazy<Module> outputModuleRelative = new LazyModuleLoader( "modules/output-module-relative.iml" );
-        public static Lazy<Module> outputProjectRelative = new LazyModuleLoader( "modules/output-project-relative.iml" );
-        public static Lazy<Module> outputUnspecified = new LazyModuleLoader( "modules/output-unspecified.iml" );
-        public static Lazy<Module> buildOrderTestA = new LazyModuleLoader( "modules/build-order-test-a.iml" );
-        public static Lazy<Module> buildOrderTestB = new LazyModuleLoader( "modules/build-order-test-b.iml" );
-        public static Lazy<Module> buildOrderTestC = new LazyModuleLoader( "modules/build-order-test-c.iml" );
-        public static Lazy<Module> buildOrderTestD = new LazyModuleLoader( "modules/build-order-test-d.iml" );
-        public static Lazy<Module> circualrDependencyTestA = new LazyModuleLoader( "modules/circular-dependency-test-a.iml" );
-        public static Lazy<Module> circualrDependencyTestB = new LazyModuleLoader( "modules/circular-dependency-test-b.iml" );
-        public static Lazy<Module> withModuleLibrary = new LazyModuleLoader( "modules/with-module-library.iml" );
+        public static final Lazy<Module> selfContained = new LazyModuleLoader( "modules/self-contained.iml" );
+        public static final Lazy<Module> dependantModule = new LazyModuleLoader( "modules/dependant-module.iml" );
+        public static final Lazy<Module> dependantLibrary = new LazyModuleLoader( "modules/dependant-library.iml" );
+        public static final Lazy<Module> dependantBoth = new LazyModuleLoader( "modules/dependant-both.iml" );
+        public static final Lazy<Module> dependee = new LazyModuleLoader( "modules/dependee.iml" );
+        public static final Lazy<Module> outputModuleRelative = new LazyModuleLoader( "modules/output-module-relative.iml" );
+        public static final Lazy<Module> outputProjectRelative = new LazyModuleLoader( "modules/output-project-relative.iml" );
+        public static final Lazy<Module> outputUnspecified = new LazyModuleLoader( "modules/output-unspecified.iml" );
+        public static final Lazy<Module> buildOrderTestA = new LazyModuleLoader( "modules/build-order-test-a.iml" );
+        public static final Lazy<Module> buildOrderTestB = new LazyModuleLoader( "modules/build-order-test-b.iml" );
+        public static final Lazy<Module> buildOrderTestC = new LazyModuleLoader( "modules/build-order-test-c.iml" );
+        public static final Lazy<Module> buildOrderTestD = new LazyModuleLoader( "modules/build-order-test-d.iml" );
+        public static final Lazy<Module> circualrDependencyTestA = new LazyModuleLoader( "modules/circular-dependency-test-a.iml" );
+        public static final Lazy<Module> circualrDependencyTestB = new LazyModuleLoader( "modules/circular-dependency-test-b.iml" );
+        public static final Lazy<Module> withModuleLibrary = new LazyModuleLoader( "modules/with-module-library.iml" );
+        public static final Lazy<Module> withModuleLibraryRecursive = new LazyModuleLoader( "modules/with-module-library-recursive.iml" );
 
         static class LazyModuleLoader extends LazyLoader<Module> {
             LazyModuleLoader( final String file ) {
@@ -90,4 +92,18 @@ public final class MockModel {
                     Projects.allModules.get().getProjectRoot().resolve( "libraries/junit/junit-4.6.jar" ) );
         }
     };
+
+    public static class Jars {
+        public static final String innerMock;
+        public static final String outerMock;
+
+        static {
+            try {
+                innerMock = UriUtils.getPath( MockModel.class.getResource( "jars/inner-mock.jar" ).toURI() );
+                outerMock = UriUtils.getPath( MockModel.class.getResource( "jars/inner-mock.jar" ).toURI() );
+            } catch ( URISyntaxException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+    }
 }

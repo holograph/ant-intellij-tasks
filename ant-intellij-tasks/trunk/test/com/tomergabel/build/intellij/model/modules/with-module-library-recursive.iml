@@ -17,7 +17,7 @@
         </CLASSES>
         <JAVADOC />
         <SOURCES />
-        <jarDirectory url="file://$MODULE_DIR$/jars" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$/jars" recursive="true" />
       </library>
     </orderEntry>
   </component>

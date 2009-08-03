@@ -48,11 +48,11 @@ public abstract class LibraryDependency implements Dependency {
 
     @Override
     public final Collection<String> resolveClasspath( final ModuleResolver resolver ) throws ResolutionException {
-        // Resolve the library and add it to the dependency list
-        final Collection<String> classpath = new HashSet<String>();
-        for ( final String uri : resolveLibrary( resolver ).getClasses() )
-            classpath.add( UriUtils.getPath( resolver.resolveUriString( uri ) ) );
-        return Collections.unmodifiableCollection( classpath );
+        // Resolve the library
+        final Library library = resolveLibrary( resolver );
+
+        // Return the library's resolved classpath
+        return library.resolveClasspath( resolver );
     }
 
     /**

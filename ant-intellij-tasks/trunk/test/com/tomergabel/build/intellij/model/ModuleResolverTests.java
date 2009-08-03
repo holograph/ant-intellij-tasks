@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -207,5 +208,14 @@ public class ModuleResolverTests {
         assertSetEquality( "Classpath resolved incorrectly.", Collections.singleton(
                 UriUtils.getPath( MockModel.class.getResource( "." ).toURI().resolve( "modules/library/" ) ) ),
                 resolveModuleClasspath( null, Modules.withModuleLibrary.get() ) );
+    }
+
+    @Test
+    public void testResolveClasspath_WithModuleLevelLibraryDependenciesWithJarDirectories_ClasspathResolvedCorrectly()
+            throws Exception {
+        assertSetEquality( "Classpath resolved incorrectly.",
+                Arrays.asList( MockModel.Jars.innerMock, MockModel.Jars.outerMock,
+                        UriUtils.getPath( MockModel.class.getResource( "." ).toURI().resolve( "modules/library/" ) ) ),
+                resolveModuleClasspath( null, Modules.withModuleLibraryRecursive.get() ) );
     }
 }

@@ -81,7 +81,19 @@ public final class UriUtils {
      * @throws IllegalArgumentException <ul><li>The URI cannot be null.</li><li>Wrong URI scheme for path resolution;
      *                                  only file:// URIs are supported.</li></ul>
      */
-    public static String getPath( URI uri ) throws IllegalArgumentException {
+    public static String getPath( final URI uri ) throws IllegalArgumentException {
+        return getFile( uri ).getAbsolutePath();
+    }
+
+    /**
+     * Resolves the specified URI, and returns the file represented by the URI.
+     *
+     * @param uri The URI for which to return an absolute path.
+     * @return The {@link File} instance represented by the specified URI.
+     * @throws IllegalArgumentException <ul><li>The URI cannot be null.</li><li>Wrong URI scheme for path resolution;
+     *                                  only file:// URIs are supported.</li></ul>
+     */
+    public static File getFile( URI uri ) throws IllegalArgumentException {
         if ( uri == null )
             throw new IllegalArgumentException( "The URI cannot be null." );
         if ( !"file".equals( uri.getScheme() ) )
@@ -99,10 +111,6 @@ public final class UriUtils {
                         "normalized.", e );
             }
 
-        try {
-            return new File( uri ).getAbsolutePath();
-        } catch ( IllegalArgumentException e ) {
-            throw new IllegalArgumentException( "URI \"" + uri + "\" is invalid", e );
-        }
+        return new File( uri );
     }
 }
