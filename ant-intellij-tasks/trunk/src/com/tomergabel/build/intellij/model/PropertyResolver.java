@@ -91,11 +91,17 @@ public abstract class PropertyResolver {
             segmentIndex = next + 1;
             next = string.indexOf( '$', segmentIndex );
             if ( next == -1 )
-                throw new IllegalArgumentException( "Unmatched escape character $ in string \"" + string + "\"" );
+                throw new ResolutionException( "Unmatched escape character $ in string \"" + string + "\"" );
 
             // Extract property name and advance segment pointer
             final String propertyName = string.substring( segmentIndex, next );
             segmentIndex = next + 1;
+
+            // Inspect property for special behavior
+            if ( "APPLICATION_HOME_DIR".equals( propertyName ) )
+                throw new ResolutionException( propertyName, "Component depends on a JAR located under the " +
+                        "IntelliJ IDEA home directory. This is not supported. Please replace the dependency " +
+                        "with a project- or module-level library dependency." );
 
             // Expand property
             final String propertyValue = getPropertyValue( propertyName );
