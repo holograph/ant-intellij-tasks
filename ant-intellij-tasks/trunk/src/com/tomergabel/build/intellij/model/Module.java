@@ -1,7 +1,7 @@
 package com.tomergabel.build.intellij.model;
 
-import static com.tomergabel.util.CollectionUtils.setEquals;
 import static com.tomergabel.util.CollectionUtils.deepHashCode;
+import static com.tomergabel.util.CollectionUtils.setEquals;
 import com.tomergabel.util.UriUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -11,12 +11,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
-public final class Module extends IntelliJParserBase {
+public final class Module extends IntelliJParserBase implements LibraryContainer {
     private final URI moduleDescriptor;
     private String outputUrl = null;
     private String testOutputUrl = null;
@@ -24,7 +21,7 @@ public final class Module extends IntelliJParserBase {
     private final Collection<String> sourceUrls;
     private final Collection<String> testSourceUrls;
     private final Collection<Dependency> dependencies;
-    private final Collection<Library> libraries = new HashSet<Library>();
+    private final Map<String, Library> libraries = new HashMap<String, Library>();
     private final String name;
     private boolean inheritOutput = true;
 
@@ -68,7 +65,8 @@ public final class Module extends IntelliJParserBase {
         return Collections.unmodifiableCollection( this.dependencies );
     }
 
-    public Collection<Library> getLibraries() {
+    @Override
+    public Map<String, Library> getLibraries() {
         return this.libraries;
     }
 
@@ -132,9 +130,10 @@ public final class Module extends IntelliJParserBase {
         final Module module = (Module) o;
 
         if ( this.inheritOutput != module.inheritOutput ) return false;
-        if ( this.contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl ) : module.contentRootUrl != null )
+        if ( this.contentRootUrl != null ? !contentRootUrl.equals( module.contentRootUrl )
+                : module.contentRootUrl != null )
             return false;
-        if ( !setEquals( this.libraries, module.libraries )  ) return false;
+        if ( !setEquals( this.libraries.entrySet(), module.libraries.entrySet() ) ) return false;
         if ( !setEquals( this.dependencies, module.dependencies ) ) return false;
         if ( this.moduleDescriptor != null ? !moduleDescriptor.equals( module.moduleDescriptor )
                 : module.moduleDescriptor != null ) return false;
@@ -158,7 +157,7 @@ public final class Module extends IntelliJParserBase {
         result = 31 * result + deepHashCode( this.sourceUrls );
         result = 31 * result + deepHashCode( this.testSourceUrls );
         result = 31 * result + deepHashCode( this.dependencies );
-        result = 31 * result + deepHashCode( this.libraries );
+        result = 31 * result + deepHashCode( this.libraries.entrySet() );
         result = 31 * result + ( this.name != null ? name.hashCode() : 0 );
         result = 31 * result + ( this.inheritOutput ? 1 : 0 );
         return result;
@@ -193,7 +192,7 @@ public final class Module extends IntelliJParserBase {
 
             // Normalize test output
             if ( Module.this.testOutputUrl == null && !Module.this.inheritOutput )
-                    Module.this.testOutputUrl = Module.this.outputUrl;
+                Module.this.testOutputUrl = Module.this.outputUrl;
 
             // Parse source folders
             Module.this.contentRootUrl = extract( componentNode, "content/@url", "Cannot extract content root path" );
@@ -218,8 +217,11 @@ public final class Module extends IntelliJParserBase {
                     // TODO handle forTests
                 } else if ( "module-library".equals( type ) ) {
                     for ( final Node libraryNode : extractAll( dependency, "library",
-                            "Cannot extract module library descriptor" ) )
-                        Module.this.libraries.add( new Library( libraryNode ) );
+                            "Cannot extract module library descriptor" ) ) {
+                        final Library library = new Library( libraryNode );
+                        if ( Module.this.libraries.put( library.getName(), library ) != null )
+                            throw new ParseException( "Library \"" + library.getName() + "\" defined more than once." );
+                    }
                 } else if ( "library".equals( type ) ) {
                     final String name = extract( dependency, "@name", "Cannot extract library dependency name" );
                     final LibraryDependency.Level level;
@@ -235,7 +237,7 @@ public final class Module extends IntelliJParserBase {
                     Module.this.dependencies.add( new ModuleDependency(
                             extract( dependency, "@module-name",
                                     "Cannot extract module dependency name" ) ) );
-                } else throw new ParseException( "Unrecognized order entry type \"" + type + "\"" );
+                } else throw new ParseException( "Unrecognized order entry type \"" + type + "\"." );
             }
         }
     }

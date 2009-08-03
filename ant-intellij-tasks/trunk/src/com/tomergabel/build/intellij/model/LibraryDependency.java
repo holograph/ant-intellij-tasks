@@ -1,5 +1,12 @@
 package com.tomergabel.build.intellij.model;
 
+import com.tomergabel.util.UriUtils;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
  * Specifies a dependency on a library.
  * <p/>
@@ -76,6 +83,37 @@ public class LibraryDependency extends Dependency {
             throw new IllegalArgumentException( "The library name cannot be null." );
         this.level = level;
         this.name = name;
+    }
+
+    @Override
+    Collection<String> resolveClasspath( final ModuleResolver resolver ) throws ResolutionException {
+        // Resolve library container
+        final Map<String, Library> libraries;
+        switch ( this.level ) {
+            case MODULE:
+                libraries = resolver.getModule().getLibraries();
+                break;
+            case PROJECT:
+                final ProjectResolver project = resolver.getProjectResolver();
+                if ( project == null )
+                    throw new ResolutionException( "Cannot resolve project-level library \"" + this.name +
+                            "\" because no project was specified." );
+                libraries = project.getProject().getLibraries();
+                break;
+            default:
+                throw new IllegalStateException( "Unrecognized library level \"" + this.level + "\"" );
+        }
+
+        // Resolve library
+        if ( !libraries.containsKey( this.name ) )
+            throw new ResolutionException(
+                    "Cannot find " + this.level.toString().toLowerCase() + "-level library \"" + this.name + "\"." );
+
+        // Resolve the library and add it to the dependency list
+        final Collection<String> classpath = new HashSet<String>();
+        for ( final String uri : libraries.get( this.name ).getClasses() )
+            classpath.add( UriUtils.getPath( resolver.resolveUriString( uri ) ) );
+        return Collections.unmodifiableCollection( classpath );
     }
 
     @Override

@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 /**
  * A parser for IntelliJ IDEA project (.ipr) files.
  */
-public final class Project extends IntelliJParserBase {
+public final class Project extends IntelliJParserBase implements LibraryContainer {
     private final URI projectRoot;
     private boolean relativePaths;
     private String outputUrl;
@@ -191,6 +191,7 @@ public final class Project extends IntelliJParserBase {
         return Collections.unmodifiableCollection( this.modules );
     }
 
+    @Override
     public Map<String, Library> getLibraries() {
         return Collections.unmodifiableMap( this.libraries );
     }

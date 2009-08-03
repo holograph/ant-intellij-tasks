@@ -214,4 +214,68 @@ public final class CollectionUtils {
             hash = 31 * hash + ( next == null ? 0 : next.hashCode() );
         return hash;
     }
+
+    private static class PredicateIterator<T> implements Iterator<T> {
+        private final Iterator<T> source;
+        private final Predicate<T> predicate;
+        private T next;
+
+        private PredicateIterator( final Iterator<T> source, final Predicate<T> predicate ) {
+            if ( source == null )
+                throw new IllegalArgumentException( "The source iterator cannot be null." );
+            if ( predicate == null )
+                throw new IllegalArgumentException( "The predicate cannot be null." );
+
+            this.source = source;
+            this.predicate = predicate;
+            findNext();
+        }
+
+        private void findNext() {
+            while ( source.hasNext() ) {
+                final T x = source.next();
+                if ( this.predicate.evaluate( x ) ) {
+                    this.next = x;
+                    return;
+                }
+            }
+            this.next = null;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return this.next != null;
+        }
+
+        @Override
+        public T next() {
+            final T x = this.next;
+            findNext();
+            return x;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public static <T> Iterable<T> filter( final Iterable<T> source, final Predicate<T> predicate ) {
+        return new Iterable<T>() {
+            @Override
+            public Iterator<T> iterator() {
+                return new PredicateIterator<T>( source.iterator(), predicate );
+            }
+        };
+    }
+
+    @SuppressWarnings( { "unchecked" } )
+    public static <T> Iterable<T> filter( final Iterable<?> source, final Class<T> type ) {
+        return (Iterable<T>) filter( (Iterable<Object>) source, new Predicate<Object>() {
+            @Override
+            public boolean evaluate( final Object x ) {
+                return type.isInstance( x );
+            }
+        } );
+    }
 }
