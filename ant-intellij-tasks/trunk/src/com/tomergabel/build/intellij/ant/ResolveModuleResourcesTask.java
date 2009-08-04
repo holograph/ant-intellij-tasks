@@ -1,12 +1,14 @@
 package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.Project;
+import com.tomergabel.build.intellij.model.ResolutionException;
+import com.tomergabel.util.CollectionUtils;
+import com.tomergabel.util.UriUtils;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.Path;
 
 import java.io.File;
-import java.util.ArrayList;
 
 public class ResolveModuleResourcesTask extends ModuleTaskBase {
     protected String pathId;
@@ -38,24 +40,50 @@ public class ResolveModuleResourcesTask extends ModuleTaskBase {
         final Project project = project();
         if ( project != null ) {
             // Derive resource patterns from project
-            final FileSet fileset = new FileSet();
-            fileset.setDir( new File( module().getModuleRoot() ) );
-
-            final ArrayList<String> includes = new ArrayList<String>(
-                    project.getResourceExtensions().size() + project.getResourceWildcardPatterns().size() );
+            final String[] includes = new String[ project.getResourceExtensions().size() + project.getResourceWildcardPatterns().size() ];
 
             // Process resource extensions
+            int i = 0;
             for ( final String extension : project.getResourceExtensions() )
-                includes.add( "**/*." + extension );
+                includes[ i++ ] = "**/*." + extension;
 
             // Process wildcard patterns
             for ( final String pattern : project.getResourceWildcardPatterns() )
-                includes.add( "**/" + pattern );
+                includes[ i++ ] = "**/" + pattern;
 
-            fileset.appendIncludes( includes.toArray( new String[ includes.size() ] ) );
-            path.addFileset( fileset );
+            // Iterate source directories
+            for ( final String sourceUrl : getSourceDirectories() ) {
+                // Resolve source directory
+                final File sourceDir;
+                try {
+                    sourceDir = UriUtils.getFile( resolver().resolveUriString( sourceUrl ) );
+                } catch ( ResolutionException e ) {
+                    throw new BuildException( "Cannot resolve source directory for mdoule \"" + module().getName() + "\"", e );
+                }
+
+                // Create appropriate FileSet and add it to the output path
+                final FileSet fileset = new FileSet();
+                fileset.setDir( sourceDir );
+                fileset.appendIncludes( includes );
+                path.addFileset( fileset );
+            }
         }
 
         getProject().addReference( this.pathId, path );
+    }
+
+    public Iterable<String> getSourceDirectories() {
+        // Choose a set of source directorise according to the mode
+        switch ( this.filter ) {
+            case source:
+                return module().getSourceUrls();
+            case test:
+                return module().getTestSourceUrls();
+            case both:
+                return CollectionUtils.concat( module().getSourceUrls(), module().getTestSourceUrls() );
+            default:
+                // Safety net, should never happen
+                throw new IllegalStateException( "Unrecognized filter \"" + this.filter.toString() + "\"" );
+        }
     }
 }

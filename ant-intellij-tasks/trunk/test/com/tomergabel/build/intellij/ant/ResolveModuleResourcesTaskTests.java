@@ -84,8 +84,9 @@ public class ResolveModuleResourcesTaskTests {
         assertTrue( "Path object found in project, but is not a valid path.", reference instanceof Path );
         final Path path = (Path) reference;
         assertSetEquality( "Resources not incorrectly resolved.", new String[] {
-                new File( this.getClass().getResource( "resource-extension.gif" ).toURI() ).getAbsolutePath(),
-                new File( this.getClass().getResource( "resource-pattern.jpg" ).toURI() ).getAbsolutePath()
+                new File( this.getClass().getResource( "resources-src/test.gif" ).toURI() ).getAbsolutePath(),
+                new File( this.getClass().getResource( "resources-src/test.jpg" ).toURI() ).getAbsolutePath(),
+                new File( this.getClass().getResource( "resources-test/test.gif" ).toURI() ).getAbsolutePath()
         }, path.list() );
     }
 }

@@ -278,4 +278,49 @@ public final class CollectionUtils {
             }
         } );
     }
+
+    private static class ConcatenationIterator<T> implements Iterator<T> {
+        final Queue<Iterator<T>> sources;
+        T next;
+
+        private ConcatenationIterator( final Iterable<T>[] sources ) {
+            this.sources = new ArrayDeque<Iterator<T>>( sources.length );
+            for ( final Iterable<T> source : sources )
+                this.sources.add( source.iterator() );
+        }
+
+        @Override
+        public boolean hasNext() {
+            while ( sources.peek() != null ) {
+                if ( sources.peek().hasNext() )
+                    return true;
+                sources.poll();
+            }
+            return false;
+        }
+
+        @Override
+        public T next() {
+            while ( sources.peek() != null ) {
+                if ( sources.peek().hasNext() )
+                    return sources.peek().next();
+                sources.poll();
+            }
+            throw new NoSuchElementException();
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public static <T> Iterable<T> concat( final Iterable<T>... sources ) {
+        return new Iterable<T>() {
+            @Override
+            public Iterator<T> iterator() {
+                return new ConcatenationIterator<T>( sources );
+            }
+        };
+    }
 }
