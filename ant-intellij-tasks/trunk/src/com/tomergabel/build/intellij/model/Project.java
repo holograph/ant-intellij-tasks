@@ -25,6 +25,7 @@ public final class Project extends IntelliJParserBase {
     private final Map<String, Library> libraries = new HashMap<String, Library>();
     private final Collection<String> resourceExtensions = new HashSet<String>();
     private final Collection<String> resourceWildcardPatterns = new HashSet<String>();
+    private boolean buildJarsOnMake;
 
     private class ProjectRootManagerHandler implements Handler {
         @Override
@@ -95,6 +96,16 @@ public final class Project extends IntelliJParserBase {
         }
     }
 
+    private class BuildJarsProjectSettingsHandler implements Handler {
+        @Override
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
+            Project.this.buildJarsOnMake = "true".equals(
+                    extract( componentNode, "option[@name='BUILD_JARS_ON_MAKE']/@value",
+                            "Can't extract project JAR settins." ) );
+        }
+    }
+
 
     private final URI projectDescriptor;
 
@@ -115,7 +126,6 @@ public final class Project extends IntelliJParserBase {
 
         // Register ignored components
         registerComponentHandler( "AntConfiguration", ignoreHandler );
-        registerComponentHandler( "BuildJarProjectSettings", ignoreHandler );               // TODO
         registerComponentHandler( "CodeStyleSettingsManager", ignoreHandler );
         registerComponentHandler( "CopyrightManager", ignoreHandler );
         registerComponentHandler( "DependencyValidationManager", ignoreHandler );
@@ -139,6 +149,7 @@ public final class Project extends IntelliJParserBase {
         registerComponentHandler( "WebServicesPlugin", ignoreHandler );                     // TODO for package
 
         // Register handlers
+        registerComponentHandler( "BuildJarProjectSettings", new BuildJarsProjectSettingsHandler() );
         registerComponentHandler( "ProjectDetails", new ProjectDetailsHandler() );
         registerComponentHandler( "ProjectModuleManager", new ProjectModuleManagerHandler() );
         registerComponentHandler( "ProjectRootManager", new ProjectRootManagerHandler() );
@@ -209,6 +220,10 @@ public final class Project extends IntelliJParserBase {
 
     public Collection<String> getResourceWildcardPatterns() {
         return Collections.unmodifiableCollection( this.resourceWildcardPatterns );
+    }
+
+    public boolean isBuildJarsOnMake() {
+        return this.buildJarsOnMake;
     }
 
     @Override

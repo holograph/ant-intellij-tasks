@@ -12,7 +12,7 @@
     </buildFile>
   </component>
   <component name="BuildJarProjectSettings">
-    <option name="BUILD_JARS_ON_MAKE" value="false" />
+    <option name="BUILD_JARS_ON_MAKE" value="true" />
   </component>
   <component name="CodeStyleSettingsManager">
     <option name="PER_PROJECT_SETTINGS">

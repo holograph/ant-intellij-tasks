@@ -23,6 +23,7 @@ public class ProjectParsingTests {
         assertEquals( "Project name incorrectly parsed.", "Test", this.project.getName() );
         assertEquals( "Relative paths flag incorrectly parsed.", true, this.project.isRelativePaths() );
         assertEquals( "Output URL incorrectly parsed.", "file://$PROJECT_DIR$/out", this.project.getOutputUrl() );
+        assertEquals( "Build JAR on make settings incorrectly parsed.", true, this.project.isBuildJarsOnMake() );
     }
 
     @Test
@@ -96,5 +97,4 @@ public class ProjectParsingTests {
                 },
                 this.project.getResourceWildcardPatterns() );
     }
-
 }
