@@ -11,21 +11,80 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
+import java.net.URISyntaxException;
+import java.util.*;
 
 public final class Module extends IntelliJParserBase {
     private final URI moduleDescriptor;
-    private String outputUrl = null;
-    private String testOutputUrl = null;
-    private String contentRootUrl;
     private final Collection<String> sourceUrls;
     private final Collection<String> testSourceUrls;
     private final Collection<Dependency> dependencies;
     private final String name;
+
+    private String outputUrl = null;
+    private String testOutputUrl = null;
+    private String contentRootUrl;
     private boolean inheritOutput = true;
+    private JarSettings jarSettings = null;
+
+    public interface JarSettings {
+        String getJarUrl();
+
+        String getMainClass();
+
+        Collection<JarModuleOutput> getModuleOutputs();
+    }
+
+    public static class JarModuleOutput {
+        public enum Packaging {
+            COPY,
+            JAR,
+            JAR_AND_LINK
+        }
+
+        private final String moduleName;
+        private final Packaging packaging;
+        private final URI targetUri;
+
+        public JarModuleOutput( final String moduleName, final Packaging packaging, final URI targetUri ) {
+            this.moduleName = moduleName;
+            this.packaging = packaging;
+            this.targetUri = targetUri;
+        }
+
+        public Packaging getPackaging() {
+            return this.packaging;
+        }
+
+        public URI getTargetUri() {
+            return this.targetUri;
+        }
+
+        public String getModuleName() {
+            return this.moduleName;
+        }
+
+        @SuppressWarnings( { "RedundantIfStatement" } )
+        @Override
+        public boolean equals( final Object o ) {
+            if ( this == o ) return true;
+            if ( o == null || getClass() != o.getClass() ) return false;
+
+            final JarModuleOutput that = (JarModuleOutput) o;
+
+            if ( this.packaging != that.packaging ) return false;
+            if ( this.targetUri != null ? !targetUri.equals( that.targetUri ) : that.targetUri != null ) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = this.packaging != null ? packaging.hashCode() : 0;
+            result = 31 * result + ( this.targetUri != null ? targetUri.hashCode() : 0 );
+            return result;
+        }
+    }
 
     public URI getModuleDescriptor() {
         return this.moduleDescriptor;
@@ -53,6 +112,14 @@ public final class Module extends IntelliJParserBase {
 
     public boolean isOutputInherited() {
         return this.inheritOutput;
+    }
+
+    public JarSettings getJarSettings() {
+        return this.jarSettings;
+    }
+
+    public boolean isBuildJar() {
+        return this.jarSettings != null;
     }
 
     public Collection<String> getSourceUrls() {
@@ -83,10 +150,10 @@ public final class Module extends IntelliJParserBase {
 
         // Register ignored components
         registerComponentHandler( "FacetManager", ignoreHandler );              // TODO
-        registerComponentHandler( "BuildJarSettings", ignoreHandler );          // TODO
 
         // Register handlers
         registerComponentHandler( "NewModuleRootManager", new NewModuleRootManagerHandler() );
+        registerComponentHandler( "BuildJarSettings", new BuildJarSettingsHandler() );
     }
 
     public static Module parse( final URI descriptor ) throws IOException, ParseException, IllegalArgumentException {
@@ -235,6 +302,95 @@ public final class Module extends IntelliJParserBase {
                                     "Cannot extract module dependency name" ) ) );
                 } else throw new ParseException( "Unrecognized order entry type \"" + type + "\"." );
             }
+        }
+    }
+
+    private class BuildJarSettingsHandler implements Handler {
+        @Override
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
+            if ( !"true".equals( extract( componentNode, "setting[@name='buildJar']/@value",
+                    "Cannot extract JAR build setting" ) ) )
+                return;
+
+            final String jarUrl = extract( componentNode, "setting[@name='jarUrl']/@value", "Cannot extract JAR URL" );
+            if ( jarUrl == null )
+                throw new ParseException( "Module JAR build enabled but output URL not specified." );
+
+            final String mainClass = extract( componentNode, "setting[@name='mainClass']/@value",
+                    "Cannot extract JAR main class name" );
+
+            final Collection<JarModuleOutput> modules = new HashSet<JarModuleOutput>();
+            for ( final Node container : extractAll( componentNode, "containerInfo/containerElement",
+                    "Cannot extract JAR container elements" ) ) {
+                final String type = extract( container, "@type", "Cannot extract container element type" );
+                if ( type == null )
+                    throw new ParseException( "JAR container element type not specified." );
+                if ( "module".equals( type ) )
+                    modules.add( resolveModuleContainerElement( container ) );
+                else throw new ParseException( "Unrecognized JAR container element type '" + type + "'" );
+            }
+
+            Module.this.jarSettings = new JarSettings() {
+                @Override
+                public String getJarUrl() {
+                    return jarUrl;
+                }
+
+                @Override
+                public String getMainClass() {
+                    return mainClass;
+                }
+
+                @Override
+                public Collection<JarModuleOutput> getModuleOutputs() {
+                    return Collections.unmodifiableCollection( modules );
+                }
+            };
+        }
+
+
+        private JarModuleOutput resolveModuleContainerElement( final Node container ) throws ParseException {
+            final String moduleName = extract( container, "@name",
+                    "Cannot extract module name for JAR module output" );
+            if ( moduleName == null )
+                throw new ParseException( "Module name not specified for JAR module output." );
+
+            // Extract packaging method
+            final String method = extract( container, "attribute[@name='method']/@value",
+                    "Cannot extract JAR module output packaging method" );
+            if ( method == null )
+                throw new ParseException(
+                        "Packaging method not specified for JAR module output \"" + moduleName + "\"." );
+            final int methodOrdinal;
+            try {
+                methodOrdinal = Integer.valueOf( method );
+            } catch ( NumberFormatException ignored ) {
+                throw new ParseException(
+                        "Invalid method ordinal \"" + method + "\" specified for JAR module output \"" +
+                                moduleName + "\"." );
+            }
+            if ( methodOrdinal < 1 || methodOrdinal > JarModuleOutput.Packaging.values().length )
+                throw new ParseException(
+                        "Invalid method ordinal \"" + method + "\" specified for JAR module output \"" +
+                                moduleName + "\"." );
+            final JarModuleOutput.Packaging packaging = JarModuleOutput.Packaging.values()[ methodOrdinal - 1 ];
+
+            // Extract target URI
+            final String uriString = extract( container, "attribute[@name='URI']/@value",
+                    "Cannot extract JAR module output target URI" );
+            if ( uriString == null )
+                throw new ParseException( "Target URI not specified for JAR module output \"" + moduleName + "\"." );
+            final URI targetUri;
+            try {
+                targetUri = new URI( uriString );
+            } catch ( URISyntaxException e ) {
+                throw new ParseException(
+                        "Invalid target URI \"" + uriString + "\" specified for JAR module output \"" + moduleName +
+                                "\".", e );
+            }
+
+            return new JarModuleOutput( moduleName, packaging, targetUri );
         }
     }
 }

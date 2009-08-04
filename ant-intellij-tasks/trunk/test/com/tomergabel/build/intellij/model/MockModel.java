@@ -73,6 +73,8 @@ public final class MockModel {
         public static final Lazy<Module> withModuleLibrary = new LazyModuleLoader( "modules/with-module-library.iml" );
         public static final Lazy<Module> withJarDirectory = new LazyModuleLoader( "modules/with-jar-directory.iml" );
         public static final Lazy<Module> withJarDirectoryRecursive = new LazyModuleLoader( "modules/with-jar-directory-recursive.iml" );
+        public static final Lazy<Module> jarOutputSelfContained = new LazyModuleLoader( "modules/jar-output-self-contained.iml" );
+        public static final Lazy<Module> jarOutputDependent = new LazyModuleLoader( "modules/jar-output-dependent.iml" );
 
         static class LazyModuleLoader extends LazyLoader<Module> {
             LazyModuleLoader( final String file ) {

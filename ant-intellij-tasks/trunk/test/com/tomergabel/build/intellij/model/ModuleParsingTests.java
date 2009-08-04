@@ -1,12 +1,15 @@
 package com.tomergabel.build.intellij.model;
 
+import com.tomergabel.util.LazyInitializationException;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import com.tomergabel.util.UriUtils;
+import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 public class ModuleParsingTests {
     private URI resource;
@@ -57,5 +60,25 @@ public class ModuleParsingTests {
     @Test
     public void testOutputInheritenceExtraction() {
         assertEquals( "Module output inheritence incorrectly parsed.", true, this.module.isOutputInherited() );
+    }
+
+    @Test
+    public void testJarSettingsExtraction() throws LazyInitializationException, URISyntaxException {
+        final Module module = MockModel.Modules.jarOutputSelfContained.get();
+        assertNotNull( "Module JAR settings were not extracted.", module.getJarSettings() );
+        assertEquals( "Module JAR output URL incorrectly parsed.", "file://$MODULE_DIR$/out/test.jar",
+                module.getJarSettings().getJarUrl() );
+        assertEquals( "Module JAR output main class incorrectly parsed.", "test.class",
+                module.getJarSettings().getMainClass() );
+        assertEquals( "Module JAR output resource list incorrectly parsed.", 1,
+                module.getJarSettings().getModuleOutputs().size() );
+        final Module.JarModuleOutput output = module.getJarSettings().getModuleOutputs().iterator().next();
+        assertNotNull( "Module JAR output resource list contains null module.", output );
+        assertEquals( "Module JAR output resource list incorrectly parsed: incorrect module name,",
+                "jar-output-self-contained", output.getModuleName() );
+        assertEquals( "Module JAR output resource list incorrectly parsed: incorrect packaging method.",
+                Module.JarModuleOutput.Packaging.COPY, output.getPackaging() );
+        assertEquals( "Module JAR output resource list incorrectly parsed: incorrect target URI,",
+                new URI( "/" ), output.getTargetUri() );
     }
 }
