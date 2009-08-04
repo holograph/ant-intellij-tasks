@@ -27,4 +27,7 @@
     </library>
     <module module-name="dependee" />
   </component>
+  <component name="BuildJarProjectSettings">
+    <option name="BUILD_JARS_ON_MAKE" value="true" />
+  </component>
 </project>

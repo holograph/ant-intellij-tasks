@@ -6,5 +6,6 @@
     <taskdef name="resolveModuleClasspath" classname="com.tomergabel.build.intellij.ant.ResolveModuleClasspathTask" />
     <taskdef name="resolveModuleResources" classname="com.tomergabel.build.intellij.ant.ResolveModuleResourcesTask" />
     <taskdef name="resolveBuildOrder" classname="com.tomergabel.build.intellij.ant.ResolveBuildOrderTask" />
+    <typedef name="buildJarsOnMakeSpecified" classname="com.tomergabel.build.intellij.ant.BuildJarsOnMakeSpecifiedConditionTests" />
 </antlib>
         
