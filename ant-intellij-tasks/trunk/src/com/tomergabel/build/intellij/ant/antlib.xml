@@ -7,5 +7,6 @@
     <taskdef name="resolveModuleResources" classname="com.tomergabel.build.intellij.ant.ResolveModuleResourcesTask" />
     <taskdef name="resolveBuildOrder" classname="com.tomergabel.build.intellij.ant.ResolveBuildOrderTask" />
     <typedef name="buildJarsOnMakeSpecified" classname="com.tomergabel.build.intellij.ant.BuildJarsOnMakeSpecifiedCondition" />
+    <typedef name="moduleJarOutputSpecified" classname="com.tomergabel.build.intellij.ant.ModuleJarOutputSpecifiedCondition" />
 </antlib>
         
