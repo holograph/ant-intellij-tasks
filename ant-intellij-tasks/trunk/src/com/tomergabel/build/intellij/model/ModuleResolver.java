@@ -1,8 +1,9 @@
 package com.tomergabel.build.intellij.model;
 
-import com.tomergabel.util.UriUtils;
 import static com.tomergabel.util.CollectionUtils.filter;
+import com.tomergabel.util.UriUtils;
 
+import java.io.File;
 import java.util.*;
 
 public class ModuleResolver extends PropertyResolver {
@@ -31,20 +32,24 @@ public class ModuleResolver extends PropertyResolver {
         return this.module;
     }
 
-    public String resolveModuleOutput() throws ResolutionException {
+    public String resolveModuleOutputPath() throws ResolutionException {
+        return resolveModuleOutput().getAbsolutePath();
+    }
+
+    public File resolveModuleOutput() throws ResolutionException {
         // Assert that a module has been specified
         if ( this.module == null )
             throw new ResolutionException( "Cannot resolve module dependencies, module not specified" );
 
         if ( this.module.getOutputUrl() != null )
-            return UriUtils.getPath( resolveUriString( this.module.getOutputUrl() ) );
+            return UriUtils.getFile( resolveUriString( this.module.getOutputUrl() ) );
         if ( this.projectResolver == null )
             throw new ResolutionException(
                     "Module does not specify an output directory and project was not specified." );
         if ( this.projectResolver.getProject().getOutputUrl() == null )
             throw new ResolutionException(
                     "Module does not specify an output directory and the project does not specify a default." );
-        return UriUtils.getPath( resolveUriString( this.projectResolver.getProject().getOutputUrl() ) );
+        return UriUtils.getFile( resolveUriString( this.projectResolver.getProject().getOutputUrl() ) );
     }
 
     public Collection<String> resolveModuleClasspath() throws ResolutionException {

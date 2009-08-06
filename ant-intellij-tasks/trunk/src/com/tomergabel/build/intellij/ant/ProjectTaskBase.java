@@ -4,6 +4,7 @@ import com.tomergabel.build.intellij.model.IntelliJParserBase;
 import com.tomergabel.build.intellij.model.ParseException;
 import com.tomergabel.build.intellij.model.Project;
 import com.tomergabel.build.intellij.model.ProjectResolver;
+import com.tomergabel.build.intellij.ant.prototype.ProjectReceiver;
 import com.tomergabel.util.Lazy;
 import com.tomergabel.util.LazyInitializationException;
 import org.apache.tools.ant.BuildException;
@@ -26,7 +27,7 @@ import java.net.URI;
  * Inheritors can access the project instance via {@link #project()} or {@link #projectResolver()} TODO complete
  * documentation
  */
-public abstract class ProjectTaskBase extends TaskBase {
+public abstract class ProjectTaskBase extends TaskBase implements ProjectReceiver {
     private Lazy<Project> project = Lazy.from( null );
 
     private final Lazy<ProjectResolver> projectResolver = new Lazy<ProjectResolver>() {
@@ -39,6 +40,7 @@ public abstract class ProjectTaskBase extends TaskBase {
 
     // Ant-facing properties
 
+    @Override
     public void setProjectFile( final File projectFile ) {
         assertNotExecuted();
         setProjectDescriptor( projectFile.toURI() );
@@ -46,11 +48,13 @@ public abstract class ProjectTaskBase extends TaskBase {
 
     // Code-facing properties
 
+    @Override
     public void setProject( final Project project ) {
         assertNotExecuted();
         this.project = Lazy.from( project );
     }
 
+    @Override
     public void setProjectDescriptor( final URI projectDescriptor ) {
         assertNotExecuted();
         this.project = new Lazy<Project>() {

@@ -4,6 +4,7 @@ import com.tomergabel.build.intellij.model.Module;
 import com.tomergabel.build.intellij.model.ModuleResolver;
 import com.tomergabel.build.intellij.model.ProjectResolver;
 import com.tomergabel.build.intellij.model.ParseException;
+import com.tomergabel.build.intellij.ant.prototype.ModuleReceiver;
 import com.tomergabel.util.Lazy;
 import com.tomergabel.util.LazyInitializationException;
 import org.apache.tools.ant.BuildException;
@@ -12,7 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
-public abstract class ModuleConditionBase extends ProjectConditionBase {
+public abstract class ModuleConditionBase extends ProjectConditionBase implements ModuleReceiver {
     private Lazy<Module> module = new Lazy<Module>() {
         @Override
         public Module call() throws Exception {
@@ -46,6 +47,7 @@ public abstract class ModuleConditionBase extends ProjectConditionBase {
         setModuleDescriptor( srcfile.toURI() );
     }
 
+    @Override
     public void setModuleFile( final File moduleFile ) {
         if ( moduleFile == null )
             throw new IllegalArgumentException( "Null module file ('modulefile' attribute) cannot be specified." );
@@ -55,6 +57,7 @@ public abstract class ModuleConditionBase extends ProjectConditionBase {
 
     // Code-facing properties
 
+    @Override
     public void setModule( final Module module ) {
         if ( module == null )
             throw new IllegalArgumentException( "The module cannot be null." );
@@ -62,6 +65,7 @@ public abstract class ModuleConditionBase extends ProjectConditionBase {
         this.module = Lazy.from( module );
     }
 
+    @Override
     public void setModuleDescriptor( final URI moduleDescriptor ) {
         if ( moduleDescriptor == null )
             throw new IllegalArgumentException( "The module descriptor URI cannot be null." );

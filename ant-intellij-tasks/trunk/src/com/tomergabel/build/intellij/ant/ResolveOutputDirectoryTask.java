@@ -21,7 +21,7 @@ public class ResolveOutputDirectoryTask extends ModuleTaskBase {
                 ( module().getOutputUrl() != null ? module().getOutputUrl() : "null" ) + "'", Project.MSG_VERBOSE );
         final String outputDirectory;
         try {
-            outputDirectory = resolver().resolveModuleOutput();
+            outputDirectory = resolver().resolveModuleOutputPath();
         } catch ( ResolutionException e ) {
             throw new BuildException( "Failed to resolve module output directory.", e );
         }

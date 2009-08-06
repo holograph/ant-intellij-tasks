@@ -4,6 +4,7 @@ import com.tomergabel.build.intellij.model.IntelliJParserBase;
 import com.tomergabel.build.intellij.model.ParseException;
 import com.tomergabel.build.intellij.model.Project;
 import com.tomergabel.build.intellij.model.ProjectResolver;
+import com.tomergabel.build.intellij.ant.prototype.ProjectReceiver;
 import com.tomergabel.util.Lazy;
 import com.tomergabel.util.LazyInitializationException;
 import org.apache.tools.ant.BuildException;
@@ -13,7 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
-public abstract class ProjectConditionBase extends ConditionBase {
+public abstract class ProjectConditionBase extends ConditionBase implements ProjectReceiver {
     private Lazy<Project> project = Lazy.from( null );
 
     private final Lazy<ProjectResolver> projectResolver = new Lazy<ProjectResolver>() {
@@ -26,6 +27,7 @@ public abstract class ProjectConditionBase extends ConditionBase {
 
     // Ant-facing properties
 
+    @Override
     public void setProjectFile( final File projectFile ) {
         assertNotEvaluated();
         setProjectDescriptor( projectFile.toURI() );
@@ -33,11 +35,13 @@ public abstract class ProjectConditionBase extends ConditionBase {
 
     // Code-facing properties
 
+    @Override
     public void setProject( final Project project ) {
         assertNotEvaluated();
         this.project = Lazy.from( project );
     }
 
+    @Override
     public void setProjectDescriptor( final URI projectDescriptor ) {
         assertNotEvaluated();
         this.project = new Lazy<Project>() {

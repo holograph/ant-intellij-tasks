@@ -48,7 +48,7 @@ public class ModuleDependency implements Dependency {
         // A module dependency's classpath contribution comprises its own classpath, plus its compile output
         final Collection<String> classpath = new HashSet<String>();
         classpath.addAll( dependee.resolveModuleClasspath() );
-        classpath.add( dependee.resolveModuleOutput() );
+        classpath.add( dependee.resolveModuleOutputPath() );
         return Collections.unmodifiableCollection( classpath );
     }
 }

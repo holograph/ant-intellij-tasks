@@ -339,7 +339,7 @@ public final class Module extends IntelliJParserBase {
 
                 @Override
                 public String getMainClass() {
-                    return mainClass;
+                    return mainClass != null && mainClass.length() == 0 ? null : mainClass;
                 }
 
                 @Override

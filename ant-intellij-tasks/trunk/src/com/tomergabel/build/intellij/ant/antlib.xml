@@ -1,12 +1,22 @@
 <?xml version="1.0" ?>
 <antlib>
+    <!-- Project resolution tasks -->
+    <taskdef name="resolveBuildOrder" classname="com.tomergabel.build.intellij.ant.ResolveBuildOrderTask" />
+
+    <!-- Project conditions -->
+    <typedef name="buildJarsOnMakeSpecified" classname="com.tomergabel.build.intellij.ant.BuildJarsOnMakeSpecifiedCondition" />
+
+    <!-- Module resolution tasks -->
     <taskdef name="resolveModuleDependencies" classname="com.tomergabel.build.intellij.ant.ResolveModuleDependenciesTask" />
     <taskdef name="resolveOutputDirectory" classname="com.tomergabel.build.intellij.ant.ResolveOutputDirectoryTask" />
     <taskdef name="resolveSourceDirectories" classname="com.tomergabel.build.intellij.ant.ResolveSourceDirectoriesTask" />
     <taskdef name="resolveModuleClasspath" classname="com.tomergabel.build.intellij.ant.ResolveModuleClasspathTask" />
     <taskdef name="resolveModuleResources" classname="com.tomergabel.build.intellij.ant.ResolveModuleResourcesTask" />
-    <taskdef name="resolveBuildOrder" classname="com.tomergabel.build.intellij.ant.ResolveBuildOrderTask" />
-    <typedef name="buildJarsOnMakeSpecified" classname="com.tomergabel.build.intellij.ant.BuildJarsOnMakeSpecifiedCondition" />
+
+    <!-- Module conditions -->
     <typedef name="moduleJarOutputSpecified" classname="com.tomergabel.build.intellij.ant.ModuleJarOutputSpecifiedCondition" />
+
+    <!-- Packging tasks -->
+    <taskdef name="buildModuleJar" classname="com.tomergabel.build.intellij.ant.BuildModuleJarTask" />
 </antlib>
         
