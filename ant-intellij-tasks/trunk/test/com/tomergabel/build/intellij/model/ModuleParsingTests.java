@@ -72,13 +72,33 @@ public class ModuleParsingTests {
                 module.getJarSettings().getMainClass() );
         assertEquals( "Module JAR output resource list incorrectly parsed.", 1,
                 module.getJarSettings().getModuleOutputs().size() );
-        final Module.JarModuleOutput output = module.getJarSettings().getModuleOutputs().iterator().next();
+        final Module.ModuleOutputContainer output = module.getJarSettings().getModuleOutputs().iterator().next();
         assertNotNull( "Module JAR output resource list contains null module.", output );
         assertEquals( "Module JAR output resource list incorrectly parsed: incorrect module name,",
                 "jar-output-self-contained", output.getModuleName() );
         assertEquals( "Module JAR output resource list incorrectly parsed: incorrect packaging method.",
-                Module.JarModuleOutput.Packaging.COPY, output.getPackaging() );
+                Module.PackagingMethod.COPY, output.getPackaging() );
         assertEquals( "Module JAR output resource list incorrectly parsed: incorrect target URI,",
                 new URI( "/" ), output.getTargetUri() );
+    }
+
+    @Test
+    public void testWarSettingsExtraction() {
+//        final Module module = MockModel.Modules.jarOutputSelfContained.get();
+//        assertNotNull( "Module JAR settings were not extracted.", module.getJarSettings() );
+//        assertEquals( "Module JAR output URL incorrectly parsed.", "file://$MODULE_DIR$/out/test.jar",
+//                module.getJarSettings().getJarUrl() );
+//        assertEquals( "Module JAR output main class incorrectly parsed.", "test.class",
+//                module.getJarSettings().getMainClass() );
+//        assertEquals( "Module JAR output resource list incorrectly parsed.", 1,
+//                module.getJarSettings().getModuleOutputs().size() );
+//        final Module.ModuleOutputContainer output = module.getJarSettings().getModuleOutputs().iterator().next();
+//        assertNotNull( "Module JAR output resource list contains null module.", output );
+//        assertEquals( "Module JAR output resource list incorrectly parsed: incorrect module name,",
+//                "jar-output-self-contained", output.getModuleName() );
+//        assertEquals( "Module JAR output resource list incorrectly parsed: incorrect packaging method.",
+//                Module.PackagingMethod.COPY, output.getPackaging() );
+//        assertEquals( "Module JAR output resource list incorrectly parsed: incorrect target URI,",
+//                new URI( "/" ), output.getTargetUri() );
     }
 }

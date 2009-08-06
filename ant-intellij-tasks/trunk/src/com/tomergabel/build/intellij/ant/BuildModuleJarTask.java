@@ -43,7 +43,7 @@ public class BuildModuleJarTask extends ModuleTaskBase {
         }
 
         // Iterate outputs and add to the JAR task
-        for ( final Module.JarModuleOutput output : settings.getModuleOutputs() ) {
+        for ( final Module.ModuleOutputContainer output : settings.getModuleOutputs() ) {
             // Resolve module
             final ModuleResolver dependency;
             if ( output.getModuleName().equals( module().getName() ) )
@@ -58,7 +58,7 @@ public class BuildModuleJarTask extends ModuleTaskBase {
             }
 
             // TODO add support for other packaging types
-            if ( output.getPackaging() != Module.JarModuleOutput.Packaging.COPY )
+            if ( output.getPackaging() != Module.PackagingMethod.COPY )
                 throw new BuildException( "Module \"" + output.getModuleName() + "\" specifies unsupported " +
                         "packaging mode " + output.getPackaging().toString() );
 

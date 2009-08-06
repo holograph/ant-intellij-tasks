@@ -12,7 +12,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
 
 public final class Module extends IntelliJParserBase {
     private final URI moduleDescriptor;
@@ -26,65 +29,7 @@ public final class Module extends IntelliJParserBase {
     private String contentRootUrl;
     private boolean inheritOutput = true;
     private JarSettings jarSettings = null;
-
-    public interface JarSettings {
-        String getJarUrl();
-
-        String getMainClass();
-
-        Collection<JarModuleOutput> getModuleOutputs();
-    }
-
-    public static class JarModuleOutput {
-        public enum Packaging {
-            COPY,
-            JAR,
-            JAR_AND_LINK
-        }
-
-        private final String moduleName;
-        private final Packaging packaging;
-        private final URI targetUri;
-
-        public JarModuleOutput( final String moduleName, final Packaging packaging, final URI targetUri ) {
-            this.moduleName = moduleName;
-            this.packaging = packaging;
-            this.targetUri = targetUri;
-        }
-
-        public Packaging getPackaging() {
-            return this.packaging;
-        }
-
-        public URI getTargetUri() {
-            return this.targetUri;
-        }
-
-        public String getModuleName() {
-            return this.moduleName;
-        }
-
-        @SuppressWarnings( { "RedundantIfStatement" } )
-        @Override
-        public boolean equals( final Object o ) {
-            if ( this == o ) return true;
-            if ( o == null || getClass() != o.getClass() ) return false;
-
-            final JarModuleOutput that = (JarModuleOutput) o;
-
-            if ( this.packaging != that.packaging ) return false;
-            if ( this.targetUri != null ? !targetUri.equals( that.targetUri ) : that.targetUri != null ) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = this.packaging != null ? packaging.hashCode() : 0;
-            result = 31 * result + ( this.targetUri != null ? targetUri.hashCode() : 0 );
-            return result;
-        }
-    }
+    private WarSettings warSettings = null;
 
     public URI getModuleDescriptor() {
         return this.moduleDescriptor;
@@ -122,6 +67,14 @@ public final class Module extends IntelliJParserBase {
         return this.jarSettings != null;
     }
 
+    public WarSettings getWarSettings() {
+        return this.warSettings;
+    }
+
+    public boolean isBuildWar() {
+        return this.warSettings != null;
+    }
+
     public Collection<String> getSourceUrls() {
         return Collections.unmodifiableCollection( this.sourceUrls );
     }
@@ -148,11 +101,9 @@ public final class Module extends IntelliJParserBase {
         this.testSourceUrls = new HashSet<String>();
         this.dependencies = new HashSet<Dependency>();
 
-        // Register ignored components
-        registerComponentHandler( "FacetManager", ignoreHandler );              // TODO
-
         // Register handlers
         registerComponentHandler( "NewModuleRootManager", new NewModuleRootManagerHandler() );
+        registerComponentHandler( "FacetManager", new FacetManagerHandler() );
         registerComponentHandler( "BuildJarSettings", new BuildJarSettingsHandler() );
     }
 
@@ -320,7 +271,7 @@ public final class Module extends IntelliJParserBase {
             final String mainClass = extract( componentNode, "setting[@name='mainClass']/@value",
                     "Cannot extract JAR main class name" );
 
-            final Collection<JarModuleOutput> modules = new HashSet<JarModuleOutput>();
+            final Collection<ModuleOutputContainer> modules = new HashSet<ModuleOutputContainer>();
             for ( final Node container : extractAll( componentNode, "containerInfo/containerElement",
                     "Cannot extract JAR container elements" ) ) {
                 final String type = extract( container, "@type", "Cannot extract container element type" );
@@ -331,50 +282,36 @@ public final class Module extends IntelliJParserBase {
                 else throw new ParseException( "Unrecognized JAR container element type '" + type + "'" );
             }
 
-            Module.this.jarSettings = new JarSettings() {
-                @Override
-                public String getJarUrl() {
-                    return jarUrl;
-                }
-
-                @Override
-                public String getMainClass() {
-                    return mainClass != null && mainClass.length() == 0 ? null : mainClass;
-                }
-
-                @Override
-                public Collection<JarModuleOutput> getModuleOutputs() {
-                    return Collections.unmodifiableCollection( modules );
-                }
-            };
+            Module.this.jarSettings = new JarSettings( jarUrl,
+                    mainClass != null && mainClass.length() == 0 ? null : mainClass, modules );
         }
 
 
-        private JarModuleOutput resolveModuleContainerElement( final Node container ) throws ParseException {
+        private ModuleOutputContainer resolveModuleContainerElement( final Node container ) throws ParseException {
             final String moduleName = extract( container, "@name",
                     "Cannot extract module name for JAR module output" );
             if ( moduleName == null )
                 throw new ParseException( "Module name not specified for JAR module output." );
 
-            // Extract packaging method
-            final String method = extract( container, "attribute[@name='method']/@value",
+            // Extract method method
+            final String methodString = extract( container, "attribute[@name='method']/@value",
                     "Cannot extract JAR module output packaging method" );
-            if ( method == null )
+            if ( methodString == null )
                 throw new ParseException(
                         "Packaging method not specified for JAR module output \"" + moduleName + "\"." );
             final int methodOrdinal;
             try {
-                methodOrdinal = Integer.valueOf( method );
+                methodOrdinal = Integer.valueOf( methodString );
             } catch ( NumberFormatException ignored ) {
                 throw new ParseException(
-                        "Invalid method ordinal \"" + method + "\" specified for JAR module output \"" +
+                        "Invalid method ordinal \"" + methodString + "\" specified for JAR module output \"" +
                                 moduleName + "\"." );
             }
-            if ( methodOrdinal < 1 || methodOrdinal > JarModuleOutput.Packaging.values().length )
+            if ( methodOrdinal < 1 || methodOrdinal > PackagingMethod.values().length )
                 throw new ParseException(
-                        "Invalid method ordinal \"" + method + "\" specified for JAR module output \"" +
+                        "Invalid method ordinal \"" + methodString + "\" specified for JAR module output \"" +
                                 moduleName + "\"." );
-            final JarModuleOutput.Packaging packaging = JarModuleOutput.Packaging.values()[ methodOrdinal - 1 ];
+            final PackagingMethod method = PackagingMethod.values()[ methodOrdinal - 1 ];
 
             // Extract target URI
             final String uriString = extract( container, "attribute[@name='URI']/@value",
@@ -390,7 +327,242 @@ public final class Module extends IntelliJParserBase {
                                 "\".", e );
             }
 
-            return new JarModuleOutput( moduleName, packaging, targetUri );
+            return new ModuleOutputContainer( moduleName, method, targetUri );
+        }
+    }
+
+    private class FacetManagerHandler implements Handler {
+        @Override
+        public void parse( final String componentName, final Node componentNode )
+                throws IllegalArgumentException, ParseException {
+            for ( final Node facetNode : extractAll( componentNode, "facet", "Cannot extract facets" ) ) {
+                final String facetType = extract( facetNode, "@type", "Cannot extract facet type" );
+                if ( facetType == null )
+                    throw new ParseException( "Module facet is missing a type attribute." );
+
+                if ( "web".equals( facetType ) )
+                    processWebFacet( facetNode );
+            }
+        }
+
+        private void processWebFacet( final Node facetNode ) throws IllegalArgumentException, ParseException {
+            if ( facetNode == null )
+                throw new IllegalArgumentException( "The facet node cannot be null." );
+
+            // Extract web descriptor URL
+            final String descriptorUrl = extract( facetNode, "configuration/descriptors/deploymentDescriptor/@url",
+                    "Cannot extract web descriptor URL." );
+            if ( descriptorUrl == null )
+                throw new ParseException( "Module specifies a WAR facet with no web descriptor." );
+
+            // Parse web roots
+            final Collection<WarSettings.WebRoot> webRoots = new HashSet<WarSettings.WebRoot>();
+            for ( final Node webRoot : extractAll( facetNode, "configuration/webroots/root",
+                    "Cannot extract web root list." ) ) {
+                final String url = extract( webRoot, "@url", "Cannot extract web root URL." );
+                if ( url == null )
+                    throw new ParseException( "Module WAR settings specify a web root with no URL." );
+                final String targetUri = extract( webRoot, "@relative", "Cannot extract web root target URI." );
+                if ( targetUri == null )
+                    throw new ParseException( "Module WAR settings specify a web root with no relative target URI." );
+                webRoots.add( new WarSettings.WebRoot( url, targetUri ) );
+            }
+
+            // Parse source roots
+            final Collection<String> sourceRoots = new HashSet<String>();
+            for ( final Node sourceRoot : extractAll( facetNode, "configuration/sourceRoots/root/@url",
+                    "Cannot extract source root list." ) )
+                sourceRoots.add( sourceRoot.getTextContent() );
+
+            // Parse build parameters
+            final String message = "Cannot extract build option.";
+            final String path = "configuration/building/setting[@name='%s']/@value";
+            final boolean explodeEnabled = "true"
+                    .equals( extract( facetNode, String.format( path, "EXPLODED_ENABLED" ), message ) );
+            final boolean warEnabled = "true"
+                    .equals( extract( facetNode, String.format( path, "JAR_ENABLED" ), message ) );
+            final String explodedUrl;
+            if ( explodeEnabled ) {
+                explodedUrl = extract( facetNode, String.format( path, "EXPLODED_URL" ), message );
+                if ( explodedUrl == null )
+                    throw new ParseException(
+                            "Module WAR settings have exploded target enabled but no URL is specified." );
+            } else explodedUrl = null;
+            final String warUrl;
+            if ( warEnabled ) {
+                warUrl = extract( facetNode, String.format( path, "JAR_URL" ), message );
+                if ( warUrl == null )
+                    throw new ParseException(
+                            "Module WAR settings have exploded target enabled but no URL is specified." );
+            } else warUrl = null;
+
+            Module.this.warSettings = new WarSettings( descriptorUrl, webRoots, sourceRoots, explodedUrl, warUrl );
+        }
+    }
+
+
+    // Additioanl helper types
+
+    public enum PackagingMethod {
+        COPY,
+        JAR,
+        JAR_AND_LINK
+    }
+
+    public static class WarSettings {
+        public static class WebRoot {
+            private final String url;
+            private final String targetUri;
+
+            public WebRoot( final String url, final String targetUri ) {
+                if ( url == null )
+                    throw new IllegalArgumentException( "The web root URL cannot be null." );
+                if ( targetUri == null )
+                    throw new IllegalArgumentException( "The web root target URI cannot be null." );
+                this.url = url;
+                this.targetUri = targetUri;
+            }
+
+            public String getUrl() {
+                return this.url;
+            }
+
+            public String getTargetUri() {
+                return this.targetUri;
+            }
+
+            @SuppressWarnings( { "RedundantIfStatement" } )
+            @Override
+            public boolean equals( final Object o ) {
+                if ( this == o ) return true;
+                if ( o == null || getClass() != o.getClass() ) return false;
+
+                final WebRoot webRoot = (WebRoot) o;
+
+                if ( this.targetUri != null ? !targetUri.equals( webRoot.targetUri ) : webRoot.targetUri != null )
+                    return false;
+                if ( this.url != null ? !url.equals( webRoot.url ) : webRoot.url != null ) return false;
+
+                return true;
+            }
+
+            @Override
+            public int hashCode() {
+                int result = this.url != null ? url.hashCode() : 0;
+                result = 31 * result + ( this.targetUri != null ? targetUri.hashCode() : 0 );
+                return result;
+            }
+        }
+
+        private final String webDescriptorUrl;
+        private final Collection<WebRoot> webRoots;
+        private final Collection<String> sourceRoots;
+        private final String explodedUrl;
+        private final String warUrl;
+
+        public WarSettings( final String webDescriptorUrl, final Collection<WebRoot> webRoots,
+                            final Collection<String> sourceRoots, final String explodedUrl, final String warUrl ) {
+            this.webDescriptorUrl = webDescriptorUrl;
+            this.webRoots = Collections.unmodifiableCollection( webRoots );
+            this.sourceRoots = Collections.unmodifiableCollection( sourceRoots );
+            this.explodedUrl = explodedUrl;
+            this.warUrl = warUrl;
+        }
+
+        public String getWebDescriptorUrl() {
+            return this.webDescriptorUrl;
+        }
+
+        public Collection<WebRoot> getWebRoots() {
+            return this.webRoots;
+        }
+
+        public Collection<String> getSourceRoots() {
+            return this.sourceRoots;
+        }
+
+        public String getExplodedUrl() {
+            return this.explodedUrl;
+        }
+
+        public String getWarUrl() {
+            return this.warUrl;
+        }
+    }
+
+    public static class JarSettings {
+        private final String jarUrl;
+        private final String mainClass;
+        private final Collection<ModuleOutputContainer> moduleOutputs;
+
+        protected JarSettings( final String jarUrl, final String mainClass,
+                               final Collection<ModuleOutputContainer> moduleOutputs ) {
+            if ( jarUrl == null )
+                throw new IllegalArgumentException( "The JAR url cannot be null." );
+            if ( moduleOutputs == null )
+                throw new IllegalArgumentException( "The module output collection cannot be null." );
+
+            this.jarUrl = jarUrl;
+            this.mainClass = mainClass;
+            this.moduleOutputs = Collections.unmodifiableCollection( moduleOutputs );
+        }
+
+        public String getJarUrl() {
+            return this.jarUrl;
+        }
+
+        public String getMainClass() {
+            return this.mainClass;
+        }
+
+        public Collection<ModuleOutputContainer> getModuleOutputs() {
+            return this.moduleOutputs;
+        }
+    }
+
+    public static class ModuleOutputContainer {
+
+        private final String moduleName;
+        private final PackagingMethod method;
+        private final URI targetUri;
+
+        public ModuleOutputContainer( final String moduleName, final PackagingMethod method, final URI targetUri ) {
+            this.moduleName = moduleName;
+            this.method = method;
+            this.targetUri = targetUri;
+        }
+
+        public PackagingMethod getPackaging() {
+            return this.method;
+        }
+
+        public URI getTargetUri() {
+            return this.targetUri;
+        }
+
+        public String getModuleName() {
+            return this.moduleName;
+        }
+
+        @SuppressWarnings( { "RedundantIfStatement" } )
+        @Override
+        public boolean equals( final Object o ) {
+            if ( this == o ) return true;
+            if ( o == null || getClass() != o.getClass() ) return false;
+
+            final ModuleOutputContainer that = (ModuleOutputContainer) o;
+
+            if ( this.method != that.method ) return false;
+            if ( this.targetUri != null ? !targetUri.equals( that.targetUri ) : that.targetUri != null ) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = this.method != null ? method.hashCode() : 0;
+            result = 31 * result + ( this.targetUri != null ? targetUri.hashCode() : 0 );
+            return result;
         }
     }
 }
