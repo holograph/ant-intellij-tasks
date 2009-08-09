@@ -31,7 +31,7 @@ public class WebFacet extends PackageFacetBase {
             throw new ParseException( "Module specifies a WAR facet with no web descriptor." );
 
         // Parse roots
-        this.webRoots = parseRoots( facetNode, "webRoots" );
+        this.webRoots = parseRoots( facetNode, "webroots" );
         this.sourceRoots = parseRoots( facetNode, "sourceRoots" );
     }
 

@@ -42,6 +42,7 @@ public final class MockModel {
         public static final Lazy<Project> outputSpecified = new LazyProjectLoader( "projects/output-specified.ipr" );
         public static final Lazy<Project> outputUnspecified = new LazyProjectLoader( "projects/output-unspecified.ipr" );
         public static final Lazy<Project> circularDependencyTest = new LazyProjectLoader( "projects/circular-dependency-test.ipr" );
+        public static final Lazy<Project> faceted = new LazyProjectLoader( "projects/faceted.ipr" );
 
         static class LazyProjectLoader extends LazyLoader<Project> {
             LazyProjectLoader( final String file ) {
@@ -75,6 +76,8 @@ public final class MockModel {
         public static final Lazy<Module> withJarDirectoryRecursive = new LazyModuleLoader( "modules/with-jar-directory-recursive.iml" );
         public static final Lazy<Module> jarOutputSelfContained = new LazyModuleLoader( "modules/jar-output-self-contained.iml" );
         public static final Lazy<Module> jarOutputDependent = new LazyModuleLoader( "modules/jar-output-dependent.iml" );
+        public static final Lazy<Module> withWebFacet = new LazyModuleLoader( "modules/with-web-facet.iml" );
+        public static final Lazy<Module> withEjbFacet = new LazyModuleLoader( "modules/with-ejb-facet.iml" );
 
         static class LazyModuleLoader extends LazyLoader<Module> {
             LazyModuleLoader( final String file ) {

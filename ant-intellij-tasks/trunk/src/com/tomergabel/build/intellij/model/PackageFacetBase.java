@@ -5,7 +5,6 @@ import org.w3c.dom.Node;
 import java.util.*;
 
 public abstract class PackageFacetBase extends Facet {
-
     private String explodedUrl;
     private String targetUrl;
     private final Collection<ContainerElement> elements = new HashSet<ContainerElement>();
@@ -30,6 +29,7 @@ public abstract class PackageFacetBase extends Facet {
         return this.targetUrl != null;
     }
 
+
     public PackageFacetBase( final Node facetNode ) throws IllegalArgumentException, ParseException {
         super( facetNode );
 
@@ -40,7 +40,7 @@ public abstract class PackageFacetBase extends Facet {
     }
 
     private void parsePackagingOptions( final Node facetNode ) throws ParseException {
-        for ( final Node container : extractAll( facetNode, "packaging/containerElement",
+        for ( final Node container : extractAll( facetNode, "configuration/packaging/containerElement",
                 "Cannot extract container elements" ) ) {
             final String type = extract( container, "@type", "Cannot extract container element type" );
             if ( type == null )
@@ -59,28 +59,12 @@ public abstract class PackageFacetBase extends Facet {
                 if ( name == null )
                     throw new ParseException(
                             getShortName() + " specifies a library container element with no library name." );
-                final String levelString = extract( container, "@name", "Cannot extract library level" );
+                final String levelString = extract( container, "@level", "Cannot extract library level" );
                 if ( levelString == null )
                     throw new ParseException(
                             getShortName() + " specifies a library container element with no level." );
                 final LibraryDependency.Level level = LibraryDependency.Level.parse( levelString );
-                dependency = new LibraryDependency() {
-                    @Override
-                    public Level getLevel() {
-                        return level;
-                    }
-
-                    @Override
-                    public Library resolveLibrary( final ModuleResolver resolver ) throws ResolutionException {
-                        if ( resolver.getProjectResolver() == null )
-                            throw new ResolutionException(
-                                    "Cannot resolve library '" + name + "', project not defined." );
-                        final Library library = resolver.getProjectResolver().getProject().getLibraries().get( name );
-                        if ( library == null )
-                            throw new ResolutionException( "Library '" + name + "' not defined in project." );
-                        return library;
-                    }
-                };
+                dependency = new NamedLibraryDependency( name, level );
             } else throw new ParseException(
                     getShortName() + "specifies an unknown container element type '" + type + "'" );
 
@@ -90,7 +74,7 @@ public abstract class PackageFacetBase extends Facet {
                             "Cannot extract packaging method" ) );
             if ( method == null )
                 throw new ParseException( getShortName() + " specifies a container element with no packaging method." );
-            final String targetUri = extract( container, "attribute[@name='uri']/@value", "Cannot extract target URI" );
+            final String targetUri = extract( container, "attribute[@name='URI']/@value", "Cannot extract target URI" );
             if ( targetUri == null )
                 throw new ParseException( getShortName() + " specifies a container element with no target URI." );
             this.elements.add( new ContainerElement( dependency, method, targetUri ) );
@@ -155,6 +139,11 @@ public abstract class PackageFacetBase extends Facet {
             int result = this.url != null ? url.hashCode() : 0;
             result = 31 * result + ( this.targetUri != null ? targetUri.hashCode() : 0 );
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return "root[url='" + this.url + "', target='" + this.targetUri + "']";
         }
     }
 
@@ -222,6 +211,12 @@ public abstract class PackageFacetBase extends Facet {
             result = 31 * result + ( this.method != null ? method.hashCode() : 0 );
             result = 31 * result + ( this.targetUri != null ? targetUri.hashCode() : 0 );
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return "ContainerElement[ dependency='" + this.dependency + "', method=" + this.method + ", targetUri='" +
+                    this.targetUri + "' ]";
         }
     }
 }

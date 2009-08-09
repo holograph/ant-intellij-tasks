@@ -12,6 +12,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 
+  <component name="FacetManager">
     <facet type="web" name="Web">
       <configuration>
         <descriptors>
@@ -46,4 +47,5 @@
         </packaging>
       </configuration>
     </facet>
+  </component>
 </module>
