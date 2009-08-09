@@ -12,16 +12,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 public final class Module extends IntelliJParserBase {
     private final URI moduleDescriptor;
     private final Collection<String> sourceUrls;
     private final Collection<String> testSourceUrls;
     private final Collection<Dependency> dependencies;
+    private final Collection<Facet> facets;
     private final String name;
 
     private String outputUrl = null;
@@ -29,7 +27,6 @@ public final class Module extends IntelliJParserBase {
     private String contentRootUrl;
     private boolean inheritOutput = true;
     private JarSettings jarSettings = null;
-    private WarSettings warSettings = null;
 
     public URI getModuleDescriptor() {
         return this.moduleDescriptor;
@@ -67,12 +64,8 @@ public final class Module extends IntelliJParserBase {
         return this.jarSettings != null;
     }
 
-    public WarSettings getWarSettings() {
-        return this.warSettings;
-    }
-
-    public boolean isBuildWar() {
-        return this.warSettings != null;
+    public Collection<Facet> getFacets() {
+        return Collections.unmodifiableCollection( this.facets );
     }
 
     public Collection<String> getSourceUrls() {
@@ -100,6 +93,7 @@ public final class Module extends IntelliJParserBase {
         this.sourceUrls = new HashSet<String>();
         this.testSourceUrls = new HashSet<String>();
         this.dependencies = new HashSet<Dependency>();
+        this.facets = new ArrayList<Facet>();
 
         // Register handlers
         registerComponentHandler( "NewModuleRootManager", new NewModuleRootManagerHandler() );
@@ -341,65 +335,12 @@ public final class Module extends IntelliJParserBase {
                     throw new ParseException( "Module facet is missing a type attribute." );
 
                 if ( "web".equals( facetType ) )
-                    processWebFacet( facetNode );
+                    Module.this.facets.add( new WebFacet( facetNode ) );
+                else if ( "ejb".equals( facetType ) )
+                    Module.this.facets.add( new EjbFacet( facetNode ) );
             }
-        }
-
-        private void processWebFacet( final Node facetNode ) throws IllegalArgumentException, ParseException {
-            if ( facetNode == null )
-                throw new IllegalArgumentException( "The facet node cannot be null." );
-
-            // Extract web descriptor URL
-            final String descriptorUrl = extract( facetNode, "configuration/descriptors/deploymentDescriptor/@url",
-                    "Cannot extract web descriptor URL." );
-            if ( descriptorUrl == null )
-                throw new ParseException( "Module specifies a WAR facet with no web descriptor." );
-
-            // Parse web roots
-            final Collection<WarSettings.WebRoot> webRoots = new HashSet<WarSettings.WebRoot>();
-            for ( final Node webRoot : extractAll( facetNode, "configuration/webroots/root",
-                    "Cannot extract web root list." ) ) {
-                final String url = extract( webRoot, "@url", "Cannot extract web root URL." );
-                if ( url == null )
-                    throw new ParseException( "Module WAR settings specify a web root with no URL." );
-                final String targetUri = extract( webRoot, "@relative", "Cannot extract web root target URI." );
-                if ( targetUri == null )
-                    throw new ParseException( "Module WAR settings specify a web root with no relative target URI." );
-                webRoots.add( new WarSettings.WebRoot( url, targetUri ) );
-            }
-
-            // Parse source roots
-            final Collection<String> sourceRoots = new HashSet<String>();
-            for ( final Node sourceRoot : extractAll( facetNode, "configuration/sourceRoots/root/@url",
-                    "Cannot extract source root list." ) )
-                sourceRoots.add( sourceRoot.getTextContent() );
-
-            // Parse build parameters
-            final String message = "Cannot extract build option.";
-            final String path = "configuration/building/setting[@name='%s']/@value";
-            final boolean explodeEnabled = "true"
-                    .equals( extract( facetNode, String.format( path, "EXPLODED_ENABLED" ), message ) );
-            final boolean warEnabled = "true"
-                    .equals( extract( facetNode, String.format( path, "JAR_ENABLED" ), message ) );
-            final String explodedUrl;
-            if ( explodeEnabled ) {
-                explodedUrl = extract( facetNode, String.format( path, "EXPLODED_URL" ), message );
-                if ( explodedUrl == null )
-                    throw new ParseException(
-                            "Module WAR settings have exploded target enabled but no URL is specified." );
-            } else explodedUrl = null;
-            final String warUrl;
-            if ( warEnabled ) {
-                warUrl = extract( facetNode, String.format( path, "JAR_URL" ), message );
-                if ( warUrl == null )
-                    throw new ParseException(
-                            "Module WAR settings have exploded target enabled but no URL is specified." );
-            } else warUrl = null;
-
-            Module.this.warSettings = new WarSettings( descriptorUrl, webRoots, sourceRoots, explodedUrl, warUrl );
         }
     }
-
 
     // Additioanl helper types
 
@@ -408,88 +349,7 @@ public final class Module extends IntelliJParserBase {
         JAR,
         JAR_AND_LINK
     }
-
-    public static class WarSettings {
-        public static class WebRoot {
-            private final String url;
-            private final String targetUri;
-
-            public WebRoot( final String url, final String targetUri ) {
-                if ( url == null )
-                    throw new IllegalArgumentException( "The web root URL cannot be null." );
-                if ( targetUri == null )
-                    throw new IllegalArgumentException( "The web root target URI cannot be null." );
-                this.url = url;
-                this.targetUri = targetUri;
-            }
-
-            public String getUrl() {
-                return this.url;
-            }
-
-            public String getTargetUri() {
-                return this.targetUri;
-            }
-
-            @SuppressWarnings( { "RedundantIfStatement" } )
-            @Override
-            public boolean equals( final Object o ) {
-                if ( this == o ) return true;
-                if ( o == null || getClass() != o.getClass() ) return false;
-
-                final WebRoot webRoot = (WebRoot) o;
-
-                if ( this.targetUri != null ? !targetUri.equals( webRoot.targetUri ) : webRoot.targetUri != null )
-                    return false;
-                if ( this.url != null ? !url.equals( webRoot.url ) : webRoot.url != null ) return false;
-
-                return true;
-            }
-
-            @Override
-            public int hashCode() {
-                int result = this.url != null ? url.hashCode() : 0;
-                result = 31 * result + ( this.targetUri != null ? targetUri.hashCode() : 0 );
-                return result;
-            }
-        }
-
-        private final String webDescriptorUrl;
-        private final Collection<WebRoot> webRoots;
-        private final Collection<String> sourceRoots;
-        private final String explodedUrl;
-        private final String warUrl;
-
-        public WarSettings( final String webDescriptorUrl, final Collection<WebRoot> webRoots,
-                            final Collection<String> sourceRoots, final String explodedUrl, final String warUrl ) {
-            this.webDescriptorUrl = webDescriptorUrl;
-            this.webRoots = Collections.unmodifiableCollection( webRoots );
-            this.sourceRoots = Collections.unmodifiableCollection( sourceRoots );
-            this.explodedUrl = explodedUrl;
-            this.warUrl = warUrl;
-        }
-
-        public String getWebDescriptorUrl() {
-            return this.webDescriptorUrl;
-        }
-
-        public Collection<WebRoot> getWebRoots() {
-            return this.webRoots;
-        }
-
-        public Collection<String> getSourceRoots() {
-            return this.sourceRoots;
-        }
-
-        public String getExplodedUrl() {
-            return this.explodedUrl;
-        }
-
-        public String getWarUrl() {
-            return this.warUrl;
-        }
-    }
-
+    
     public static class JarSettings {
         private final String jarUrl;
         private final String mainClass;
