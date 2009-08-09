@@ -77,7 +77,7 @@ public class ModuleParsingTests {
         assertEquals( "Module JAR output resource list incorrectly parsed: incorrect module name,",
                 "jar-output-self-contained", output.getModuleName() );
         assertEquals( "Module JAR output resource list incorrectly parsed: incorrect packaging method.",
-                Module.PackagingMethod.COPY, output.getPackaging() );
+                PackagingMethod.COPY, output.getPackaging() );
         assertEquals( "Module JAR output resource list incorrectly parsed: incorrect target URI,",
                 new URI( "/" ), output.getTargetUri() );
     }

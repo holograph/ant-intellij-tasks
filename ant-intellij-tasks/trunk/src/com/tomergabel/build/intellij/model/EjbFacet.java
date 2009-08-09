@@ -17,4 +17,9 @@ public class EjbFacet extends PackageFacetBase {
         // Parse roots
         this.ejbRoots = parseRoots( facetNode, "ejbRoots" );
     }
+
+    @Override
+    protected String getShortName() {
+        return "EJB facet";
+    }
 }

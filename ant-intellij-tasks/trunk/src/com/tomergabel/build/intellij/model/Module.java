@@ -288,24 +288,11 @@ public final class Module extends IntelliJParserBase {
                 throw new ParseException( "Module name not specified for JAR module output." );
 
             // Extract method method
-            final String methodString = extract( container, "attribute[@name='method']/@value",
-                    "Cannot extract JAR module output packaging method" );
-            if ( methodString == null )
-                throw new ParseException(
-                        "Packaging method not specified for JAR module output \"" + moduleName + "\"." );
-            final int methodOrdinal;
-            try {
-                methodOrdinal = Integer.valueOf( methodString );
-            } catch ( NumberFormatException ignored ) {
-                throw new ParseException(
-                        "Invalid method ordinal \"" + methodString + "\" specified for JAR module output \"" +
-                                moduleName + "\"." );
-            }
-            if ( methodOrdinal < 1 || methodOrdinal > PackagingMethod.values().length )
-                throw new ParseException(
-                        "Invalid method ordinal \"" + methodString + "\" specified for JAR module output \"" +
-                                moduleName + "\"." );
-            final PackagingMethod method = PackagingMethod.values()[ methodOrdinal - 1 ];
+            final PackagingMethod method = PackagingMethod
+                    .parse( extract( container, "attribute[@name='method']/@value",
+                            "Cannot extract JAR module output packaging method" ) );
+            if ( method == null ) throw new ParseException(
+                    "Packaging method not specified for JAR module output \"" + moduleName + "\"." );
 
             // Extract target URI
             final String uriString = extract( container, "attribute[@name='URI']/@value",
@@ -344,12 +331,6 @@ public final class Module extends IntelliJParserBase {
 
     // Additioanl helper types
 
-    public enum PackagingMethod {
-        COPY,
-        JAR,
-        JAR_AND_LINK
-    }
-    
     public static class JarSettings {
         private final String jarUrl;
         private final String mainClass;
@@ -386,7 +367,8 @@ public final class Module extends IntelliJParserBase {
         private final PackagingMethod method;
         private final URI targetUri;
 
-        public ModuleOutputContainer( final String moduleName, final PackagingMethod method, final URI targetUri ) {
+        public ModuleOutputContainer( final String moduleName, final PackagingMethod method,
+                                      final URI targetUri ) {
             this.moduleName = moduleName;
             this.method = method;
             this.targetUri = targetUri;

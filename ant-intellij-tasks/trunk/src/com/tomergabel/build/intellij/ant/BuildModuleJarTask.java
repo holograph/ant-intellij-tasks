@@ -2,6 +2,7 @@ package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.Module;
 import com.tomergabel.build.intellij.model.ModuleResolver;
+import com.tomergabel.build.intellij.model.PackagingMethod;
 import com.tomergabel.build.intellij.model.ResolutionException;
 import com.tomergabel.util.UriUtils;
 import org.apache.tools.ant.BuildException;
@@ -58,7 +59,7 @@ public class BuildModuleJarTask extends ModuleTaskBase {
             }
 
             // TODO add support for other packaging types
-            if ( output.getPackaging() != Module.PackagingMethod.COPY )
+            if ( output.getPackaging() != PackagingMethod.COPY )
                 throw new BuildException( "Module \"" + output.getModuleName() + "\" specifies unsupported " +
                         "packaging mode " + output.getPackaging().toString() );
 

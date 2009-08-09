@@ -34,4 +34,9 @@ public class WebFacet extends PackageFacetBase {
         this.webRoots = parseRoots( facetNode, "webRoots" );
         this.sourceRoots = parseRoots( facetNode, "sourceRoots" );
     }
+
+    @Override
+    protected String getShortName() {
+        return "Web facet";
+    }
 }
