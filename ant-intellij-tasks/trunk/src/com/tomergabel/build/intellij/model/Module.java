@@ -321,10 +321,9 @@ public final class Module extends IntelliJParserBase {
                 if ( facetType == null )
                     throw new ParseException( "Module facet is missing a type attribute." );
 
-                if ( "web".equals( facetType ) )
-                    Module.this.facets.add( new WebFacet( facetNode ) );
-                else if ( "ejb".equals( facetType ) )
-                    Module.this.facets.add( new EjbFacet( facetNode ) );
+                final Facet facet = Facet.create( facetType, facetNode );
+                if ( facet != null )
+                    Module.this.facets.add( facet );
             }
         }
     }
