@@ -13,9 +13,9 @@ public enum PackagingMethod {
     static {
         stringMap = new HashMap<String, PackagingMethod>();
         stringMap.put( "1", COPY );
-        stringMap.put( "2", JAR );
-        stringMap.put( "3", JAR_AND_LINK );
-        stringMap.put( "6", COPY );
+//        stringMap.put( "2", JAR );
+//        stringMap.put( "3", JAR_AND_LINK );
+        stringMap.put( "6", JAR_AND_LINK );
     }
 
     public static PackagingMethod parse( final String methodString ) {

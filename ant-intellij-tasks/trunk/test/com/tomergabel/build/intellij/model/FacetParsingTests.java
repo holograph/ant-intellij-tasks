@@ -37,8 +37,26 @@ public class FacetParsingTests {
                         new NamedLibraryDependency( "junit", LibraryDependency.Level.PROJECT ), PackagingMethod.COPY,
                         "/WEB-INF/lib" ),
         }, facet.getElements() );
-
     }
+
+    @SuppressWarnings( { "ConstantConditions" } )
+    @Test
+    public void test_ModuleWithEjbFacet_EjbFacetSuccessfullyParsed() throws LazyInitializationException {
+        final Module module = MockModel.Modules.withEjbFacet.get();
+        final EjbFacet facet = resolve( module.getFacets(), EjbFacet.class );
+        assertNotNull( "Target URL enable flag incorrectly parsed.", facet.getTargetUrl() );
+        assertEquals( "Target URL incorrectly parsed.", "file://$MODULE_DIR$/out/with-ejb-facet.jar", facet.getTargetUrl() );
+        assertNull( "Explode enable flag incorrectly parsed.", facet.getExplodedUrl() );
+
+        assertSetEquality( "Source roots incorrectly parsed.",
+                Collections.singleton( new PackageFacetBase.Root( "file://$MODULE_DIR$/src", null ) ),
+                facet.getEjbRoots() );
+
+        assertSetEquality( "Container elements incorrectly parsed.", new PackageFacetBase.ContainerElement[] {
+                new PackageFacetBase.ContainerElement( new ModuleDependency( "dependee" ), PackagingMethod.JAR_AND_LINK,
+                        "/dependee.jar" ),
+        }, facet.getElements() );
+    }                        
 
     @SuppressWarnings( { "unchecked" } )
     private <U, T extends U> T resolve( final Collection<U> collection, final Class<T> subclass ) {
