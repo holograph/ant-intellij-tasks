@@ -14,10 +14,11 @@ public abstract class Facet extends ParserBase {
             throw new IllegalArgumentException( "The facet node cannot be null." );
     }
 
-    private static final Map<String, Constructor<? extends Facet>> facetTypeMap = new HashMap<String, Constructor<? extends Facet>>();
+    private static final Map<String, Constructor<? extends Facet>> facetTypeMap;
 
     static {
         try {
+            facetTypeMap = new HashMap<String, Constructor<? extends Facet>>();
             facetTypeMap.put( "web", WebFacet.class.getConstructor( Node.class ) );
             facetTypeMap.put( "ejb", EjbFacet.class.getConstructor( Node.class ) );
         } catch ( NoSuchMethodException e ) {

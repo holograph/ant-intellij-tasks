@@ -1,6 +1,7 @@
 package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.*;
+import com.tomergabel.util.CharPrefixTree;
 import com.tomergabel.util.UriUtils;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.*;
@@ -8,7 +9,6 @@ import org.apache.tools.ant.types.selectors.FileSelector;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 
 public abstract class PackageTaskBase extends ModuleTaskBase {
@@ -16,6 +16,7 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
         final Path path = new Path( getProject() );
         for ( final PackagingContainer.ContainerElement element : resolvePackagingContainer().getElements() ) {
             final String prefix = AntUtils.stripPreceedingSlash( element.getTargetUri() );
+            logVerbose( "Resolving %s, method=%s, prefix=%s...", element, element.getMethod(), prefix );
             switch ( element.getMethod() ) {
                 case COPY:
                     resolveDependencyOutput( element.getDependency(), path, prefix );
@@ -53,8 +54,7 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
     }
 
     protected /*static*/ class CompileOutputSelector implements FileSelector {
-        private final Collection<String> filenames = new HashSet<String>();
-        private final File baseDir;
+        private final Collection<String> filenames = new CharPrefixTree();
 
         public CompileOutputSelector( final ModuleResolver resolver, final String rootUrl ) throws ResolutionException {
             if ( rootUrl == null )
@@ -65,11 +65,10 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
                 throw new ResolutionException(
                         "Source root URL \"" + rootUrl + "\" not found  in module \"" + resolver.getModule().getName() +
                                 "\"." );
-            this.baseDir = UriUtils.getFile( resolver.resolveUriString( rootUrl ) );
 
             // Generate source file set
             final FileSet source = new FileSet();
-            source.setDir( this.baseDir );                                  // Use root source directory
+            source.setDir( UriUtils.getFile( resolver.resolveUriString( rootUrl ) ) );
             source.setIncludes( "**/*.java" );                              // Include Java sources
             if ( resolver.getProjectResolver() != null )                    // Include file resources
                 source.appendIncludes(
@@ -78,21 +77,29 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
             // Required to work around an NPE in AbstractFileSet:477
             source.setProject( getProject() );
 
+            logVerbose( "Iterating source files and resources under " + source.getDir() );
             final Iterator iter = source.iterator();
             while ( iter.hasNext() ) {
-                final Resource resource = (Resource) iter.next();
-                final String filename;
-                if ( resource.getName().endsWith( ".java" ) )
-                    filename = resource.getName().substring( 0, resource.getName().length() - 4 ) + "class";
-                else
-                    filename = resource.getName();
+                final String filename = mangle( ( (Resource) iter.next() ).getName() );
+                logVerbose( "Adding file %s to selector", filename );
                 this.filenames.add( filename );
             }
         }
 
+        private String mangle( final String name ) {
+            if ( name.endsWith( ".java" ) )
+                return name.substring( 0, name.length() - 4 ) + "class";
+            else if ( name.endsWith( ".class" ) && name.indexOf( '$' ) != -1 )
+                return name.substring( 0, name.indexOf( '$' ) ) + ".class";
+            else
+                return name;
+        }
+
         @Override
         public boolean isSelected( final File basedir, final String filename, final File file ) throws BuildException {
-            return this.baseDir.equals( basedir ) && this.filenames.contains( filename );
+            final boolean result = this.filenames.contains( mangle( filename ) );
+            logVerbose( "Selecting file %s under %s, result=%b", filename, basedir, result );
+            return result;
         }
     }
 
@@ -130,6 +137,7 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
         if ( resolver == null )
             throw new IllegalArgumentException( "The module resolver cannot be null." );
 
+        logVerbose( "Resolving compile output for module " + resolver.getModule().getName() );
         final Path p = new Path( getProject() );
         for ( final String source : resolver.getModule().getSourceUrls() )
             p.add( resolveCompileOutput( resolver, source, prefix ) );
@@ -154,6 +162,8 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
         if ( rootUrl == null )
             throw new IllegalArgumentException( "The root URL cannot be null." );
 
+        logVerbose( "Resolving compile output for source root %s of module %s...", rootUrl,
+                resolver.getModule().getName() );
         final ZipFileSet target = new ZipFileSet();
         target.setDir( resolver.resolveModuleOutput() );
         target.setPrefix( prefix );

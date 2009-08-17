@@ -17,7 +17,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 @Ignore( "Pending completion" )
-public class BuildModuleJarTaskTests {
+public class PackageModuleJarTaskTests {
     private PackageModuleJarTask task;
 
     static class TestableJar extends Jar {
