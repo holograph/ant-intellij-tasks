@@ -10,7 +10,7 @@ public abstract class BuildFacetTaskBase<T extends Facet> extends ModuleTaskBase
     protected abstract Class<T> getFacetClass();
 
     protected T resolveFacet() throws ResolutionException {
-        if ( this.facet == null )
+        if ( this.facet == null ) {
             for ( final T facet : filter( module().getFacets(), getFacetClass() ) )
                 if ( this.facet != null )
                     throw new ResolutionException(
@@ -19,6 +19,11 @@ public abstract class BuildFacetTaskBase<T extends Facet> extends ModuleTaskBase
                                     " instance" );
                 else
                     this.facet = facet;
+
+            throw new ResolutionException(
+                    "Module \"" + module().getName() + "\" does not specify a " + getFacetClass().getName() +
+                            " instance" );
+        }
         return this.facet;
     }
 

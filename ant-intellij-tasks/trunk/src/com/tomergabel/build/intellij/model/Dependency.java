@@ -12,7 +12,9 @@ public interface Dependency {
      * @param resolver The {@link com.tomergabel.build.intellij.model.ModuleResolver module resolver} against which to
      *                 resolve the classpath entries.
      * @return The classpath entries resolved against the specified module.
-     * @throws ResolutionException An error has occurred while resolving the classpath.
+     * @throws IllegalArgumentException The module resolver cannot be null.
+     * @throws ResolutionException      An error has occurred while resolving the classpath.
      */
-    Collection<String> resolveClasspath( final ModuleResolver resolver ) throws ResolutionException;
+    Collection<String> resolveClasspath( final ModuleResolver resolver )
+            throws IllegalArgumentException, ResolutionException;
 }

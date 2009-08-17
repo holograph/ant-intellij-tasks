@@ -67,7 +67,7 @@ public class BuildModuleJarTask extends ModuleTaskBase {
             final ZipFileSet fileset = new ZipFileSet();
             try {
                 fileset.setDir( dependency.resolveModuleOutput() );
-                fileset.setPrefix( stripPreceedingSlash( output.getTargetUri().toString() ) );
+                fileset.setPrefix( AntUtils.stripPreceedingSlash( output.getTargetUri().toString() ) );
             } catch ( ResolutionException e ) {
                 throw new BuildException( e );
             }
@@ -75,10 +75,6 @@ public class BuildModuleJarTask extends ModuleTaskBase {
         }
 
         return jar;
-    }
-
-    protected static String stripPreceedingSlash( final String uri ) {
-        return uri.startsWith( "/" ) ? uri.substring( 1 ) : uri;
     }
 
     protected Jar instantiateJarTask() {

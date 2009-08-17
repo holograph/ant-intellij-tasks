@@ -28,12 +28,20 @@ public abstract class Facet extends ParserBase {
     }
 
     public static Class<? extends Facet> resolveFacetClass( final String typeName ) {
-        final Constructor<? extends Facet> ctor = facetTypeMap.get( typeName );
+        if ( typeName == null )
+            throw new IllegalArgumentException( "The facet type name cannot be null." );
+
+        final Constructor<? extends Facet> ctor = facetTypeMap.get( typeName.toLowerCase() );
         return ctor != null ? ctor.getDeclaringClass() : null;
     }
 
     public static Facet create( final String typeName, final Node facetNode ) throws ParseException {
-        final Constructor<? extends Facet> ctor = facetTypeMap.get( typeName );
+        if ( typeName == null )
+            throw new IllegalArgumentException( "The facet type name cannot be null." );
+        if ( facetNode == null )
+            throw new IllegalArgumentException( "The facet node cannot be null." );
+
+        final Constructor<? extends Facet> ctor = facetTypeMap.get( typeName.toLowerCase() );
         if ( ctor == null )
             return null;
 

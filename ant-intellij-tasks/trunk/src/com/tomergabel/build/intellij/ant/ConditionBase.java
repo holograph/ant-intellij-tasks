@@ -17,5 +17,5 @@ public abstract class ConditionBase implements Condition {
         return evaluate();
     }
 
-    protected abstract boolean evaluate();
+    protected abstract boolean evaluate() throws BuildException;
 }

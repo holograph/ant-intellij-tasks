@@ -36,20 +36,14 @@ public class ResolveModuleResourcesTask extends ModuleTaskBase {
             throw new BuildException( "Target path (attribute 'pathid') not specified." );
 
         // Resolve resources
+        getProject().addReference( this.pathId, resolveResourcePath() );
+    }
+
+    public Path resolveResourcePath() throws BuildException {
         final Path path = new Path( getProject() );
         final Project project = project();
         if ( project != null ) {
-            // Derive resource patterns from project
-            final String[] includes = new String[ project.getResourceExtensions().size() + project.getResourceWildcardPatterns().size() ];
-
-            // Process resource extensions
-            int i = 0;
-            for ( final String extension : project.getResourceExtensions() )
-                includes[ i++ ] = "**/*." + extension;
-
-            // Process wildcard patterns
-            for ( final String pattern : project.getResourceWildcardPatterns() )
-                includes[ i++ ] = "**/" + pattern;
+            final String[] includes = AntUtils.generateResourceIncludes( project );
 
             // Iterate source directories
             for ( final String sourceUrl : getSourceDirectories() ) {
@@ -58,7 +52,8 @@ public class ResolveModuleResourcesTask extends ModuleTaskBase {
                 try {
                     sourceDir = UriUtils.getFile( resolver().resolveUriString( sourceUrl ) );
                 } catch ( ResolutionException e ) {
-                    throw new BuildException( "Cannot resolve source directory for mdoule \"" + module().getName() + "\"", e );
+                    throw new BuildException(
+                            "Cannot resolve source directory for mdoule \"" + module().getName() + "\"", e );
                 }
 
                 // Create appropriate FileSet and add it to the output path
@@ -68,8 +63,7 @@ public class ResolveModuleResourcesTask extends ModuleTaskBase {
                 path.addFileset( fileset );
             }
         }
-
-        getProject().addReference( this.pathId, path );
+        return path;
     }
 
     public Iterable<String> getSourceDirectories() {
