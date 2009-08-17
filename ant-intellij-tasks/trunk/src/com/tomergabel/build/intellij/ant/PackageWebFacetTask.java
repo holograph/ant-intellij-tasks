@@ -9,7 +9,7 @@ import org.apache.tools.ant.taskdefs.War;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.ResourceCollection;
 
-public class BuildWebFacetTask extends BuildPackageFacetTaskBase<WebFacet> {
+public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
     @Override
     protected Class<WebFacet> getFacetClass() {
         return WebFacet.class;

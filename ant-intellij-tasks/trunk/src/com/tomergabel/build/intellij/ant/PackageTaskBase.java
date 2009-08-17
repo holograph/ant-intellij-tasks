@@ -2,20 +2,19 @@ package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.*;
 import com.tomergabel.util.UriUtils;
+import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.*;
 import org.apache.tools.ant.types.selectors.FileSelector;
-import org.apache.tools.ant.BuildException;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.io.File;
 
-public abstract class BuildPackageFacetTaskBase<T extends PackageFacetBase> extends BuildFacetTaskBase<T> {
-
+public abstract class PackageTaskBase extends ModuleTaskBase {
     protected ResourceCollection resolvePackagingElements() throws ResolutionException {
         final Path path = new Path( getProject() );
-        for ( final PackageFacetBase.ContainerElement element : resolveFacet().getElements() ) {
+        for ( final PackagingContainer.ContainerElement element : resolvePackagingContainer().getElements() ) {
             final String prefix = AntUtils.stripPreceedingSlash( element.getTargetUri() );
             switch ( element.getMethod() ) {
                 case COPY:
@@ -34,6 +33,8 @@ public abstract class BuildPackageFacetTaskBase<T extends PackageFacetBase> exte
         return path;
     }
 
+    protected abstract PackagingContainer resolvePackagingContainer() throws ResolutionException;
+
     private void resolveDependencyClasspath( final Dependency dependency, final Path path, final String prefix )
             throws ResolutionException {
         if ( dependency == null )
@@ -45,12 +46,13 @@ public abstract class BuildPackageFacetTaskBase<T extends PackageFacetBase> exte
 
         final ZipFileSet fs = new ZipFileSet();
         fs.setPrefix( prefix );
-        fs.setDir( UriUtils.getFile( resolver().resolveUriString( module().getOutputUrl() ) ) );
-        fs.appendIncludes( (String[]) dependency.resolveClasspath( resolver() ).toArray() );
+        fs.setDir( resolver().resolveModuleOutput() );
+        final Collection<String> classpath = dependency.resolveClasspath( resolver() );
+        fs.appendIncludes( classpath.toArray( new String[ classpath.size() ] ) );
         path.add( fs );
     }
 
-    protected static class CompileOutputSelector implements FileSelector {
+    protected /*static*/ class CompileOutputSelector implements FileSelector {
         private final Collection<String> filenames = new HashSet<String>();
         private final File baseDir;
 
@@ -59,7 +61,7 @@ public abstract class BuildPackageFacetTaskBase<T extends PackageFacetBase> exte
                 throw new IllegalArgumentException( "The source root URL cannot be null." );
 
             // Verify that the source root is part of our resolver
-            if ( resolver.getModule().getSourceUrls().contains( rootUrl ) )
+            if ( !resolver.getModule().getSourceUrls().contains( rootUrl ) )
                 throw new ResolutionException(
                         "Source root URL \"" + rootUrl + "\" not found  in module \"" + resolver.getModule().getName() +
                                 "\"." );
@@ -69,8 +71,13 @@ public abstract class BuildPackageFacetTaskBase<T extends PackageFacetBase> exte
             final FileSet source = new FileSet();
             source.setDir( this.baseDir );                                  // Use root source directory
             source.setIncludes( "**/*.java" );                              // Include Java sources
-            source.appendIncludes( AntUtils.generateResourceIncludes(       // Include file resources
-                    resolver.getProjectResolver().getProject() ) );
+            if ( resolver.getProjectResolver() != null )                    // Include file resources
+                source.appendIncludes(
+                        AntUtils.generateResourceIncludes( resolver.getProjectResolver().getProject() ) );
+
+            // Required to work around an NPE in AbstractFileSet:477
+            source.setProject( getProject() );
+
             final Iterator iter = source.iterator();
             while ( iter.hasNext() ) {
                 final Resource resource = (Resource) iter.next();
@@ -101,8 +108,17 @@ public abstract class BuildPackageFacetTaskBase<T extends PackageFacetBase> exte
             // the module output directory - precisely what we need)
             resolveDependencyClasspath( dependency, path, prefix );
         else if ( dependency instanceof ModuleDependency ) {
-            assertProjectSpecified();
-            final ModuleResolver dependee = projectResolver().getModuleResolver( ( (ModuleDependency) dependency ).name );
+            final String moduleName = ( (ModuleDependency) dependency ).name;
+
+            // Resolve dependee
+            final ModuleResolver dependee;
+            if ( moduleName.equals( module().getName() ) )
+                dependee = resolver();
+            else {
+                assertProjectSpecified();
+                dependee = projectResolver().getModuleResolver( moduleName );
+            }
+
             path.add( resolveCompileOutput( dependee, prefix ) );
         } else
             throw new ResolutionException(
@@ -120,7 +136,7 @@ public abstract class BuildPackageFacetTaskBase<T extends PackageFacetBase> exte
         return p;
     }
 
-    protected static ResourceCollection resolveCompileOutput( final ModuleResolver resolver,
+    protected /*static*/ ResourceCollection resolveCompileOutput( final ModuleResolver resolver,
                                                               final PackageFacetBase.Root root )
             throws ResolutionException {
         if ( resolver == null )
@@ -131,7 +147,7 @@ public abstract class BuildPackageFacetTaskBase<T extends PackageFacetBase> exte
         return resolveCompileOutput( resolver, root.getUrl(), AntUtils.stripPreceedingSlash( root.getTargetUri() ) );
     }
 
-    private static ResourceCollection resolveCompileOutput( final ModuleResolver resolver, final String rootUrl, final String prefix )
+    private /*static*/ ResourceCollection resolveCompileOutput( final ModuleResolver resolver, final String rootUrl, final String prefix )
             throws ResolutionException {
         if ( resolver == null )
             throw new IllegalArgumentException( "The module resolver cannot be null." );

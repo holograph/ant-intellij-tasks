@@ -28,15 +28,15 @@ public class FacetParsingTests {
         assertEquals( "Exploded URL incorrectly parsed.", "file://$MODULE_DIR$/out/exploded/test",
                 facet.getExplodedUrl() );
 
-        assertSetEquality( "Container elements incorrectly parsed.", new PackageFacetBase.ContainerElement[] {
-                new PackageFacetBase.ContainerElement( new ModuleDependency( "with-web-facet" ), PackagingMethod.COPY,
+        assertSetEquality( "Container elements incorrectly parsed.", new PackagingContainer.ContainerElement[] {
+                new PackagingContainer.ContainerElement( new ModuleDependency( "with-web-facet" ), PackagingMethod.COPY,
                         "/WEB-INF/classes" ),
-                new PackageFacetBase.ContainerElement( new ModuleDependency( "dependee" ), PackagingMethod.COPY,
+                new PackagingContainer.ContainerElement( new ModuleDependency( "dependee" ), PackagingMethod.COPY,
                         "/WEB-INF/classes" ),
-                new PackageFacetBase.ContainerElement(
+                new PackagingContainer.ContainerElement(
                         new NamedLibraryDependency( "junit", LibraryDependency.Level.PROJECT ), PackagingMethod.COPY,
                         "/WEB-INF/lib" ),
-        }, facet.getElements() );
+        }, facet.getPackagingContainer().getElements() );
     }
 
     @SuppressWarnings( { "ConstantConditions" } )
@@ -52,10 +52,10 @@ public class FacetParsingTests {
                 Collections.singleton( new PackageFacetBase.Root( "file://$MODULE_DIR$/src", null ) ),
                 facet.getEjbRoots() );
 
-        assertSetEquality( "Container elements incorrectly parsed.", new PackageFacetBase.ContainerElement[] {
-                new PackageFacetBase.ContainerElement( new ModuleDependency( "dependee" ), PackagingMethod.JAR_AND_LINK,
+        assertSetEquality( "Container elements incorrectly parsed.", new PackagingContainer.ContainerElement[] {
+                new PackagingContainer.ContainerElement( new ModuleDependency( "dependee" ), PackagingMethod.JAR_AND_LINK,
                         "/dependee.jar" ),
-        }, facet.getElements() );
+        }, facet.getPackagingContainer().getElements() );
     }                        
 
     @SuppressWarnings( { "unchecked" } )

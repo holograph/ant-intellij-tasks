@@ -1,17 +1,15 @@
 package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.Module;
-import com.tomergabel.build.intellij.model.ModuleResolver;
-import com.tomergabel.build.intellij.model.PackagingMethod;
+import com.tomergabel.build.intellij.model.PackagingContainer;
 import com.tomergabel.build.intellij.model.ResolutionException;
 import com.tomergabel.util.UriUtils;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.Jar;
 import org.apache.tools.ant.taskdefs.Manifest;
 import org.apache.tools.ant.taskdefs.ManifestException;
-import org.apache.tools.ant.types.ZipFileSet;
 
-public class BuildModuleJarTask extends ModuleTaskBase {
+public class PackageModuleJarTask extends PackageTaskBase {
     @Override
     protected void executeTask() throws BuildException {
         // Set up JAR task
@@ -43,35 +41,11 @@ public class BuildModuleJarTask extends ModuleTaskBase {
             throw new BuildException( e );
         }
 
-        // Iterate outputs and add to the JAR task
-        for ( final Module.ModuleOutputContainer output : settings.getModuleOutputs() ) {
-            // Resolve module
-            final ModuleResolver dependency;
-            if ( output.getModuleName().equals( module().getName() ) )
-                dependency = resolver();
-            else {
-                assertProjectSpecified();
-                try {
-                    dependency = projectResolver().getModuleResolver( output.getModuleName() );
-                } catch ( ResolutionException e ) {
-                    throw new BuildException( e );
-                }
-            }
-
-            // TODO add support for other packaging types
-            if ( output.getPackaging() != PackagingMethod.COPY )
-                throw new BuildException( "Module \"" + output.getModuleName() + "\" specifies unsupported " +
-                        "packaging mode " + output.getPackaging().toString() );
-
-            // Generate fileset
-            final ZipFileSet fileset = new ZipFileSet();
-            try {
-                fileset.setDir( dependency.resolveModuleOutput() );
-                fileset.setPrefix( AntUtils.stripPreceedingSlash( output.getTargetUri().toString() ) );
-            } catch ( ResolutionException e ) {
-                throw new BuildException( e );
-            }
-            jar.add( fileset );
+        // Add package output to the JAR task
+        try {
+            jar.add( resolvePackagingElements() );
+        } catch ( ResolutionException e ) {
+            throw new BuildException( e );
         }
 
         return jar;
@@ -88,5 +62,10 @@ public class BuildModuleJarTask extends ModuleTaskBase {
         if ( mainClass != null )
             manifest.addConfiguredAttribute( new Manifest.Attribute( "Main-Class", mainClass ) );
         return manifest;
+    }
+
+    @Override
+    protected PackagingContainer resolvePackagingContainer() throws ResolutionException {
+        return module().getJarSettings();
     }
 }

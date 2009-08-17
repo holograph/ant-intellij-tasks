@@ -71,15 +71,15 @@ public class ModuleParsingTests {
         assertEquals( "Module JAR output main class incorrectly parsed.", "test.class",
                 module.getJarSettings().getMainClass() );
         assertEquals( "Module JAR output resource list incorrectly parsed.", 1,
-                module.getJarSettings().getModuleOutputs().size() );
-        final Module.ModuleOutputContainer output = module.getJarSettings().getModuleOutputs().iterator().next();
-        assertNotNull( "Module JAR output resource list contains null module.", output );
-        assertEquals( "Module JAR output resource list incorrectly parsed: incorrect module name,",
-                "jar-output-self-contained", output.getModuleName() );
+                module.getJarSettings().getElements().size() );
+        final PackagingContainer.ContainerElement element = module.getJarSettings().getElements().iterator().next();
+        assertNotNull( "Module JAR output resource list contains null dependency.", element.getDependency() );
+        assertEquals( "Module JAR output resource list incorrectly parsed: incorrect module dependency,",
+                new ModuleDependency( "jar-output-self-contained" ), element.getDependency() );
         assertEquals( "Module JAR output resource list incorrectly parsed: incorrect packaging method.",
-                PackagingMethod.COPY, output.getPackaging() );
+                PackagingMethod.COPY, element.getMethod() );
         assertEquals( "Module JAR output resource list incorrectly parsed: incorrect target URI,",
-                new URI( "/" ), output.getTargetUri() );
+                "/", element.getTargetUri() );
     }
 
     @Test

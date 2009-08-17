@@ -11,7 +11,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.*;
 
 public final class Module extends IntelliJParserBase {
@@ -124,9 +123,14 @@ public final class Module extends IntelliJParserBase {
         // Verify root element
         final String moduleType = extract( document, "/module/@type", "Cannot extract module type" );
         if ( !"JAVA_MODULE".equals( moduleType ) )
-            throw new ParseException( "Invalid module type \"" + moduleType + "\", expected \"JAVA_MODULE\"" );
+            throw new ParseException( "Module \"" + module.getName() + "\" is not a Java module." );
 
-        module.processComponents( document );
+        try {
+            module.processComponents( document );
+        } catch ( ParseException e ) {
+            throw new ParseException( "Cannot parse module \"" + module.getName() + "\".", e );
+        }
+
         return module;
     }
 
@@ -258,57 +262,7 @@ public final class Module extends IntelliJParserBase {
                     "Cannot extract JAR build setting" ) ) )
                 return;
 
-            final String jarUrl = extract( componentNode, "setting[@name='jarUrl']/@value", "Cannot extract JAR URL" );
-            if ( jarUrl == null )
-                throw new ParseException( "Module JAR build enabled but output URL not specified." );
-
-            final String mainClass = extract( componentNode, "setting[@name='mainClass']/@value",
-                    "Cannot extract JAR main class name" );
-
-            final Collection<ModuleOutputContainer> modules = new HashSet<ModuleOutputContainer>();
-            for ( final Node container : extractAll( componentNode, "containerInfo/containerElement",
-                    "Cannot extract JAR container elements" ) ) {
-                final String type = extract( container, "@type", "Cannot extract container element type" );
-                if ( type == null )
-                    throw new ParseException( "JAR container element type not specified." );
-                if ( "module".equals( type ) )
-                    modules.add( resolveModuleContainerElement( container ) );
-                else throw new ParseException( "Unrecognized JAR container element type '" + type + "'" );
-            }
-
-            Module.this.jarSettings = new JarSettings( jarUrl,
-                    mainClass != null && mainClass.length() == 0 ? null : mainClass, modules );
-        }
-
-
-        private ModuleOutputContainer resolveModuleContainerElement( final Node container ) throws ParseException {
-            final String moduleName = extract( container, "@name",
-                    "Cannot extract module name for JAR module output" );
-            if ( moduleName == null )
-                throw new ParseException( "Module name not specified for JAR module output." );
-
-            // Extract method method
-            final PackagingMethod method = PackagingMethod
-                    .parse( extract( container, "attribute[@name='method']/@value",
-                            "Cannot extract JAR module output packaging method" ) );
-            if ( method == null ) throw new ParseException(
-                    "Packaging method not specified for JAR module output \"" + moduleName + "\"." );
-
-            // Extract target URI
-            final String uriString = extract( container, "attribute[@name='URI']/@value",
-                    "Cannot extract JAR module output target URI" );
-            if ( uriString == null )
-                throw new ParseException( "Target URI not specified for JAR module output \"" + moduleName + "\"." );
-            final URI targetUri;
-            try {
-                targetUri = new URI( uriString );
-            } catch ( URISyntaxException e ) {
-                throw new ParseException(
-                        "Invalid target URI \"" + uriString + "\" specified for JAR module output \"" + moduleName +
-                                "\".", e );
-            }
-
-            return new ModuleOutputContainer( moduleName, method, targetUri );
+            Module.this.jarSettings = new JarSettings( componentNode );
         }
     }
 
@@ -330,21 +284,23 @@ public final class Module extends IntelliJParserBase {
 
     // Additioanl helper types
 
-    public static class JarSettings {
+    public static class JarSettings extends PackagingContainer {
         private final String jarUrl;
         private final String mainClass;
-        private final Collection<ModuleOutputContainer> moduleOutputs;
 
-        protected JarSettings( final String jarUrl, final String mainClass,
-                               final Collection<ModuleOutputContainer> moduleOutputs ) {
-            if ( jarUrl == null )
-                throw new IllegalArgumentException( "The JAR url cannot be null." );
-            if ( moduleOutputs == null )
-                throw new IllegalArgumentException( "The module output collection cannot be null." );
+        public JarSettings( final Node componentNode ) throws ParseException {
+            super( componentNode, "containerInfo" );
 
-            this.jarUrl = jarUrl;
-            this.mainClass = mainClass;
-            this.moduleOutputs = Collections.unmodifiableCollection( moduleOutputs );
+            if ( componentNode == null )
+                throw new IllegalArgumentException( "The component node cannot be null." );
+
+            this.jarUrl = extract( componentNode, "setting[@name='jarUrl']/@value", "Cannot extract JAR URL" );
+            if ( this.jarUrl == null )
+                throw new ParseException( "Module JAR build enabled but output URL not specified." );
+
+            final String mainClass = extract( componentNode, "setting[@name='mainClass']/@value",
+                    "Cannot extract JAR main class name" );
+            this.mainClass = mainClass != null && mainClass.length() == 0 ? null : mainClass;
         }
 
         public String getJarUrl() {
@@ -353,57 +309,6 @@ public final class Module extends IntelliJParserBase {
 
         public String getMainClass() {
             return this.mainClass;
-        }
-
-        public Collection<ModuleOutputContainer> getModuleOutputs() {
-            return this.moduleOutputs;
-        }
-    }
-
-    public static class ModuleOutputContainer {
-
-        private final String moduleName;
-        private final PackagingMethod method;
-        private final URI targetUri;
-
-        public ModuleOutputContainer( final String moduleName, final PackagingMethod method,
-                                      final URI targetUri ) {
-            this.moduleName = moduleName;
-            this.method = method;
-            this.targetUri = targetUri;
-        }
-
-        public PackagingMethod getPackaging() {
-            return this.method;
-        }
-
-        public URI getTargetUri() {
-            return this.targetUri;
-        }
-
-        public String getModuleName() {
-            return this.moduleName;
-        }
-
-        @SuppressWarnings( { "RedundantIfStatement" } )
-        @Override
-        public boolean equals( final Object o ) {
-            if ( this == o ) return true;
-            if ( o == null || getClass() != o.getClass() ) return false;
-
-            final ModuleOutputContainer that = (ModuleOutputContainer) o;
-
-            if ( this.method != that.method ) return false;
-            if ( this.targetUri != null ? !targetUri.equals( that.targetUri ) : that.targetUri != null ) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = this.method != null ? method.hashCode() : 0;
-            result = 31 * result + ( this.targetUri != null ? targetUri.hashCode() : 0 );
-            return result;
         }
     }
 }

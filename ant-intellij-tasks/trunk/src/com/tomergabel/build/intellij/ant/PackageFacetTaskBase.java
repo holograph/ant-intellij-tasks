@@ -1,10 +1,11 @@
 package com.tomergabel.build.intellij.ant;
 
-import com.tomergabel.build.intellij.model.Facet;
+import com.tomergabel.build.intellij.model.PackageFacetBase;
 import com.tomergabel.build.intellij.model.ResolutionException;
+import com.tomergabel.build.intellij.model.PackagingContainer;
 import static com.tomergabel.util.CollectionUtils.filter;
 
-public abstract class BuildFacetTaskBase<T extends Facet> extends ModuleTaskBase {
+public abstract class PackageFacetTaskBase<T extends PackageFacetBase> extends PackageTaskBase {
     private T facet;
 
     protected abstract Class<T> getFacetClass();
@@ -30,5 +31,10 @@ public abstract class BuildFacetTaskBase<T extends Facet> extends ModuleTaskBase
     public void setFacet( final T facet ) {
         assertNotExecuted();
         this.facet = facet;
+    }
+
+    @Override
+    protected PackagingContainer resolvePackagingContainer() throws ResolutionException {
+        return resolveFacet().getPackagingContainer();
     }
 }

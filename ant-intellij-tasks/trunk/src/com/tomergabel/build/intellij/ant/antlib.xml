@@ -15,9 +15,10 @@
 
     <!-- Module conditions -->
     <typedef name="moduleJarOutputSpecified" classname="com.tomergabel.build.intellij.ant.ModuleJarOutputSpecifiedCondition" />
+    <typedef name="moduleFacetSpecified" classname="com.tomergabel.build.intellij.ant.ModuleFacetSpecifiedCondition" />
 
     <!-- Packging tasks -->
-    <taskdef name="buildModuleJar" classname="com.tomergabel.build.intellij.ant.BuildModuleJarTask" />
-    <taskdef name="buildWebFacet" classname="com.tomergabel.build.intellij.ant.BuildWebFacetTask" />
+    <taskdef name="packageModuleJar" classname="com.tomergabel.build.intellij.ant.PackageModuleJarTask" />
+    <taskdef name="packageWebFacet" classname="com.tomergabel.build.intellij.ant.PackageWebFacetTask" />
 </antlib>
         
