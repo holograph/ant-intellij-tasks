@@ -323,4 +323,11 @@ public final class CollectionUtils {
             }
         };
     }
+
+    public static <T> boolean all( final Iterable<T> stream, final Predicate<T> predicate ) {
+        for ( final T x : stream )
+            if ( !predicate.evaluate( x ) )
+                return false;
+        return true;
+    }
 }

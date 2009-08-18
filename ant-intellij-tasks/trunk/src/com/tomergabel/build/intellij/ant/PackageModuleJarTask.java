@@ -40,6 +40,7 @@ public class PackageModuleJarTask extends PackageTaskBase {
         } catch ( ResolutionException e ) {
             throw new BuildException( e );
         }
+        jar.getDestFile().delete();
 
         // Add package output to the JAR task
         try {

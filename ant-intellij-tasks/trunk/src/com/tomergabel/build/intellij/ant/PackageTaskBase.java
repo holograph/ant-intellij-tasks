@@ -45,12 +45,12 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
         if ( prefix == null )
             throw new IllegalArgumentException( "The target prefix cannot be null." );
 
-        final ZipFileSet fs = new ZipFileSet();
-        fs.setPrefix( prefix );
-        fs.setDir( resolver().resolveModuleOutput() );
+        logVerbose( "Resolving classpath for dependency %s, prefix=%s", dependency, prefix );
         final Collection<String> classpath = dependency.resolveClasspath( resolver() );
-        fs.appendIncludes( classpath.toArray( new String[ classpath.size() ] ) );
-        path.add( fs );
+        final AntUtils.ResourceContainer rc = new AntUtils.ResourceContainer();
+        for ( final String entry : classpath )
+            rc.add( AntUtils.mapFileResource( new File( entry ).getAbsoluteFile(), prefix ) );
+        path.add( rc );
     }
 
     protected /*static*/ class CompileOutputSelector implements FileSelector {

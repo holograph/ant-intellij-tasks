@@ -1,7 +1,7 @@
 package com.tomergabel.build.intellij.ant;
 
-import org.apache.tools.ant.taskdefs.condition.Condition;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.taskdefs.condition.Condition;
 
 public abstract class ConditionBase implements Condition {
     protected boolean evaluated = false;
