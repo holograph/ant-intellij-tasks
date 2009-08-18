@@ -13,7 +13,7 @@ public class PackageModuleJarTask extends PackageTaskBase {
     @Override
     protected void executeTask() throws BuildException {
         // Set up JAR task
-        createJarTask().execute();
+        createJarTask().perform();
     }
 
     protected Jar createJarTask() throws BuildException {

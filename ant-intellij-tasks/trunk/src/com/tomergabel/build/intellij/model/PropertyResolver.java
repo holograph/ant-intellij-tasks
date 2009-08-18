@@ -2,11 +2,13 @@ package com.tomergabel.build.intellij.model;
 
 import com.tomergabel.util.Lazy;
 import com.tomergabel.util.LazyInitializationException;
+import com.tomergabel.util.UriUtils;
 
-import java.util.Collections;
-import java.util.Map;
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.Map;
 
 public abstract class PropertyResolver {
     private final Lazy<Map<String, String>> propertyCache = new Lazy<Map<String, String>>() {
@@ -55,6 +57,10 @@ public abstract class PropertyResolver {
         } else throw new ResolutionException( "Unrecognized URI scheme \"" + expandedUri.getScheme() + "\"" );
     }
 
+    public File resolveUriFile( final String string ) throws IllegalArgumentException, ResolutionException {
+        return UriUtils.getFile( resolveUriString( string ) );
+    }
+    
     public String getPropertyValue( final String property ) throws IllegalArgumentException {
         if ( property == null )
             throw new IllegalArgumentException( "The property name cannot be null." );

@@ -48,8 +48,10 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
         logVerbose( "Resolving classpath for dependency %s, prefix=%s", dependency, prefix );
         final Collection<String> classpath = dependency.resolveClasspath( resolver() );
         final AntUtils.ResourceContainer rc = new AntUtils.ResourceContainer();
-        for ( final String entry : classpath )
-            rc.add( AntUtils.mapFileResource( new File( entry ).getAbsoluteFile(), prefix ) );
+        for ( final String entry : classpath ) {
+            final File entryFile = new File( entry ).getAbsoluteFile();
+            rc.add( AntUtils.mapFileResource( entryFile.getParentFile(), entryFile, prefix ) );
+        }
         path.add( rc );
     }
 
@@ -164,10 +166,10 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
 
         logVerbose( "Resolving compile output for source root %s of module %s...", rootUrl,
                 resolver.getModule().getName() );
-        final ZipFileSet target = new ZipFileSet();
+        final FileSet target = new FileSet();
+        target.setProject( getProject() );
         target.setDir( resolver.resolveModuleOutput() );
-        target.setPrefix( prefix );
         target.appendSelector( new CompileOutputSelector( resolver, rootUrl ) );
-        return target;
+        return AntUtils.mapResources( target, prefix );
     }
 }
