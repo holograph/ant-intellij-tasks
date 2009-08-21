@@ -10,6 +10,7 @@ import java.io.StringWriter;
 
 public abstract class TaskBase extends Task {
     protected boolean failOnError = true;
+    private AntUtils antUtils;
     private boolean executed = false;
 
     // Ant-facing properties
@@ -52,6 +53,7 @@ public abstract class TaskBase extends Task {
     @Override
     public final void execute() throws BuildException {
         assertNotExecuted();
+        this.antUtils = new AntUtils( getProject() );
         this.executed = true;
         try {
             executeTask();
@@ -78,5 +80,9 @@ public abstract class TaskBase extends Task {
 
     protected void logInfo( final String message, final Object... args ) {
         log( String.format( message, args ), Project.MSG_INFO );
+    }
+
+    protected AntUtils ant() {
+        return this.antUtils;
     }
 }

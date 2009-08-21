@@ -4,13 +4,13 @@ import com.tomergabel.build.intellij.model.PackageFacetBase;
 import com.tomergabel.build.intellij.model.ResolutionException;
 import com.tomergabel.build.intellij.model.WebFacet;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.taskdefs.Delete;
 import org.apache.tools.ant.taskdefs.War;
-import org.apache.tools.ant.taskdefs.Expand;
 import org.apache.tools.ant.types.FileSet;
-import org.apache.tools.ant.types.Path;
-import org.apache.tools.ant.types.ResourceCollection;
+import org.apache.tools.ant.types.resources.Union;
 
 import java.io.File;
+import java.io.IOException;
 
 public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
     @Override
@@ -27,12 +27,23 @@ public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
             throw new BuildException( e );
         }
 
-        final ResourceCollection rc;
+        // If neither WAR nor exploded target are specified, skip the whole thing
+        if ( !facet.isExplodeEnabled() && !facet.isTargetEnabled() )
+            return;
+
+        // Generate temporary directory
+        final File tempDir;
         try {
-            rc = resolveWarResources( facet );
-        } catch ( ResolutionException e ) {
-            throw new BuildException( e );
+            tempDir = File.createTempFile( "idea", "war" );
+        } catch ( IOException e ) {
+            throw new BuildException( "Cannot create temporary target directory.", e );
         }
+        tempDir.delete();   // Get rid of temporary file
+
+        packageWar( facet, tempDir );
+        final FileSet fs = (FileSet) getProject().createDataType( "FileSet" );
+        fs.setDir( tempDir );
+        fs.setIncludes( "**/*" );
 
         final File webDescriptor;
         try {
@@ -51,7 +62,7 @@ public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
                 throw new BuildException( "Cannot resolve WAR output URL.", e );
             }
             war.setWebxml( webDescriptor );
-            war.add( rc );
+            war.add( fs );
             logInfo( "Packaging module %s to %s", module().getName(), war.getDestFile() );
             war.perform();
         }
@@ -59,63 +70,53 @@ public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
         if ( facet.isExplodeEnabled() ) {
             final File explodeTarget;
             try {
-                 explodeTarget = resolver().resolveUriFile( facet.getExplodedUrl() );
+                explodeTarget = resolver().resolveUriFile( facet.getExplodedUrl() );
             } catch ( ResolutionException e ) {
                 throw new BuildException( "Cannot resolve exploded WAR target URL.", e );
             }
 
             logInfo( "Copying module %s exploded output to %s", module().getName(), explodeTarget );
-            
-            // TODO copy task won't work because of the getName() hack we use in the various mappers. Find
-            // TODO a proper way to do that; in the meantime hack around it.
-//            final Copy copy = (Copy) getProject().createTask( "copy" );
-//            copy.setTodir( explodeTarget );
-//            copy.setOverwrite( true );
-//            copy.add( rc );
-////            copy.add( new AntUtils.SingletonResource( AntUtils.mapFileResource( webDescriptor, "WEB-INF/web.xml" ) ) );
-//            logInfo( "Copying exploded module %s package to %s", module().getName(), explodeTarget );
-//            copy.perform();
-
-            // TODO temporary hack
-            if ( !facet.isTargetEnabled() )
-                throw new BuildException( "Web facets with exploded URLs but without target URLs " +
-                        "are not currently supported." );
-
-            final File war;
-            try {
-                 war = resolver().resolveUriFile( facet.getTargetUrl() );
-            } catch ( ResolutionException e ) {
-                throw new BuildException( "Cannot resolve exploded WAR target URL.", e );
-            }
-
-            final Expand expand = (Expand) getProject().createTask( "unzip" );
-            expand.setSrc( war );
-            expand.setDest( explodeTarget );
-            expand.perform();
+            final Union union = (Union) getProject().createDataType( "union" );
+            union.add( fs );
+            union.add( new AntUtils.SingletonResource( AntUtils.mapFileResource( webDescriptor, "WEB-INF/web.xml" ) ) );
+            ant().move( union, explodeTarget );
+        } else {
+            logVerbose( "Deleting temporary directory " + tempDir );
+            final Delete delete = (Delete) getProject().createTask( "delete" );
+            delete.setDir( tempDir );
+            delete.perform();
         }
     }
 
-    protected ResourceCollection resolveWarResources( final WebFacet facet ) throws ResolutionException {
+    protected void packageWar( final WebFacet facet, final File tempDir ) throws BuildException {
         if ( facet == null )
             throw new IllegalArgumentException( "The web facet cannot be null." );
 
-        final Path path = new Path( getProject() );
         // Add packaging container
-        path.add( resolvePackagingElements() );
+        packageContainerElements( tempDir );
 
-        // Add source roots
-        for ( final PackageFacetBase.Root source : facet.getSourceRoots() )
-            path.add( resolveCompileOutput( resolver(), new PackageFacetBase.Root( source.getUrl(),
-                    source.getTargetUri() != null ? source.getTargetUri() : "WEB-INF/classes" ) ) );
+        try {
+            // Add source roots
+            for ( final PackageFacetBase.Root source : facet.getSourceRoots() ) {
+                final File target = source.getTargetUri() != null ? new File( tempDir,
+                        AntUtils.stripPreceedingSlash( source.getTargetUri() ) )
+                        : new File( tempDir, "WEB-INF/classes" );
+                final File sourceDir = resolver().resolveUriFile( source.getUrl() );
+                ant().compile( sourceDir, target );
+                ant().copy( ant().resolveModuleSourceRoot( resolver(), source.getUrl(), false, true ), target );
+            }
 
-        // Add web roots
-        for ( final PackageFacetBase.Root webRoot : facet.getWebRoots() ) {
-            final FileSet fs = new FileSet();
-            fs.setProject( getProject() );
-            fs.setDir( resolver().resolveUriFile( webRoot.getUrl() ) );
-            path.add( AntUtils.mapResources( fs, AntUtils.stripPreceedingSlash( webRoot.getTargetUri() ) ) );
+            // Add web roots
+            for ( final PackageFacetBase.Root webRoot : facet.getWebRoots() ) {
+                final File target = webRoot.getTargetUri() != null ? new File( tempDir,
+                        AntUtils.stripPreceedingSlash( webRoot.getTargetUri() ) ) : tempDir;
+                final FileSet fs = (FileSet) getProject().createDataType( "fileset" );
+                fs.setDir( resolver().resolveUriFile( webRoot.getUrl() ) );
+                fs.setIncludes( "**/*" );
+                ant().copy( fs, target );
+            }
+        } catch ( ResolutionException e ) {
+            throw new BuildException( e );
         }
-
-        return path;
     }
 }

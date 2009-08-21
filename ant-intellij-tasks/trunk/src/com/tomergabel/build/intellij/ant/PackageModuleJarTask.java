@@ -5,29 +5,38 @@ import com.tomergabel.build.intellij.model.PackagingContainer;
 import com.tomergabel.build.intellij.model.ResolutionException;
 import com.tomergabel.util.UriUtils;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.taskdefs.Jar;
 import org.apache.tools.ant.taskdefs.Manifest;
 import org.apache.tools.ant.taskdefs.ManifestException;
+import org.apache.tools.ant.taskdefs.Delete;
+
+import java.io.File;
+import java.io.IOException;
 
 public class PackageModuleJarTask extends PackageTaskBase {
     @Override
     protected void executeTask() throws BuildException {
-        // Set up JAR task
-        createJarTask().perform();
-    }
-
-    protected Jar createJarTask() throws BuildException {
         if ( !module().isBuildJar() )
             throw new BuildException( "Module \"" + module().getName() + "\" does not specify JAR output settings." );
 
         final Module.JarSettings settings = module().getJarSettings();
         assert null != settings;
 
-        final Jar jar = instantiateJarTask();
-        if ( jar == null )
-            throw new BuildException( "Cannot spawn JAR task for module \"" + module().getName() + "\"" );
+        // Generate temporary directory
+        final File tempDir;
+        try {
+            tempDir = File.createTempFile( "idea", "jar" );
+        } catch ( IOException e ) {
+            throw new BuildException( "Cannot create temporary target directory.", e );
+        }
+        tempDir.delete();   // Get rid of temporary file
+
+        // Build target
+        packageContainerElements( tempDir );
 
         // Generate and apply manifest
+        final Jar jar = (Jar) getProject().createTask( "jar" );
         try {
             jar.addConfiguredManifest( generateManifest( settings.getMainClass() ) );
         } catch ( ManifestException e ) {
@@ -43,17 +52,17 @@ public class PackageModuleJarTask extends PackageTaskBase {
         jar.getDestFile().delete();
 
         // Add package output to the JAR task
-        try {
-            jar.add( resolvePackagingElements() );
-        } catch ( ResolutionException e ) {
-            throw new BuildException( e );
-        }
+        final FileSet fs = (FileSet) getProject().createDataType( "fileset" );
+        fs.setDir( tempDir );
+        fs.setIncludes( "**/*" );
+        jar.add( fs );
+        jar.perform();
 
-        return jar;
-    }
-
-    protected Jar instantiateJarTask() {
-        return (Jar) getProject().createTask( "jar" );
+        // Delete temporary directory
+        logVerbose( "Deleting temporary directory " + tempDir );
+        final Delete delete = (Delete) getProject().createTask( "delete" );
+        delete.setDir( tempDir );
+        delete.perform();
     }
 
     protected Manifest generateManifest( final String mainClass ) throws ManifestException {

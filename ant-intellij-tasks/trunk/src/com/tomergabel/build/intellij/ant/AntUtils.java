@@ -1,9 +1,17 @@
 package com.tomergabel.build.intellij.ant;
 
+import com.tomergabel.build.intellij.model.ModuleResolver;
 import com.tomergabel.build.intellij.model.Project;
+import com.tomergabel.build.intellij.model.ResolutionException;
 import com.tomergabel.util.CollectionUtils;
 import com.tomergabel.util.PathUtils;
 import com.tomergabel.util.Predicate;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.taskdefs.Copy;
+import org.apache.tools.ant.taskdefs.Javac;
+import org.apache.tools.ant.taskdefs.Move;
+import org.apache.tools.ant.types.FileSet;
+import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.resources.FileResource;
@@ -15,9 +23,11 @@ import java.util.Collections;
 import java.util.Iterator;
 
 public class AntUtils {
-    private AntUtils() {
-    }
+    private final org.apache.tools.ant.Project project;
 
+    public AntUtils( final org.apache.tools.ant.Project project ) {
+        this.project = project;
+    }
 
     static String[] generateResourceIncludes( final Project project ) {
         if ( project == null )
@@ -189,5 +199,91 @@ public class AntUtils {
                 return source.isFilesystemOnly();
             }
         };
+    }
+
+    public void copy( final ResourceCollection source, final File to ) throws BuildException {
+        if ( source == null )
+            throw new IllegalArgumentException( "The source resource collection cannot be null." );
+        if ( to == null )
+            throw new IllegalArgumentException( "The target direcotry cannot be null." );
+        if ( to.exists() && !to.isDirectory() )
+            throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
+
+        final Copy copy = (Copy) this.project.createTask( "copy" );
+        copy.add( source );
+        copy.setTodir( to );
+        copy.setOverwrite( true );
+        copy.perform();
+    }
+
+    public void move( final ResourceCollection source, final File to ) throws BuildException {
+        if ( source == null )
+            throw new IllegalArgumentException( "The source resource collection cannot be null." );
+        if ( to == null )
+            throw new IllegalArgumentException( "The target direcotry cannot be null." );
+        if ( to.exists() && !to.isDirectory() )
+            throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
+
+        final Move move = (Move) this.project.createTask( "move" );
+        move.add( source );
+        move.setTodir( to );
+        move.setOverwrite( true );
+        move.perform();
+    }
+    
+    public void compile( final Path source, final File to ) throws BuildException {
+        if ( source == null )
+            throw new IllegalArgumentException( "The source resource collection cannot be null." );
+        if ( to == null )
+            throw new IllegalArgumentException( "The target direcotry cannot be null." );
+        if ( to.exists() && !to.isDirectory() )
+            throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
+
+        final Javac javac = (Javac) this.project.createTask( "javac" );
+        javac.setSrcdir( source );
+        javac.setDestdir( to );
+        javac.perform();
+    }
+
+    public void compile( final File source, final File to ) throws BuildException {
+        if ( source == null )
+            throw new IllegalArgumentException( "The source resource collection cannot be null." );
+        if ( !source.exists() && !to.isDirectory() )
+            throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
+        if ( to == null )
+            throw new IllegalArgumentException( "The target direcotry cannot be null." );
+        if ( to.exists() && !to.isDirectory() )
+            throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
+
+        final FileSet fs = (FileSet) this.project.createDataType( "fileset" );
+        fs.setDir( source );
+        fs.setIncludes( "**/*" );
+        final Path path = (Path) this.project.createDataType( "path" );
+        compile( path, to );
+    }
+
+    public Path getModulePath( final ModuleResolver module, final boolean includeSources,
+                                  final boolean includeResources ) throws ResolutionException {
+        final Path path = (Path) this.project.createDataType( "path" );
+        for ( final String source : module.getModule().getSourceUrls() )
+            path.add( resolveModuleSourceRoot( module, source, includeSources, includeResources ) );
+        return path;
+    }
+
+    public ResourceCollection resolveModuleSourceRoot( final ModuleResolver module, final String rootUrl,
+                                                        final boolean includeSources, final boolean includeResources )
+            throws ResolutionException {
+        // Verify this is an actual source directory
+        if ( !module.getModule().getSourceUrls().contains( rootUrl ) )
+            throw new ResolutionException( "The web facet specifies source URL \"" + rootUrl +
+                    "\", but it is not part of the module." );
+
+        final FileSet fs = (FileSet) this.project.createDataType( "fileset" );
+        fs.setDir( module.resolveUriFile( rootUrl ) );
+        if ( includeSources )
+            fs.setIncludes( "**/*.java" );
+        if ( includeResources )
+            fs.appendIncludes( generateResourceIncludes( module.getProjectResolver().getProject() ) );
+        return fs;
     }
 }
