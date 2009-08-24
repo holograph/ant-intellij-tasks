@@ -75,7 +75,7 @@ public abstract class TaskBase extends Task {
     protected abstract void executeTask() throws BuildException;
 
     protected void logVerbose( final String message, final Object... args ) {
-        log( String.format( message, args ), Project.MSG_DEBUG );
+        log( String.format( message, args ), Project.MSG_VERBOSE );
     }
 
     protected void logInfo( final String message, final Object... args ) {

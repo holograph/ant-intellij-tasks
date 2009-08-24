@@ -7,8 +7,10 @@ import com.tomergabel.util.UriUtils;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.HashSet;
 
 public abstract class PropertyResolver {
     private final Lazy<Map<String, String>> propertyCache = new Lazy<Map<String, String>>() {
@@ -60,7 +62,14 @@ public abstract class PropertyResolver {
     public File resolveUriFile( final String string ) throws IllegalArgumentException, ResolutionException {
         return UriUtils.getFile( resolveUriString( string ) );
     }
-    
+
+    public Collection<File> resolveUriFiles( final Collection<String> uris ) throws ResolutionException {
+        final Collection<File> set = new HashSet<File>( uris.size() );
+        for ( final String uri : uris )
+            set.add( resolveUriFile( uri ) );
+        return Collections.unmodifiableCollection( set );
+    }
+
     public String getPropertyValue( final String property ) throws IllegalArgumentException {
         if ( property == null )
             throw new IllegalArgumentException( "The property name cannot be null." );

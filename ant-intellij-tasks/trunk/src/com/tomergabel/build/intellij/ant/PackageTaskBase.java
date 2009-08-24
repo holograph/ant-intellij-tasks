@@ -2,7 +2,6 @@ package com.tomergabel.build.intellij.ant;
 
 import com.tomergabel.build.intellij.model.*;
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.resources.FileResource;
 
@@ -16,20 +15,21 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
         if ( to.exists() && !to.isDirectory() )
             throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
 
+        logVerbose( "Packaging container elements of module %s to \"%s...\"", module().getName(), to );
         try {
             for ( final PackagingContainer.ContainerElement element : resolvePackagingContainer().getElements() ) {
                 final String prefix = AntUtils.stripPreceedingSlash( element.getTargetUri() );
-                logVerbose( "Resolving %s, method=%s, prefix=%s...", element, element.getMethod(), prefix );
+                logVerbose( "Resolving %s, method=%s, prefix=%s", element, element.getMethod(), prefix );
                 final File target = new File( to, prefix );
                 switch ( element.getMethod() ) {
                     case COPY:
                         if ( element.getDependency() instanceof ModuleDependency ) {
                             final ModuleDependency module = (ModuleDependency) element.getDependency();
+                            logVerbose( "Packaging dependee module %s to \"%s\"...", module.name, target );
                             final ModuleResolver dependency = projectResolver().getModuleResolver( module.name );
-                            final Path sources = ant().getModulePath( dependency, true, false );
-                            ant().compile( sources, target );
-                            final Path resources = ant().getModulePath( dependency, true, false );
-                            ant().copy( resources, target );
+                            ant().compile( dependency.resolveUriFiles( dependency.getModule().getSourceUrls() ), target,
+                                    ant().buildClasspath( dependency ) );
+                            ant().copy( ant().resolveModuleResources( dependency ), target );
                         } else if ( element.getDependency() instanceof LibraryDependency ) {
                             ant().copy( resolveDependencyClasspath( element.getDependency() ), target );
                         } else throw new BuildException( "Unrecognized dependency type " + element.getDependency() );
