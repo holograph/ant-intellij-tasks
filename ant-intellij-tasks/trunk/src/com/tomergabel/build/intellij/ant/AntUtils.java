@@ -7,7 +7,6 @@ import com.tomergabel.util.CollectionUtils;
 import com.tomergabel.util.PathUtils;
 import com.tomergabel.util.Predicate;
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Location;
 import org.apache.tools.ant.taskdefs.Copy;
 import org.apache.tools.ant.taskdefs.Javac;
 import org.apache.tools.ant.taskdefs.Move;
@@ -232,20 +231,6 @@ public class AntUtils {
         move.perform();
     }
 
-//    public void compile( final Path source, final File to ) throws BuildException {
-//        if ( source == null )
-//            throw new IllegalArgumentException( "The source resource collection cannot be null." );
-//        if ( to == null )
-//            throw new IllegalArgumentException( "The target direcotry cannot be null." );
-//        if ( to.exists() && !to.isDirectory() )
-//            throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
-//
-//        final Javac javac = (Javac) this.project.createTask( "javac" );
-//        javac.setSrcdir( source );
-//        javac.setDestdir( to );
-//        javac.perform();
-//    }
-
     public void compile( final File source, final File to, final Path classpath ) throws BuildException {
         if ( source == null )
             throw new IllegalArgumentException( "The source directory cannot be null." );
@@ -277,15 +262,6 @@ public class AntUtils {
             javac.setClasspath( classpath );
         javac.perform();
     }
-
-
-//    public Path getModulePath( final ModuleResolver module, final boolean includeSources,
-//                                  final boolean includeResources ) throws ResolutionException {
-//        final Path path = (Path) this.project.createDataType( "path" );
-//        for ( final String source : module.getModule().getSourceUrls() )
-//            path.add( resolveModuleSourceRoot( module, source, includeSources, includeResources ) );
-//        return path;
-//    }
 
     public ResourceCollection resolveModuleResources( final ModuleResolver module, final String rootUrl )
             throws ResolutionException {
@@ -327,7 +303,7 @@ public class AntUtils {
         final Path classpath = (Path) this.project.createDataType( "path" );
         for ( final String path : resolved ) {
             final Path entry = (Path) this.project.createDataType( "path" );
-            entry.setLocation( new Location( path ) );
+            entry.setPath( path );
             classpath.add( entry );
         }
         return classpath;

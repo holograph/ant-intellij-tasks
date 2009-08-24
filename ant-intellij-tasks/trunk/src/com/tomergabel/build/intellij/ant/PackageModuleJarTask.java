@@ -3,9 +3,13 @@ package com.tomergabel.build.intellij.ant;
 import com.tomergabel.build.intellij.model.Module;
 import com.tomergabel.build.intellij.model.PackagingContainer;
 import com.tomergabel.build.intellij.model.ResolutionException;
+import com.tomergabel.util.UriUtils;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.taskdefs.Delete;
+import org.apache.tools.ant.taskdefs.Jar;
 import org.apache.tools.ant.taskdefs.Manifest;
 import org.apache.tools.ant.taskdefs.ManifestException;
+import org.apache.tools.ant.types.FileSet;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,34 +36,34 @@ public class PackageModuleJarTask extends PackageTaskBase {
         // Build target
         packageContainerElements( tempDir );
 
-//        // Generate and apply manifest
-//        final Jar jar = (Jar) getProject().createTask( "jar" );
-//        try {
-//            jar.addConfiguredManifest( generateManifest( settings.getMainClass() ) );
-//        } catch ( ManifestException e ) {
-//            throw new BuildException( "Failed to generate JAR manifest.", e );
-//        }
-//
-//        // Set destination file
-//        try {
-//            jar.setDestFile( UriUtils.getFile( resolver().resolveUriString( settings.getJarUrl() ) ) );
-//        } catch ( ResolutionException e ) {
-//            throw new BuildException( e );
-//        }
-//        jar.getDestFile().delete();
-//
-//        // Add package output to the JAR task
-//        final FileSet fs = (FileSet) getProject().createDataType( "fileset" );
-//        fs.setDir( tempDir );
-//        fs.setIncludes( "**/*" );
-//        jar.add( fs );
-//        jar.perform();
-//
-//        // Delete temporary directory
-//        logVerbose( "Deleting temporary directory " + tempDir );
-//        final Delete delete = (Delete) getProject().createTask( "delete" );
-//        delete.setDir( tempDir );
-//        delete.perform();
+        // Generate and apply manifest
+        final Jar jar = (Jar) getProject().createTask( "jar" );
+        try {
+            jar.addConfiguredManifest( generateManifest( settings.getMainClass() ) );
+        } catch ( ManifestException e ) {
+            throw new BuildException( "Failed to generate JAR manifest.", e );
+        }
+
+        // Set destination file
+        try {
+            jar.setDestFile( UriUtils.getFile( resolver().resolveUriString( settings.getJarUrl() ) ) );
+        } catch ( ResolutionException e ) {
+            throw new BuildException( e );
+        }
+        jar.getDestFile().delete();
+
+        // Add package output to the JAR task
+        final FileSet fs = (FileSet) getProject().createDataType( "fileset" );
+        fs.setDir( tempDir );
+        fs.setIncludes( "**/*" );
+        jar.add( fs );
+        jar.perform();
+
+        // Delete temporary directory
+        logVerbose( "Deleting temporary directory " + tempDir );
+        final Delete delete = (Delete) getProject().createTask( "delete" );
+        delete.setDir( tempDir );
+        delete.perform();
     }
 
     protected Manifest generateManifest( final String mainClass ) throws ManifestException {
