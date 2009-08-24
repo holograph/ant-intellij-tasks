@@ -4,10 +4,11 @@ import com.tomergabel.build.intellij.model.PackageFacetBase;
 import com.tomergabel.build.intellij.model.ResolutionException;
 import com.tomergabel.build.intellij.model.WebFacet;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.taskdefs.Copy;
 import org.apache.tools.ant.taskdefs.Delete;
 import org.apache.tools.ant.taskdefs.War;
 import org.apache.tools.ant.types.FileSet;
-import org.apache.tools.ant.types.resources.Union;
+import org.apache.tools.ant.types.Path;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +42,7 @@ public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
         tempDir.delete();   // Get rid of temporary file
 
         packageWar( facet, tempDir );
-        final FileSet fs = (FileSet) getProject().createDataType( "FileSet" );
+        final FileSet fs = (FileSet) getProject().createDataType( "fileset" );
         fs.setDir( tempDir );
         fs.setIncludes( "**/*" );
 
@@ -76,10 +77,13 @@ public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
             }
 
             logInfo( "Copying module %s exploded output to %s", module().getName(), explodeTarget );
-            final Union union = (Union) getProject().createDataType( "union" );
-            union.add( fs );
-            union.add( new AntUtils.SingletonResource( AntUtils.mapFileResource( webDescriptor, "WEB-INF/web.xml" ) ) );
-            ant().move( union, explodeTarget );
+            ant().move( fs, explodeTarget );
+            final Copy copy = (Copy) getProject().createTask( "copy" );
+            final Path rc = (Path) getProject().createDataType( "path" );
+            rc.setPath( webDescriptor.getAbsolutePath() );
+            copy.add( rc );
+            copy.setTofile( new File( explodeTarget, "WEB-INF/web.xml" ) );
+            copy.perform();
         } else {
             logVerbose( "Deleting temporary directory " + tempDir );
             final Delete delete = (Delete) getProject().createTask( "delete" );

@@ -4,7 +4,6 @@ import com.tomergabel.build.intellij.model.ModuleResolver;
 import com.tomergabel.build.intellij.model.Project;
 import com.tomergabel.build.intellij.model.ResolutionException;
 import com.tomergabel.util.CollectionUtils;
-import com.tomergabel.util.PathUtils;
 import com.tomergabel.util.Predicate;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.Copy;
@@ -14,7 +13,6 @@ import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.ResourceCollection;
-import org.apache.tools.ant.types.resources.FileResource;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -52,35 +50,35 @@ public class AntUtils {
         return uri != null ? ( uri.startsWith( "/" ) ? uri.substring( 1 ) : uri ) : null;
     }
 
-    public static class SingletonResource implements ResourceCollection {
-        private final Resource resource;
-
-        public SingletonResource( final Resource resource ) {
-            if ( resource == null )
-                throw new IllegalArgumentException( "The resource cannot be null." );
-            this.resource = resource;
-        }
-
-        @Override
-        public Iterator iterator() {
-            return Collections.singleton( this.resource ).iterator();
-        }
-
-        @Override
-        public int size() {
-            return 1;
-        }
-
-        @Override
-        public boolean isFilesystemOnly() {
-            return resource.isFilesystemOnly();
-        }
-
-        public Resource getResource() {
-            return this.resource;
-        }
-    }
-
+//    public static class SingletonResource implements ResourceCollection {
+//        private final Resource resource;
+//
+//        public SingletonResource( final Resource resource ) {
+//            if ( resource == null )
+//                throw new IllegalArgumentException( "The resource cannot be null." );
+//            this.resource = resource;
+//        }
+//
+//        @Override
+//        public Iterator iterator() {
+//            return Collections.singleton( this.resource ).iterator();
+//        }
+//
+//        @Override
+//        public int size() {
+//            return 1;
+//        }
+//
+//        @Override
+//        public boolean isFilesystemOnly() {
+//            return resource.isFilesystemOnly();
+//        }
+//
+//        public Resource getResource() {
+//            return this.resource;
+//        }
+//    }
+//
     public static class ResourceContainer implements ResourceCollection {
         final Collection<Resource> resources = new ArrayList<Resource>();
 
@@ -108,98 +106,98 @@ public class AntUtils {
             this.resources.add( resource );
         }
     }
-
-    public static Resource mapFileResource( final FileResource resource, final String targetPrefix ) {
-        if ( resource == null )
-            throw new IllegalArgumentException( "The file resource cannot be null." );
-        if ( targetPrefix == null )
-            throw new IllegalArgumentException( "The target prefix cannot be null." );
-
-        return new FileResource( resource.getFile() ) {
-            @Override
-            public String getName() {
-                return targetPrefix + File.separator +
-                        PathUtils.relativize( resource.getBaseDir(), resource.getFile() );
-            }
-        };
-    }
-
-    public static Resource mapFileResource( final File file, final String targetLocation ) {
-        if ( file == null )
-            throw new IllegalArgumentException( "The file cannot be null." );
-        if ( targetLocation == null )
-            throw new IllegalArgumentException( "The target location cannot be null." );
-        if ( !file.isAbsolute() )
-            throw new IllegalArgumentException( "The file path must be absolute." );
-
-        return new FileResource( file.getAbsoluteFile() ) {
-            @Override
-            public String getName() {
-                return targetLocation;
-            }
-        };
-    }
-
-    public static Resource mapFileResource( final File root, final File target, final String targetPrefix ) {
-        if ( root == null )
-            throw new IllegalArgumentException( "The root cannot be null." );
-        if ( target == null )
-            throw new IllegalArgumentException( "The target cannot be null." );
-        if ( targetPrefix == null )
-            throw new IllegalArgumentException( "The target prefix cannot be null." );
-
-        return new FileResource( target.getAbsoluteFile() ) {
-            @Override
-            public String getName() {
-                return targetPrefix + File.separator + PathUtils.relativize( root, target );
-            }
-        };
-    }
-
-    public static ResourceCollection mapResources( final ResourceCollection source,
-                                                   final String targetPrefix ) {
-        if ( source == null )
-            throw new IllegalArgumentException( "The source resource collection cannot be null." );
-        if ( targetPrefix == null )
-            throw new IllegalArgumentException( "The target prefix cannot be null." );
-
-        if ( targetPrefix.length() == 0 )
-            return source;
-
-        return new ResourceCollection() {
-            @Override
-            public Iterator iterator() {
-                return new Iterator() {
-                    Iterator iter = source.iterator();
-
-                    @Override
-                    public boolean hasNext() {
-                        return iter.hasNext();
-                    }
-
-                    @Override
-                    public Object next() {
-                        return mapFileResource( (FileResource) iter.next(), targetPrefix );
-                    }
-
-                    @Override
-                    public void remove() {
-                        iter.remove();
-                    }
-                };
-            }
-
-            @Override
-            public int size() {
-                return source.size();
-            }
-
-            @Override
-            public boolean isFilesystemOnly() {
-                return source.isFilesystemOnly();
-            }
-        };
-    }
+//
+//    public static Resource mapFileResource( final FileResource resource, final String targetPrefix ) {
+//        if ( resource == null )
+//            throw new IllegalArgumentException( "The file resource cannot be null." );
+//        if ( targetPrefix == null )
+//            throw new IllegalArgumentException( "The target prefix cannot be null." );
+//
+//        return new FileResource( resource.getFile() ) {
+//            @Override
+//            public String getName() {
+//                return targetPrefix + File.separator +
+//                        PathUtils.relativize( resource.getBaseDir(), resource.getFile() );
+//            }
+//        };
+//    }
+//
+//    public static Resource mapFileResource( final File file, final String targetLocation ) {
+//        if ( file == null )
+//            throw new IllegalArgumentException( "The file cannot be null." );
+//        if ( targetLocation == null )
+//            throw new IllegalArgumentException( "The target location cannot be null." );
+//        if ( !file.isAbsolute() )
+//            throw new IllegalArgumentException( "The file path must be absolute." );
+//
+//        return new FileResource( file.getAbsoluteFile() ) {
+//            @Override
+//            public String getName() {
+//                return targetLocation;
+//            }
+//        };
+//    }
+//
+//    public static Resource mapFileResource( final File root, final File target, final String targetPrefix ) {
+//        if ( root == null )
+//            throw new IllegalArgumentException( "The root cannot be null." );
+//        if ( target == null )
+//            throw new IllegalArgumentException( "The target cannot be null." );
+//        if ( targetPrefix == null )
+//            throw new IllegalArgumentException( "The target prefix cannot be null." );
+//
+//        return new FileResource( target.getAbsoluteFile() ) {
+//            @Override
+//            public String getName() {
+//                return targetPrefix + File.separator + PathUtils.relativize( root, target );
+//            }
+//        };
+//    }
+//
+//    public static ResourceCollection mapResources( final ResourceCollection source,
+//                                                   final String targetPrefix ) {
+//        if ( source == null )
+//            throw new IllegalArgumentException( "The source resource collection cannot be null." );
+//        if ( targetPrefix == null )
+//            throw new IllegalArgumentException( "The target prefix cannot be null." );
+//
+//        if ( targetPrefix.length() == 0 )
+//            return source;
+//
+//        return new ResourceCollection() {
+//            @Override
+//            public Iterator iterator() {
+//                return new Iterator() {
+//                    Iterator iter = source.iterator();
+//
+//                    @Override
+//                    public boolean hasNext() {
+//                        return iter.hasNext();
+//                    }
+//
+//                    @Override
+//                    public Object next() {
+//                        return mapFileResource( (FileResource) iter.next(), targetPrefix );
+//                    }
+//
+//                    @Override
+//                    public void remove() {
+//                        iter.remove();
+//                    }
+//                };
+//            }
+//
+//            @Override
+//            public int size() {
+//                return source.size();
+//            }
+//
+//            @Override
+//            public boolean isFilesystemOnly() {
+//                return source.isFilesystemOnly();
+//            }
+//        };
+//    }
 
     public void copy( final ResourceCollection source, final File to ) throws BuildException {
         if ( source == null )
@@ -208,6 +206,7 @@ public class AntUtils {
             throw new IllegalArgumentException( "The target direcotry cannot be null." );
         if ( to.exists() && !to.isDirectory() )
             throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
+        to.mkdir();
 
         final Copy copy = (Copy) this.project.createTask( "copy" );
         copy.add( source );
@@ -223,6 +222,7 @@ public class AntUtils {
             throw new IllegalArgumentException( "The target direcotry cannot be null." );
         if ( to.exists() && !to.isDirectory() )
             throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
+        to.mkdir();
 
         final Move move = (Move) this.project.createTask( "move" );
         move.add( source );
@@ -244,7 +244,7 @@ public class AntUtils {
             throw new IllegalArgumentException( "The target direcotry cannot be null." );
         if ( to.exists() && !to.isDirectory() )
             throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
-
+        to.mkdir();
 
         final Javac javac = (Javac) this.project.createTask( "javac" );
         for ( final File directory : sourceDirectories ) {
@@ -290,7 +290,10 @@ public class AntUtils {
         return path;
     }
 
-    public Path buildClasspath( ModuleResolver module ) throws BuildException {
+    public Path buildClasspath( final ModuleResolver module ) throws BuildException {
+        if ( module == null )
+            throw new IllegalArgumentException( "The module cannot be null." );
+
         // Resolve classpath
         final Collection<String> resolved;
         try {

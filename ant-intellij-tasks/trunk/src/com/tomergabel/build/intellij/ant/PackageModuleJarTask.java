@@ -31,7 +31,6 @@ public class PackageModuleJarTask extends PackageTaskBase {
             throw new BuildException( "Cannot create temporary target directory.", e );
         }
         tempDir.delete();   // Get rid of temporary file
-        tempDir.mkdir();
 
         // Build target
         packageContainerElements( tempDir );
