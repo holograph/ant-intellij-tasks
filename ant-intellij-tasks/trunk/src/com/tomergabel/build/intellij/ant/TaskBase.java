@@ -78,6 +78,18 @@ public abstract class TaskBase extends Task {
         log( String.format( message, args ), Project.MSG_VERBOSE );
     }
 
+    protected void logDebug( final String message, final Object... args ) {
+        log( String.format( message, args ), Project.MSG_DEBUG );
+    }
+
+    protected void logWarn( final String message, final Object... args ) {
+        log( String.format( message, args ), Project.MSG_WARN );
+    }
+
+    protected void logWarn( final Throwable cause, final String message, final Object... args ) {
+        log( String.format( message, args ), cause, Project.MSG_WARN );
+    }
+
     protected void logInfo( final String message, final Object... args ) {
         log( String.format( message, args ), Project.MSG_INFO );
     }

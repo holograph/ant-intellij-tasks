@@ -11,7 +11,6 @@ import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.Path;
 
 import java.io.File;
-import java.io.IOException;
 
 public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
     @Override
@@ -35,11 +34,10 @@ public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
         // Generate temporary directory
         final File tempDir;
         try {
-            tempDir = File.createTempFile( "idea", "war" );
-        } catch ( IOException e ) {
+            tempDir = getTemporaryDirectory( "war" );
+        } catch ( ResolutionException e ) {
             throw new BuildException( "Cannot create temporary target directory.", e );
         }
-        tempDir.delete();   // Get rid of temporary file
 
         packageWar( facet, tempDir );
         final FileSet fs = (FileSet) getProject().createDataType( "fileset" );
@@ -82,7 +80,9 @@ public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
             final Path rc = (Path) getProject().createDataType( "path" );
             rc.setPath( webDescriptor.getAbsolutePath() );
             copy.add( rc );
-            copy.setTofile( new File( explodeTarget, "WEB-INF/web.xml" ) );
+            final File target = new File( explodeTarget, "WEB-INF/web.xml" );
+            target.getParentFile().mkdirs();
+            copy.setTofile( target );
             copy.perform();
         } else {
             logVerbose( "Deleting temporary directory " + tempDir );

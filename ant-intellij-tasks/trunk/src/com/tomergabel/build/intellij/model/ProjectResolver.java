@@ -156,7 +156,7 @@ public class ProjectResolver extends PropertyResolver {
             throw new IllegalArgumentException( "The module name cannot be null." );
         final Lazy<Module> m = this.moduleNameMap.get( moduleName );
         if ( m == null )
-            throw new IllegalArgumentException( "No module \"" + moduleName + "\" found in project." );
+            throw new ResolutionException( "No module \"" + moduleName + "\" found in project." );
         try {
             return this.moduleResolverLazyMap.get( m ).get();
         } catch ( LazyInitializationException e ) {
@@ -179,7 +179,7 @@ public class ProjectResolver extends PropertyResolver {
 
     public Module getModule( final URI moduleDescriptor ) throws IllegalArgumentException, ResolutionException {
         if ( moduleDescriptor == null )
-            throw new IllegalArgumentException( "The module descriptor UIRI cannot be null." );
+            throw new IllegalArgumentException( "The module descriptor URI cannot be null." );
         final Lazy<Module> m = this.moduleDescriptorMap.get( moduleDescriptor );
         if ( m == null )
             throw new ResolutionException( "No module found in project for URI \"" + moduleDescriptor + "\"." );

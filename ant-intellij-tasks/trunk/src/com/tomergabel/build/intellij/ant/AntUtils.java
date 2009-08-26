@@ -206,7 +206,7 @@ public class AntUtils {
             throw new IllegalArgumentException( "The target direcotry cannot be null." );
         if ( to.exists() && !to.isDirectory() )
             throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
-        to.mkdir();
+        to.mkdirs();
 
         final Copy copy = (Copy) this.project.createTask( "copy" );
         copy.add( source );
@@ -222,7 +222,7 @@ public class AntUtils {
             throw new IllegalArgumentException( "The target direcotry cannot be null." );
         if ( to.exists() && !to.isDirectory() )
             throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
-        to.mkdir();
+        to.mkdirs();
 
         final Move move = (Move) this.project.createTask( "move" );
         move.add( source );
@@ -244,7 +244,7 @@ public class AntUtils {
             throw new IllegalArgumentException( "The target direcotry cannot be null." );
         if ( to.exists() && !to.isDirectory() )
             throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
-        to.mkdir();
+        to.mkdirs();
 
         final Javac javac = (Javac) this.project.createTask( "javac" );
         for ( final File directory : sourceDirectories ) {

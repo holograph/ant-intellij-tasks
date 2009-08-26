@@ -12,7 +12,6 @@ import org.apache.tools.ant.taskdefs.ManifestException;
 import org.apache.tools.ant.types.FileSet;
 
 import java.io.File;
-import java.io.IOException;
 
 public class PackageModuleJarTask extends PackageTaskBase {
     @Override
@@ -26,11 +25,10 @@ public class PackageModuleJarTask extends PackageTaskBase {
         // Generate temporary directory
         final File tempDir;
         try {
-            tempDir = File.createTempFile( "idea", "jar" );
-        } catch ( IOException e ) {
+            tempDir = getTemporaryDirectory( "jar" );
+        } catch ( ResolutionException e ) {
             throw new BuildException( "Cannot create temporary target directory.", e );
         }
-        tempDir.delete();   // Get rid of temporary file
 
         // Build target
         packageContainerElements( tempDir );
@@ -45,7 +43,9 @@ public class PackageModuleJarTask extends PackageTaskBase {
 
         // Set destination file
         try {
-            jar.setDestFile( UriUtils.getFile( resolver().resolveUriString( settings.getJarUrl() ) ) );
+            final File target = UriUtils.getFile( resolver().resolveUriString( settings.getJarUrl() ) );
+            target.getParentFile().mkdirs();     // Ensure target directory exists
+            jar.setDestFile( target );
         } catch ( ResolutionException e ) {
             throw new BuildException( e );
         }
