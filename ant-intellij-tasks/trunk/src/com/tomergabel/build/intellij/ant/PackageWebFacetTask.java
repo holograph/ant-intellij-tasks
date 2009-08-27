@@ -54,9 +54,11 @@ public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
         if ( facet.isTargetEnabled() ) {
             final War war = (War) getProject().createTask( "war" );
             try {
-                war.setDestFile( resolver().resolveUriFile( facet.getTargetUrl() ) );
+                final File target = resolver().resolveUriFile( facet.getTargetUrl() );
+                war.setDestFile( target );
                 logVerbose( "Deleting package target %s", war.getDestFile() );
-                war.getDestFile().delete();
+                target.delete();
+                target.getParentFile().mkdirs();
             } catch ( ResolutionException e ) {
                 throw new BuildException( "Cannot resolve WAR output URL.", e );
             }
