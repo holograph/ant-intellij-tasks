@@ -7,8 +7,8 @@ import static com.tomergabel.util.CollectionUtils.map;
 import org.apache.tools.ant.BuildException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 
 public class ResolveBuildOrderTask extends ProjectTaskBase {
     protected static final String LIST_SEPARATOR = ",";
@@ -54,7 +54,12 @@ public class ResolveBuildOrderTask extends ProjectTaskBase {
         if ( modules == null )
             throw new IllegalArgumentException( "The name list cannot be null." );
 
-        this.modules = Arrays.asList( modules.split( LIST_SEPARATOR ) );
+        final String[] split = modules.split( LIST_SEPARATOR );
+        final Collection<String> list = new HashSet<String>( split.length );
+        for ( final String module : split )
+            if ( module.length() > 0 )
+                list.add( module );
+        this.modules = list.size() > 0 ? list : null;
     }
 
     @Override
@@ -67,31 +72,38 @@ public class ResolveBuildOrderTask extends ProjectTaskBase {
         // Resolve build order
         final Collection<Module> buildOrder;
         try {
-            if ( this.modules == null )
+            if ( this.modules == null || this.modules.size() == 0 ) {
+                logVerbose( "Resolving build order for project \"%s\"", project().getName() );
                 buildOrder = projectResolver().resolveModuleBuildOrder();
-            else switch ( this.inputMode ) {
-                case names:
-                    buildOrder = projectResolver().resolveModuleBuildOrderByName( this.modules );
-                    break;
+            } else {
+                logVerbose( "Resolving build order for modules: %s", join( this.modules ) );
+                switch ( this.inputMode ) {
+                    case names:
+                        buildOrder = projectResolver().resolveModuleBuildOrderByName( this.modules );
+                        break;
 
-                case descriptors:
-                    buildOrder = new ArrayList<Module>();   // Make sure order is maintained
-                    for ( final String descriptor : this.modules )
-                        buildOrder
-                                .add( projectResolver().getModule( projectResolver().resolveUriString( descriptor ) ) );
-                    break;
+                    case descriptors:
+                        buildOrder = new ArrayList<Module>();   // Make sure order is maintained
+                        for ( final String descriptor : this.modules )
+                            buildOrder
+                                    .add( projectResolver().getModule(
+                                            projectResolver().resolveUriString( descriptor ) ) );
+                        break;
 
-                default:
-                    // Safety net, should never happen
-                    throw new IllegalStateException( "Unknown input mode '" + this.inputMode + "'" );
+                    default:
+                        // Safety net, should never happen
+                        throw new IllegalStateException( "Unknown input mode '" + this.inputMode + "'" );
+                }
             }
         } catch ( ResolutionException e ) {
             throw new BuildException( e );
         }
 
         // Set the target property
-        getProject().setProperty( this.property,
-                join( map( buildOrder, ( this.outputMode == null ? this.inputMode : this.outputMode ).mapper ),
-                        LIST_SEPARATOR ) );
+        final String value = join(
+                map( buildOrder, ( this.outputMode == null ? this.inputMode : this.outputMode ).mapper ),
+                LIST_SEPARATOR );
+        getProject().setProperty( this.property, value );
+        logVerbose( "Resolved build order: %s", value );
     }
 }
