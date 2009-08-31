@@ -69,7 +69,7 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
             case COPY:
                 logVerbose( "Packaging dependee module \"%s\" to \"%s\"...", dependency.getModule().getName(), target );
                 ant().compile( dependency.resolveUriFiles( dependency.getModule().getSourceUrls() ), target,
-                        ant().buildClasspath( dependency ) );
+                        ant().buildClasspath( dependency, SourceFilter.source ) );
                 ant().copy( ant().resolveModuleResources( dependency ), target );
                 break;
 
@@ -116,7 +116,7 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
             throw new IllegalArgumentException( "The dependency cannot be null." );
 
         logVerbose( "Resolving classpath for dependency " + dependency );
-        final Collection<String> classpath = dependency.resolveClasspath( resolver() );
+        final Collection<String> classpath = dependency.resolveClasspath( resolver(), true, false );
         final AntUtils.ResourceContainer rc = new AntUtils.ResourceContainer();
         for ( final String entry : classpath ) {
             final File entryFile = new File( entry ).getAbsoluteFile();

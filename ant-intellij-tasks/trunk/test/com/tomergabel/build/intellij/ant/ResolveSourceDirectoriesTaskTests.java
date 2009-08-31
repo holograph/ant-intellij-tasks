@@ -81,7 +81,7 @@ public class ResolveSourceDirectoriesTaskTests {
     public void execute_ModuleWithTestFilesAndSourceFilterSpecified_Property_OnlySourceDirectoriesReturned()
             throws LazyInitializationException {
         task.setProperty( "property" );
-        task.setFilter( Filter.source );
+        task.setFilter( SourceFilter.source );
         task.execute();
         assertEquals( "Directories resolved incorrectly.", sourceDirectory, project.getProperty( "property" ) );
     }
@@ -90,7 +90,7 @@ public class ResolveSourceDirectoriesTaskTests {
     public void execute_ModuleWithTestFilesAndTestFilterSpecified_Property_OnlyTestDirectoriesReturned()
             throws LazyInitializationException {
         task.setProperty( "property" );
-        task.setFilter( Filter.test );
+        task.setFilter( SourceFilter.test );
         task.execute();
         assertEquals( "Directories resolved incorrectly.", testDirectory, project.getProperty( "property" ) );
     }
@@ -99,7 +99,7 @@ public class ResolveSourceDirectoriesTaskTests {
     public void execute_ModuleWithTestFilesAndBothFilterSpecified_Property_SourceAndTestDirectoriesReturned()
             throws LazyInitializationException {
         task.setProperty( "property" );
-        task.setFilter( Filter.both );
+        task.setFilter( SourceFilter.both );
         task.execute();
         assertSetEquality( "Directories resolved incorrectly.", Arrays.asList( sourceDirectory, testDirectory ),
                 project.getProperty( "property" ).split( "," ) );
@@ -109,7 +109,7 @@ public class ResolveSourceDirectoriesTaskTests {
     public void execute_ModuleWithTestFilesAndSourceFilterSpecified_PathID_OnlySourceDirectoriesReturned()
             throws LazyInitializationException {
         task.setPathId( "path" );
-        task.setFilter( Filter.source );
+        task.setFilter( SourceFilter.source );
         task.execute();
         assertNotNull( "Path was not generated.", project.getReference( "path" ) );
         assertTrue( "Object generated does not derive from an Ant path.",
@@ -130,7 +130,7 @@ public class ResolveSourceDirectoriesTaskTests {
     @Test
     public void execute_ModuleWithTestFilesAndTestFilterSpecified_PathID_OnlyTestDirectoriesReturned() {
         task.setPathId( "path" );
-        task.setFilter( Filter.test );
+        task.setFilter( SourceFilter.test );
         task.execute();
         assertPath( testDirectory );
     }
@@ -138,7 +138,7 @@ public class ResolveSourceDirectoriesTaskTests {
     @Test
     public void execute_ModuleWithTestFilesAndBothFilterSpecified_PathID_SourceAndTestDirectoriesReturned() {
         task.setPathId( "path" );
-        task.setFilter( Filter.both );
+        task.setFilter( SourceFilter.both );
         task.execute();
         assertPath( sourceDirectory, testDirectory );
     }
@@ -147,7 +147,7 @@ public class ResolveSourceDirectoriesTaskTests {
     public void execute_ModuleWithTestFilesAndSourceFilterSpecified_PropertyAndPathID_OnlySourceDirectoriesReturned() {
         task.setProperty( "property" );
         task.setPathId( "path" );
-        task.setFilter( Filter.source );
+        task.setFilter( SourceFilter.source );
         task.execute();
         assertPath( sourceDirectory );
         assertEquals( "Directories resolved incorrectly.", sourceDirectory, project.getProperty( "property" ) );
@@ -157,7 +157,7 @@ public class ResolveSourceDirectoriesTaskTests {
     public void execute_ModuleWithTestFilesAndTestFilterSpecified_PropertyAndPathID_OnlyTestDirectoriesReturned() {
         task.setProperty( "property" );
         task.setPathId( "path" );
-        task.setFilter( Filter.test );
+        task.setFilter( SourceFilter.test );
         task.execute();
         assertPath( testDirectory );
         assertEquals( "Directories resolved incorrectly.", testDirectory, project.getProperty( "property" ) );
@@ -167,7 +167,7 @@ public class ResolveSourceDirectoriesTaskTests {
     public void execute_ModuleWithTestFilesAndBothFilterSpecified_PropertyAndPathID_SourceAndTestDirectoriesReturned() {
         task.setProperty( "property" );
         task.setPathId( "path" );
-        task.setFilter( Filter.both );
+        task.setFilter( SourceFilter.both );
         task.execute();
         assertPath( sourceDirectory, testDirectory );
         assertSetEquality( "Directories resolved incorrectly.", Arrays.asList( sourceDirectory, testDirectory ),

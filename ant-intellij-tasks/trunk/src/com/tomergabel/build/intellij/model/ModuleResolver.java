@@ -58,10 +58,15 @@ public class ModuleResolver extends PropertyResolver {
         return new File( root, ( test ? "test" : "production" ) + File.separator + this.module.getName() );
     }
 
-    public Collection<String> resolveModuleClasspath() throws ResolutionException {
+    public Collection<String> resolveModuleClasspath( final boolean includeSources, final boolean includeTests )
+            throws ResolutionException {
         final Collection<String> classpath = new HashSet<String>();
         for ( final Dependency dependency : this.module.getDependencies() )
-            classpath.addAll( dependency.resolveClasspath( this ) );
+            classpath.addAll( dependency.resolveClasspath( this, includeSources, includeTests ) );
+        if ( includeSources )
+            classpath.add( resolveModuleOutputPath( false ) );
+        if ( includeTests )
+            classpath.add( resolveModuleOutputPath( true ) );
         return Collections.unmodifiableCollection( classpath );
     }
 
@@ -69,7 +74,7 @@ public class ModuleResolver extends PropertyResolver {
         // Iterate dependencies and process library dependencies
         final Collection<String> dependencies = new HashSet<String>();
         for ( final LibraryDependency library : filter( this.getModule().getDependencies(), LibraryDependency.class ) )
-            dependencies.addAll( library.resolveClasspath( this ) );
+            dependencies.addAll( library.resolveClasspath( this, true, true ) );
         return Collections.unmodifiableCollection( dependencies );
     }
 

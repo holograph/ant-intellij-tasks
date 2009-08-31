@@ -83,6 +83,8 @@ public class ResolveModuleClasspathTaskTests extends AntTestBase {
         }
     }
 
+    // TODO add filtering tests
+
     @Test
     public void testExecute_DependantModuleWithProjectAndPathIdSpecified_CorrectClasspathResolved() throws Exception {
         final ResolveModuleClasspathTask task = new ResolveModuleClasspathTask();
@@ -96,7 +98,7 @@ public class ResolveModuleClasspathTaskTests extends AntTestBase {
         assertNotNull( "Classpath was not generated.", object );
         assertTrue( "Generated object is not a Path.", object instanceof Path );
         assertSetEquality( "Classpath generated incorrectly.",
-                new ModuleResolver( allModules.get(), dependantModule.get() ).resolveModuleClasspath(),
+                new ModuleResolver( allModules.get(), dependantModule.get() ).resolveModuleClasspath( true, false ),
                 ( (Path) object ).list() );
     }
 

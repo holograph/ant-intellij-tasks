@@ -139,9 +139,11 @@ public class ModuleResolverTests {
     // resolveModuleClasspath tests
     // ------------------------------------------------------
 
+    // TODO add filtering tests
+
     private Collection<String> resolveModuleClasspath( final Project project, final Module module )
             throws ResolutionException {
-        return new ModuleResolver( project, module ).resolveModuleClasspath();
+        return new ModuleResolver( project, module ).resolveModuleClasspath( true, false );
     }
 
     @Test

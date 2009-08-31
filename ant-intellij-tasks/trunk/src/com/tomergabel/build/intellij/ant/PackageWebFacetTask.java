@@ -108,7 +108,7 @@ public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
                         AntUtils.stripPreceedingSlash( source.getTargetUri() ) )
                         : new File( tempDir, "WEB-INF/classes" );
                 final File sourceDir = resolver().resolveUriFile( source.getUrl() );
-                ant().compile( sourceDir, target, ant().buildClasspath( resolver() ) );
+                ant().compile( sourceDir, target, ant().buildClasspath( resolver(), SourceFilter.source ) );
                 ant().copy( ant().resolveModuleResources( resolver(), source.getUrl() ), target );
             }
 

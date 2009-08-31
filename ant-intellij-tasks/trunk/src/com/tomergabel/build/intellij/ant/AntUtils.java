@@ -5,6 +5,7 @@ import com.tomergabel.build.intellij.model.Project;
 import com.tomergabel.build.intellij.model.ResolutionException;
 import com.tomergabel.util.CollectionUtils;
 import com.tomergabel.util.Predicate;
+import static com.tomergabel.util.CollectionUtils.join;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.Copy;
 import org.apache.tools.ant.taskdefs.Javac;
@@ -290,14 +291,17 @@ public class AntUtils {
         return path;
     }
 
-    public Path buildClasspath( final ModuleResolver module ) throws BuildException {
+    public Path buildClasspath( final ModuleResolver module, final SourceFilter filter ) throws BuildException {
         if ( module == null )
             throw new IllegalArgumentException( "The module cannot be null." );
+        if ( filter == null )
+            throw new IllegalArgumentException( "The source filter cannot be null." );
 
         // Resolve classpath
         final Collection<String> resolved;
         try {
-            resolved = module.resolveModuleClasspath();
+            resolved = module.resolveModuleClasspath( filter == SourceFilter.source || filter == SourceFilter.both,
+                    filter == SourceFilter.test || filter == SourceFilter.both );
         } catch ( ResolutionException e ) {
             throw new BuildException( "Cannot resolve module classpath for module \"" + module.getModule().getName() + "\".", e );
         }

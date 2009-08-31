@@ -17,7 +17,7 @@ import java.util.HashSet;
 public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
     protected String property;
     protected String pathId;
-    protected Filter filter = Filter.both;
+    protected SourceFilter filter = SourceFilter.both;
 
     public String getProperty() {
         return this.property;
@@ -35,11 +35,11 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
         this.pathId = pathId;
     }
 
-    public Filter getFilter() {
+    public SourceFilter getFilter() {
         return this.filter;
     }
 
-    public void setFilter( final Filter filter ) {
+    public void setFilter( final SourceFilter filter ) {
         if ( filter == null )
             throw new IllegalArgumentException( "Filter cannot be null." );
 
@@ -74,7 +74,7 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
         return resolveSourceDirectories( this.filter );
     }
 
-    private Collection<String> resolveSourceDirectories( final Filter filter )
+    private Collection<String> resolveSourceDirectories( final SourceFilter filter )
             throws IllegalArgumentException, BuildException {
         if ( filter == null )
             throw new IllegalArgumentException( "The filter cannot be null." );
@@ -99,9 +99,9 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
         };
 
         // Add the appropriate lists according to the filter
-        if ( filter == Filter.source || filter == Filter.both )
+        if ( filter == SourceFilter.source || filter == SourceFilter.both )
             directories.addAll( map( module.getSourceUrls(), mapper ) );
-        if ( filter == Filter.test || filter == Filter.both )
+        if ( filter == SourceFilter.test || filter == SourceFilter.both )
             directories.addAll( map( module.getTestSourceUrls(), mapper ) );
 
         // Return the collection

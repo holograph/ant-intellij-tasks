@@ -12,7 +12,7 @@ import java.io.File;
 
 public class ResolveModuleResourcesTask extends ModuleTaskBase {
     protected String pathId;
-    protected Filter filter = Filter.both;
+    protected SourceFilter filter = SourceFilter.both;
 
     public String getPathId() {
         return this.pathId;
@@ -22,11 +22,11 @@ public class ResolveModuleResourcesTask extends ModuleTaskBase {
         this.pathId = pathId;
     }
 
-    public Filter getFilter() {
+    public SourceFilter getFilter() {
         return this.filter;
     }
 
-    public void setFilter( final Filter filter ) {
+    public void setFilter( final SourceFilter filter ) {
         this.filter = filter;
     }
 

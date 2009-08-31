@@ -35,8 +35,15 @@ public class ModuleDependency implements Dependency {
         return "module:" + this.name;
     }
 
+
+
     @Override
-    public Collection<String> resolveClasspath( final ModuleResolver resolver ) throws ResolutionException {
+    public Collection<String> resolveClasspath( final ModuleResolver resolver, final boolean includeSources,
+                                                final boolean includeTests )
+            throws IllegalArgumentException, ResolutionException {
+        if ( resolver == null )
+            throw new IllegalArgumentException( "The module resolver cannot be null." );
+
         // Resolve the depenendee against the project
         final ProjectResolver project = resolver.getProjectResolver();
         if ( project == null )
@@ -47,8 +54,11 @@ public class ModuleDependency implements Dependency {
 
         // A module dependency's classpath contribution comprises its own classpath, plus its compile output
         final Collection<String> classpath = new HashSet<String>();
-        classpath.addAll( dependee.resolveModuleClasspath() );
-        classpath.add( dependee.resolveModuleOutputPath( false ) );
+        classpath.addAll( dependee.resolveModuleClasspath( includeSources, includeTests ) );
+        if ( includeSources )
+            classpath.add( dependee.resolveModuleOutputPath( false ) );
+        if ( includeTests )
+            classpath.add( dependee.resolveModuleOutputPath( true ) );
         return Collections.unmodifiableCollection( classpath );
     }
 }

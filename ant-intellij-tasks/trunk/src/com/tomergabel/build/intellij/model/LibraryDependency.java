@@ -43,7 +43,9 @@ public abstract class LibraryDependency implements Dependency {
     public abstract Level getLevel();
 
     @Override
-    public final Collection<String> resolveClasspath( final ModuleResolver resolver ) throws ResolutionException {
+    public final Collection<String> resolveClasspath( final ModuleResolver resolver, final boolean includeSources,
+                                                      final boolean includeTests )
+            throws ResolutionException {
         // Resolve the library
         final Library library = resolveLibrary( resolver );
 
