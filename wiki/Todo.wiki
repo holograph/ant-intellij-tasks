@@ -1,11 +1,19 @@
 #summary Project to-do list
 
-  * JavaDocs for all present code
-  ** Run on major codebase (e.g. Delver) to test real-world behavior (done on simple codebase)
-  * Add packaging support
-  ** Web facet
-  ** Project "build JARs on make"
+Before initial release:
 
-Down the road:
+  * JavaDocs for all present code
+  * Missing tests
+  * Run on major codebase (e.g. Delver) to test real-world behavior (done on simple codebase)
+
+Next version:
+
+  * Significant optimizations, possibly:
+    * A cache layer for parsed module/project files. Assuming a simple process life cycle for Ant, this will significantly improve packaging and project-wide build times.
+    * Dependency checks to see if targets need to be recompiled.
+    * Better build artifact reuse, e.g. exploit already-built class files for packaging.
+
+Long-term:
 
   * Obtain samples of non-Java projects and add support
+ 
