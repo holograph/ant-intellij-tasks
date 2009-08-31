@@ -5,6 +5,7 @@ Before initial release:
   * JavaDocs for all present code
   * Missing tests
   * Run on major codebase (e.g. Delver) to test real-world behavior (done on simple codebase)
+  * Test on Linux
 
 Next version:
 
