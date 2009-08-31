@@ -32,24 +32,30 @@ public class ModuleResolver extends PropertyResolver {
         return this.module;
     }
 
-    public String resolveModuleOutputPath() throws ResolutionException {
-        return resolveModuleOutput().getAbsolutePath();
+    public String resolveModuleOutputPath( final boolean test ) throws ResolutionException {
+        return resolveModuleOutput( test ).getAbsolutePath();
     }
 
-    public File resolveModuleOutput() throws ResolutionException {
+    public File resolveModuleOutput( final boolean test ) throws ResolutionException {
         // Assert that a module has been specified
         if ( this.module == null )
             throw new ResolutionException( "Cannot resolve module dependencies, module not specified" );
 
-        if ( this.module.getOutputUrl() != null )
-            return UriUtils.getFile( resolveUriString( this.module.getOutputUrl() ) );
+        // First, see if the model defines its own output
+        final String moduleOutput = test ? this.module.getTestOutputUrl() : this.module.getOutputUrl();
+        if ( moduleOutput != null )
+            return UriUtils.getFile( resolveUriString( moduleOutput ) );
+
+        // Generate an output directory from the project
         if ( this.projectResolver == null )
             throw new ResolutionException(
                     "Module does not specify an output directory and project was not specified." );
         if ( this.projectResolver.getProject().getOutputUrl() == null )
             throw new ResolutionException(
                     "Module does not specify an output directory and the project does not specify a default." );
-        return UriUtils.getFile( resolveUriString( this.projectResolver.getProject().getOutputUrl() ) );
+
+        final File root = UriUtils.getFile( resolveUriString( this.projectResolver.getProject().getOutputUrl() ) );
+        return new File( root, ( test ? "test" : "production" ) + File.separator + this.module.getName() );
     }
 
     public Collection<String> resolveModuleClasspath() throws ResolutionException {

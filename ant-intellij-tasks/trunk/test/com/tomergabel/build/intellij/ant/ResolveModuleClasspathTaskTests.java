@@ -18,7 +18,7 @@ import org.junit.Test;
 import java.util.Collections;
 
 @SuppressWarnings( { "ConstantConditions" } )
-public class ResolveModuleClasspathTaskTests {
+public class ResolveModuleClasspathTaskTests extends AntTestBase {
 
     @Test
     public void testExecute_ModuleNotSpecified_ThrowsBuildException() throws Exception {

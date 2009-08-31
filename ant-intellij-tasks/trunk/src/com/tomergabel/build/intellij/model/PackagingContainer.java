@@ -101,14 +101,24 @@ public class PackagingContainer extends ParserBase {
                 if ( levelString == null )
                     throw new ParseException( "A library container element with no level was specified." );
                 final LibraryDependency.Level level = LibraryDependency.Level.parse( levelString );
-                if ( level == LibraryDependency.Level.MODULE )
-                    // TODO module-level dependencies
-                    throw new ParseException( "Module-level libraries inside packages are not " +
-                            "currently supported by ant-intellij-tasks." );
-                final String name = extract( container, "@name", "Cannot extract library name" );
-                if ( name == null )
-                    throw new ParseException( "A library container element with no library name was specified." );
-                dependency = new NamedLibraryDependency( name, level );
+
+                switch ( level ) {
+                    case MODULE:
+                        dependency = new ModuleLibraryDependency( new Library( container ) );
+                        break;
+
+                    case PROJECT:
+                        final String name = extract( container, "@name", "Cannot extract library name" );
+                        if ( name == null )
+                            throw new ParseException(
+                                    "A library container element with no library name was specified." );
+                        dependency = new NamedLibraryDependency( name, level );
+                        break;
+
+                    default:
+                        throw new IllegalStateException( "Unexpected library level '" + level + "'" );
+
+                }
             } else throw new ParseException( "An unknown container element type '" + type + "' was specified" );
 
             // Parse container element settings
