@@ -2,7 +2,8 @@
 
 Before initial release:
 
-  * JavaDocs for all present code
+  * Javadocs for all present code
+  * Licensing headers
   * Missing tests
   * Run on major codebase (e.g. Delver) to test real-world behavior (done on simple codebase)
   * Test on Linux
