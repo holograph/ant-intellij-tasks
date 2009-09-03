@@ -6,6 +6,7 @@ Before initial release:
   * Licensing headers
   * Missing tests
   * Test on Linux
+  * Done - Test on Mac
 
 Next version:
 
