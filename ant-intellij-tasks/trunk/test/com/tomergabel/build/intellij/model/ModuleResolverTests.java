@@ -2,6 +2,8 @@ package com.tomergabel.build.intellij.model;
 
 import static com.tomergabel.build.intellij.model.MockModel.Modules;
 import static com.tomergabel.build.intellij.model.MockModel.Projects;
+import com.tomergabel.util.Lazy;
+import com.tomergabel.util.LazyInitializationException;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import com.tomergabel.util.UriUtils;
 import static org.junit.Assert.assertEquals;
@@ -10,16 +12,15 @@ import org.junit.Test;
 
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 
 public class ModuleResolverTests {
-
     // ------------------------------------------------------
     // resolveUriString tests
     // ------------------------------------------------------
-    
-    public URI resolveUri( final Project project, final Module module, final String uriString ) throws ResolutionException {
+
+    public URI resolveUri( final Project project, final Module module, final String uriString )
+            throws ResolutionException {
         final PropertyResolver resolver =
                 module != null ? new ModuleResolver( project, module ) : new ProjectResolver( project );
         return resolver.resolveUriString( uriString );
@@ -139,25 +140,31 @@ public class ModuleResolverTests {
     // resolveModuleClasspath tests
     // ------------------------------------------------------
 
+    private ModuleResolver resolver;
+
     // TODO add filtering tests
 
-    private Collection<String> resolveModuleClasspath( final Project project, final Module module )
-            throws ResolutionException {
-        return new ModuleResolver( project, module ).resolveModuleClasspath( true, false );
+    private ModuleResolver resolve( final Lazy<Project> project, final Lazy<Module> module )
+            throws ResolutionException, LazyInitializationException {
+        this.resolver = new ModuleResolver( project != null ? project.get() : null,
+                module != null ? module.get() : null );
+        return this.resolver;
     }
 
     @Test
     public void testResolveClasspath_NoProjectLevelModuleOrLibraryDependenciesAndNoProjectSpecified_ClasspathResolvedCorrectly()
             throws Exception {
-        assertSetEquality( "Classpath resolved incorrectly.", new String[] { },
-                resolveModuleClasspath( null, Modules.selfContained.get() ) );
+        resolve( null, Modules.selfContained );
+        assertSetEquality( "Classpath resolved incorrectly.",
+                new String[] { resolver.resolveModuleOutputPath( false ) },
+                resolver.resolveModuleClasspath( true, false ) );
     }
 
     @Test
     public void testResolveClasspath_WithProjectLevelModuleDependenciesAndNoProjectSpecified_ResolutionExceptionIsThrown()
             throws Exception {
         try {
-            resolveModuleClasspath( null, Modules.dependantModule.get() );
+            resolve( null, Modules.dependantModule ).resolveModuleClasspath( true, false );
             fail( "Project not specified but module dependencies exist, expected ResolutionException" );
         } catch ( ResolutionException e ) {
             // Expected, all is well
@@ -169,16 +176,21 @@ public class ModuleResolverTests {
         final String dependeeOutput = UriUtils
                 .getPath( resolveUri( Projects.allModules.get(), Modules.dependee.get(),
                         Modules.dependee.get().getOutputUrl() ) );
+        resolve( Projects.allModules, Modules.dependantModule );
         assertSetEquality( "Classpath resolved incorrectly.", new String[] {
-                dependeeOutput, MockModel.junitLibraryPath.get()  // Inherited from dependee
-        }, resolveModuleClasspath( Projects.allModules.get(), Modules.dependantModule.get() ) );
+                dependeeOutput,
+                MockModel.junitLibraryPath.get(),  // Inherited from dependee
+                resolver.resolveModuleOutputPath( false )
+        }, resolver.resolveModuleClasspath( true, false ) );
     }
 
     @Test
     public void testResolveClasspath_WithProjectLevelLibraryDependencies_ClasspathResolvedCorrectly()
             throws Exception {
-        assertSetEquality( "Classpath resolved incorrectly.", Collections.singleton( MockModel.junitLibraryPath.get() ),
-                resolveModuleClasspath( Projects.allModules.get(), Modules.dependantLibrary.get() ) );
+        resolve( Projects.allModules, Modules.dependantLibrary );
+        assertSetEquality( "Classpath resolved incorrectly.",
+                new String[] { MockModel.junitLibraryPath.get(), resolver.resolveModuleOutputPath( false ) },
+                resolver.resolveModuleClasspath( true, false ) );
     }
 
     @Test
@@ -187,16 +199,17 @@ public class ModuleResolverTests {
         final String dependeeOutput = UriUtils.getPath(
                 resolveUri( Projects.allModules.get(), Modules.dependee.get(),
                         Modules.dependee.get().getOutputUrl() ) );
-        assertSetEquality( "Classpath resolved incorrectly.",
-                new String[] { dependeeOutput, MockModel.junitLibraryPath.get() },
-                resolveModuleClasspath( Projects.allModules.get(), Modules.dependantBoth.get() ) );
+        resolve( Projects.allModules, Modules.dependantBoth );
+        assertSetEquality( "Classpath resolved incorrectly.", new String[] {
+                dependeeOutput, MockModel.junitLibraryPath.get(), resolver.resolveModuleOutputPath( false )
+        }, resolver.resolveModuleClasspath( true, false ) );
     }
 
     @Test
     public void testResolveClasspath_WithProjectLevelLibraryDependenciesAndNoProjectSpecified_ResolutionExceptionIsThrown()
             throws Exception {
         try {
-            resolveModuleClasspath( null, Modules.dependantLibrary.get() );
+            resolve( null, Modules.dependantLibrary ).resolveModuleClasspath( true, false );
             fail( "Project not specified but project level library dependencies exist, expected ResolutionException" );
         } catch ( ResolutionException e ) {
             // Expected, all is well
@@ -206,23 +219,28 @@ public class ModuleResolverTests {
     @Test
     public void testResolveClasspath_WithModuleLevelLibraryDependenciesAndNoProjectSpecified_ClasspathResolvedCorrectly()
             throws Exception {
-        assertSetEquality( "Classpath resolved incorrectly.", Collections.singleton(
-                UriUtils.getPath( MockModel.class.getResource( "." ).toURI().resolve( "modules/library/" ) ) ),
-                resolveModuleClasspath( null, Modules.withModuleLibrary.get() ) );
+        resolve( null, Modules.withModuleLibrary );
+        assertSetEquality( "Classpath resolved incorrectly.", new String[] {
+                UriUtils.getPath( MockModel.class.getResource( "." ).toURI().resolve( "modules/library/" ) ),
+                resolver.resolveModuleOutputPath( false )
+        }, resolver.resolveModuleClasspath( true, false ) );
     }
 
     @Test
     public void testResolveClasspath_WithModuleLevelLibraryDependenciesWithJarDirectories_ClasspathResolvedCorrectly()
             throws Exception {
-        assertSetEquality( "Classpath resolved incorrectly.", Collections.singleton( MockModel.Jars.outerMock ),
-                resolveModuleClasspath( null, Modules.withJarDirectory.get() ) );
+        resolve( null, Modules.withJarDirectory );
+        assertSetEquality( "Classpath resolved incorrectly.",
+                new String[] { MockModel.Jars.outerMock, resolver.resolveModuleOutputPath( false ) },
+                resolver.resolveModuleClasspath( true, false ) );
     }
 
     @Test
     public void testResolveClasspath_WithModuleLevelLibraryDependenciesWithRecursiveJarDirectories_ClasspathResolvedCorrectly()
             throws Exception {
-        assertSetEquality( "Classpath resolved incorrectly.",
-                Arrays.asList( MockModel.Jars.innerMock, MockModel.Jars.outerMock ),
-                resolveModuleClasspath( null, Modules.withJarDirectoryRecursive.get() ) );
+        resolve( null, Modules.withJarDirectoryRecursive );
+        assertSetEquality( "Classpath resolved incorrectly.", new String[] {
+                MockModel.Jars.innerMock, MockModel.Jars.outerMock, resolver.resolveModuleOutputPath( false )
+        }, resolver.resolveModuleClasspath( true, false ) );
     }
 }

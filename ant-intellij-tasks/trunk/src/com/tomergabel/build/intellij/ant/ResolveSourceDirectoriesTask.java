@@ -8,6 +8,7 @@ import static com.tomergabel.util.CollectionUtils.map;
 import com.tomergabel.util.Mapper;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.Path;
+import org.apache.tools.ant.types.FileSet;
 
 import java.io.File;
 import java.util.Collection;
@@ -18,6 +19,12 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
     protected String property;
     protected String pathId;
     protected SourceFilter filter = SourceFilter.both;
+    protected Output output = Output.directories;
+
+    public enum Output {
+        directories,
+        files,
+    }
 
     public String getProperty() {
         return this.property;
@@ -46,6 +53,16 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
         this.filter = filter;
     }
 
+    public Output getOutput() {
+        return this.output;
+    }
+
+    public void setOutput( final Output output ) {
+        if ( output == null )
+            throw new IllegalArgumentException( "The output mode cannot be null." );
+        this.output = output;
+    }
+
     @Override
     public void executeTask() throws BuildException {
         if ( this.property == null && this.pathId == null )
@@ -63,9 +80,29 @@ public class ResolveSourceDirectoriesTask extends ModuleTaskBase {
 
         // Set target path ID, if specified
         if ( this.pathId != null ) {
-            final Path path = new Path( getProject() );
+            final Path path = (Path) getProject().createDataType( "path" );
+            assert path != null;
             for ( final String sourceDirectory : sourceDirectories )
-                path.append( new Path( getProject(), sourceDirectory ) );
+                switch ( this.output ) {
+                    case directories:
+                        final Path dir = (Path) getProject().createDataType( "path" );
+                        assert dir != null;
+                        dir.setLocation( new File( sourceDirectory ) );
+                        path.append( dir );
+                        break;
+
+                    case files:
+                        final FileSet fs = (FileSet) getProject().createDataType( "fileset" );
+                        assert fs != null;
+                        fs.setDir( new File( sourceDirectory ) );
+                        fs.setIncludes( "**/*.java" );
+                        path.add( fs );
+                        break;
+
+                    default:
+                        throw new BuildException( "Unknown output mode '" + this.output + "'" );
+                }
+
             getProject().addReference( this.pathId, path );
         }
     }

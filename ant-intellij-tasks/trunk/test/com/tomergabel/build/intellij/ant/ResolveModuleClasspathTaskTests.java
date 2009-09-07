@@ -3,7 +3,6 @@ package com.tomergabel.build.intellij.ant;
 import static com.tomergabel.build.intellij.model.MockModel.Modules.dependantLibrary;
 import static com.tomergabel.build.intellij.model.MockModel.Modules.dependantModule;
 import static com.tomergabel.build.intellij.model.MockModel.Projects.allModules;
-import static com.tomergabel.build.intellij.model.MockModel.junitLibraryPath;
 import com.tomergabel.build.intellij.model.ModuleResolver;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import static junit.framework.Assert.assertNotNull;
@@ -16,7 +15,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Collections;
 
 @SuppressWarnings( { "ConstantConditions" } )
 public class ResolveModuleClasspathTaskTests extends AntTestBase {
@@ -25,7 +23,7 @@ public class ResolveModuleClasspathTaskTests extends AntTestBase {
     }
 
     private ResolveModuleClasspathTask task;
-    
+
     @Before
     public void setup() {
         this.task = new ResolveModuleClasspathTask();
@@ -45,7 +43,7 @@ public class ResolveModuleClasspathTaskTests extends AntTestBase {
     @Test
     public void testExecute_DependantModuleWithNoProjectSpecified_ThrowsBuildException() throws Exception {
         // Build task
-        
+
         task.setModule( dependantModule.get() );
         try {
             this.task.execute();
@@ -79,7 +77,8 @@ public class ResolveModuleClasspathTaskTests extends AntTestBase {
     }
 
     @Test
-    public void testExecute_ProjectLibraryDependencyWithProjectSpecifiedButNoPathId_ThrowsBuildException() throws Exception {
+    public void testExecute_ProjectLibraryDependencyWithProjectSpecifiedButNoPathId_ThrowsBuildException()
+            throws Exception {
         task.setModule( dependantLibrary.get() );
         task.setProject( allModules.get() );
         try {
@@ -109,7 +108,8 @@ public class ResolveModuleClasspathTaskTests extends AntTestBase {
     }
 
     @Test
-    public void testExecute_ProjectLibraryDependencyWithProjectAndPathIdSpecified_CorrectClasspathResolved() throws Exception {
+    public void testExecute_ProjectLibraryDependencyWithProjectAndPathIdSpecified_CorrectClasspathResolved()
+            throws Exception {
         task.setModule( dependantLibrary.get() );
         task.setProject( allModules.get() );
         task.setPathId( "testpath" );
@@ -120,7 +120,7 @@ public class ResolveModuleClasspathTaskTests extends AntTestBase {
         assertNotNull( "Classpath was not generated.", object );
         assertTrue( "Generated object is not a Path.", object instanceof Path );
         assertSetEquality( "Classpath generated incorrectly.",
-                Collections.singleton( junitLibraryPath.get() ),
+                new ModuleResolver( allModules.get(), dependantLibrary.get() ).resolveModuleClasspath( true, false ),
                 ( (Path) object ).list() );
     }
 }

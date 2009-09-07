@@ -12,13 +12,13 @@ public class AntTestBase {
 
     protected static final String DEFAULT_TASKS = "org/apache/tools/ant/taskdefs/defaults.properties";
     protected static final String DEFAULT_TYPES = "org/apache/tools/ant/types/defaults.properties";
-    
+
     public AntTestBase() throws URISyntaxException, IOException {
         this.project = new Project();
-        
+
         // Load type definitions
         final Properties typedefs = new Properties();
-        typedefs.load(this.getClass().getClassLoader().getResourceAsStream(DEFAULT_TYPES));
+        typedefs.load( this.getClass().getClassLoader().getResourceAsStream( DEFAULT_TYPES ) );
         for ( final Object o : typedefs.keySet() )
             try {
                 final Class clazz = Class.forName( (String) typedefs.get( o ) );
@@ -28,7 +28,7 @@ public class AntTestBase {
 
         // Load task definitions
         final Properties taskdefs = new Properties();
-        taskdefs.load(this.getClass().getClassLoader().getResourceAsStream(DEFAULT_TASKS));
+        taskdefs.load( this.getClass().getClassLoader().getResourceAsStream( DEFAULT_TASKS ) );
         for ( final Object o : taskdefs.keySet() )
             try {
                 final Class clazz = Class.forName( (String) taskdefs.get( o ) );
@@ -38,9 +38,9 @@ public class AntTestBase {
 
         // Add build logger
         final DefaultLogger antLogger = new DefaultLogger();
-        antLogger.setErrorPrintStream(System.err);
-        antLogger.setOutputPrintStream(System.out);
-        antLogger.setMessageOutputLevel(Project.MSG_VERBOSE);
-        this.project.addBuildListener(antLogger);
+        antLogger.setErrorPrintStream( System.err );
+        antLogger.setOutputPrintStream( System.out );
+        antLogger.setMessageOutputLevel( Project.MSG_VERBOSE );
+        this.project.addBuildListener( antLogger );
     }
 }

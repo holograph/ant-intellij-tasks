@@ -7,23 +7,26 @@ import com.tomergabel.util.UriUtils;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.Path;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 
-public class ResolveSourceDirectoriesTaskTests {
+public class ResolveSourceDirectoriesTaskTests extends AntTestBase {
     private ResolveSourceDirectoriesTask task;
-    private Project project;
 
     static String sourceDirectory;
     static String testDirectory;
+
+    public ResolveSourceDirectoriesTaskTests() throws URISyntaxException, IOException {
+        super();
+    }
 
     @BeforeClass
     public static void fixtureSetup() throws URISyntaxException {
@@ -34,7 +37,7 @@ public class ResolveSourceDirectoriesTaskTests {
     @Before
     public void testSetup() throws LazyInitializationException {
         this.task = new ResolveSourceDirectoriesTask();
-        task.setProject( this.project = new Project() );
+        task.setProject( this.project );
         task.setModule( MockModel.Modules.outputModuleRelative.get() );
     }
 
