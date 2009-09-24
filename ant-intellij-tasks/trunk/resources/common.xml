@@ -1,0 +1,646 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	Copyright 2009 Tomer Gabel <tomer@tomergabel.com>
+
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+		http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+
+
+	$Id$
+	
+
+	ant-intellij-tasks project (http://code.google.com/p/ant-intellij-tasks/)
+	common.xml: Common build script for ant-intellij-tasks
+	
+	I.	Overview
+	
+	This build file can be included from any build script building on ant-intellij-tasks
+	(such as the included build-all.xml). The "common" project includes the
+	ant-intellij-task task library, provides various macros to deal with IntelliJ 
+	IDEA modules and can be extended or customized by the importing script to roll out
+	your own build process. It defines the following targets:
+	
+		I.I.	"init" target
+
+	This target imports the ant-intellij-tasks.jar and ant-contrib.jar task libraries.
+	Both files are assumed to exist in the same directory as common.xml. You may add
+	this to your own targets' dependencies in order to use ant-intellij-tasks.
+	
+		I.II.	"clean" target
+		
+	This target cleans up the build output for the specified module. See section II
+	("Using the common targets") for details on how to specify the module. This does
+	not remove the module's output directory itself.
+	
+		I.III.	"build" target
+		
+	This target builds the specified module. See section II ("Using the common
+	targets") for details on how to specify the module. The compile output is placed
+	in the module's compile output directory as specified in IntelliJ IDEA. Unlike
+	IntelliJ IDEA itself, this target does not generate JARs even if the "Build JARs
+	On Make" option is specified; use the "package" target for this purpose.
+	
+		I.IV.	"test" target
+		
+	This target builds the sources in the specified module's test directories and
+	runs them via the JUnit test runnner. See section II ("Using the common
+	targets") for details on how to specify the module. The compile output is placed
+	in the module's test output directory as specified in IntelliJ IDEA. Only files
+	matching one of the following patterns will be executed by the test runner:
+	
+		Test?*.java
+		?*Test.java
+		?*Tests.java
+			
+	Where ? resolves to a single character and * resolves to zero or more characters.
+	Tests may be further customized; please refer to the documentation for the
+	"test-module" macro for details.
+	
+		I.V.	"package" target
+		
+	This target packages the specified module. The exact output is determined by the
+	module and project settings in IntelliJ IDEA:
+	
+		- If the project specifies "Build JARs on make" and JAR settings are
+		  specified for the module, a JAR is created;
+		- If the module has a Web facet with WAR or exploded output enabled,
+		  a web module (including web descriptor and output settings as defined
+		  in IntelliJ IDEA) is created accordingly.
+	
+	
+	II. Using the common targets
+	
+	The common targets (see sections I.II through I.V) all assume a module is specified.
+	When importing common.xml and using one of these targets, you must define the 
+	"project-file" property and set it to the location of the project (.ipr) file, or the
+	build will fail.
+	
+	The resolve-module target (upon which the common targets depend) looks up a module
+	(.iml) file in the current directory, which saves you the trouble of explicitly
+	specifying it in importing build scripts; if more than one module file is found,
+	the build will fail. You can override this behavior by predefining the "module-file"
+	property and pointing it to the module file.
+
+
+	III. Macros
+	
+	Following is a list of all macros defined by common.xml along with a synopsis; please
+	refer to the macro definition for specific documentation on how to use it:
+	
+		iterate-modules			Reorders a list of modules according to build order and
+								performs an action on them
+		build-module			Builds a single module
+		clean-module-output		Cleans the compile output of a single module
+		test-module				Tests a single module
+		package-module			Packages a single module
+-->
+
+<project
+	name="common"
+	xmlns:rsel="antlib:org.apache.tools.ant.types.resources.selectors">
+
+    <!-- =====================================================================
+		 Defaults
+		 ===================================================================== -->
+
+	<!-- The default maximum amount of allowed memory for a JUnit test. This value
+		 is passed to the -Xmx flag of the JVM hosting JUnit. You can override
+		 this value by predefining the "junit.maxmemory" property before using the
+		 "test-module" macro. -->
+	<property name="junit.maxmemory.default" value="64m" />
+	<!-- The default halt-on-failure setting for JUnit. If set to true, the build is
+		 aborted if a test fails. You can override this value by predefining the
+		 "junit.haltonfailure" property before using the "test-module" macro. -->
+	<property name="junit.haltonfailure.default" value="true" />
+
+
+    <!-- =====================================================================
+		 Macros
+		 ===================================================================== -->
+
+	<!--
+		"build-module" macro
+		
+		Summary:	Builds the specified module. 
+		
+					Compilation is currently performed by the javac compiler, in
+					debug mode and with UTF-8 encoding.
+					
+		Arguments:	"project-file" attribute (required): The location of the project file
+					"module-file" attribute (required): The location of the module file
+	-->
+    <macrodef name="build-module">
+        <attribute name="project-file" />
+        <attribute name="module-file" />
+
+        <sequential>
+            <var name="module-name" unset="true"/>
+            <basename file="@{module-file}" property="module-name" suffix=".iml" />
+            <echo message="Building module ${module-name}..." />
+
+			<!-- Resolve source directories, output directory for production classes,
+			     classpath and the module's resources. -->
+            <resolveOutputDirectory
+				property="idea.output.core" mode="source"
+				projectfile="@{project-file}" modulefile="@{module-file}" />
+            <resolveSourceDirectories
+				pathid="idea.sources.core" filter="source" output="directories"
+				projectfile="@{project-file}" modulefile="@{module-file}" />
+            <resolveModuleClasspath
+				pathid="idea.classpath" filter="source"
+				projectfile="@{project-file}" modulefile="@{module-file}" />
+            <resolveModuleResources
+				pathid="idea.resources.core" filter="source"
+				projectfile="@{project-file}" modulefile="@{module-file}" />
+
+            <!-- Asecrtain that there are any source directories (this is to make sure
+				 we don't get an error from javac task when the source path is empty.) -->
+			<if>
+				<resourcecount refid="idea.sources.core" count="0" when="gt" />
+				
+                <then>
+					<!-- Make sure output directory exists -->
+                    <mkdir dir="${idea.output.core}" />
+					
+					<!-- Compile sources -->
+                    <javac
+						destdir="${idea.output.core}" classpathref="idea.classpath"
+						debug="true" encoding="utf-8">
+						<src refid="idea.sources.core" />
+					</javac>
+
+                    <!-- Copy core resources -->
+                    <copy todir="${idea.output.core}" includeemptydirs="false">
+                        <path refid="idea.resources.core" />
+                    </copy>
+                </then>
+				
+            </if>
+        </sequential>
+    </macrodef>
+
+
+	<!--
+		"test-module" macro
+		
+		Summary:	Builds the sources in the specified module's test directories and
+					runs them through the JUnit test runner.
+					
+					Compilation is currently performed by the javac compiler, in
+					debug mode and with UTF-8 encoding.
+					
+					Tests are run via a forked JUnit task, with maximum memory determined
+					by the "junit.maxmemory" property; if the property is specified, the
+					value is passed to the -Xmx VM flag. If not, the value in the
+					"junit.maxmemory.default" property is used (see the "defaults" section).
+					A source file is considered a test class if it matches on of the
+					following patterns (where ? resolves to a single character and * resolves
+					to zero or more characters):
+					
+						Test?*.java
+						?*Test.java
+						?*Tests.java
+			
+					Java system properties for the code under test may be specified by
+					defining the corresponding Ant property with the "junit.property."
+					prefix; for example "junit.property.server_id" will map to the Java
+					system property "server_id".
+					
+		Arguments:	* "project-file" attribute (required): The location of the project file
+					* "module-file" attribute (required): The location of the module file
+					* "junit.maxmemory" property (optional): The maximum heap size for the
+					  JUnit tests
+					* Any property with the prefix "junit.property." (optional): Specifies
+					  a Java system property for the code under test
+	-->
+    <macrodef name="test-module">
+        <attribute name="project-file"/>
+        <attribute name="module-file"/>
+		
+        <sequential>
+            <var name="module-name" unset="true"/>
+            <basename file="@{module-file}" property="module-name" suffix=".iml" />
+            <echo message="Building tests for module ${module-name}..." />
+
+			<!-- Resolve test directories, output directory for test classes,
+			     classpath and the module's test resources. -->
+            <resolveOutputDirectory
+				property="idea.output.test" mode="test"
+				projectfile="@{project-file}" modulefile="@{module-file}" />
+            <resolveSourceDirectories
+				pathid="idea.sources.test" property="idea.sourcedirs.test" 
+				filter="test" output="directories"
+				projectfile="@{project-file}" modulefile="@{module-file}" />
+            <resolveModuleClasspath
+				pathid="idea.classpath" filter="both"
+				projectfile="@{project-file}" modulefile="@{module-file}" />
+            <resolveModuleResources
+				pathid="idea.resources.test" filter="test"
+				projectfile="@{project-file}" modulefile="@{module-file}" />
+				
+            <!-- Ascertain that there are any source directories (this is to make sure
+				 we don't get an error from javac task when the source path is empty.) -->
+            <if>
+                <resourcecount refid="idea.sources.test" count="0" when="gt" />
+				
+                <then>
+					<echo message="Running tests for module ${module-name}..." />
+
+					<!-- Make sure output directory exists -->
+                    <mkdir dir="${idea.output.test}" />
+					
+					<!-- Compile test sources -->
+                    <javac
+						destdir="${idea.output.test}" classpathref="idea.classpath"
+						debug="true" encoding="utf-8">
+                        <src refid="idea.sources.test" />
+                    </javac>
+
+                    <!-- Copy test resources -->
+                    <copy todir="${idea.output.test}" includeemptydirs="false">
+                        <path refid="idea.resources.test" />
+                    </copy>
+
+                    <!-- Resolve test settings -->
+                    <if>
+                        <not><isset property="junit.maxmemory" /></not>
+                        <then>
+							<property name="junit.maxmemory" value="${junit.maxmemory.default}" />
+                        </then>
+                    </if>
+                    <if>
+                        <not><isset property="junit.haltonfailure" /></not>
+                        <then>
+							<property name="junit.haltonfailure" value="${junit.haltonfailure.default}" />
+                        </then>
+                    </if>
+					
+					<!-- Iterate on all test source directories -->
+					<for list="${idea.sourcedirs.test}" param="directory">
+						<sequential>
+							<!-- Fork JUnit -->
+							<junit
+								fork="true" haltonfailure="${junit.haltonfailure}"
+								maxmemory="${junit.maxmemory}">
+							
+								<formatter type="plain" usefile="false" />								
+
+								<assertions>
+									<enable />
+								</assertions>
+								
+								<classpath>
+									<path refid="idea.classpath" />
+									<path location="${idea.output.test}" />
+								</classpath>
+								
+								<batchtest>
+									<fileset dir="@{directory}">
+										<include name="**/Test*?.java" />
+										<include name="**/*?Test.java" />
+										<include name="**/*?Tests.java" />
+									</fileset>
+								</batchtest>
+						
+								<!-- Map all properties prefixes with junit.properties
+								     to Java system properties -->
+								<syspropertyset>
+									<propertyref prefix="junit.properties." />
+									<mapper type="glob" from="junit.properties.*" to="*" />
+								</syspropertyset>
+							</junit>
+						</sequential>
+					</for>				
+				</then>
+            </if>
+        </sequential>
+    </macrodef>
+
+	
+	<!--
+		"clean-module-output" macro
+		
+		Summary:	Deletes all files in the test and production output directories for the
+					specified module.
+					
+		Arguments:	* "project-file" attribute (required): The location of the project file
+					* "module-file" attribute (required): The location of the module file
+	-->
+    <macrodef name="clean-module-output">
+        <attribute name="project-file" />
+        <attribute name="module-file" />
+
+        <sequential>
+            <var name="module-name" unset="true"/>
+            <basename file="@{module-file}" property="module-name" suffix=".iml" />
+            <echo message="Cleaning output for module ${module-name}..." />
+
+            <resolveOutputDirectory
+				property="idea.output.core" projectfile="@{project-file}"
+				modulefile="@{module-file}" mode="source" />
+            <delete dir="${idea.output.core}" includes="**" />
+            <resolveOutputDirectory
+				property="idea.output.test" projectfile="@{project-file}"
+				modulefile="@{module-file}" mode="test" />
+            <delete dir="${idea.output.test}" includes="**" />
+        </sequential>
+    </macrodef>
+
+	
+	<!--
+		"package-module" macro
+		
+		Summary:	Builds packages for the specified module, according to the module
+					definitions in IntelliJ IDEA. If the module does not define options for
+					the specified packaging type, this macro does nothing.
+		
+					Currently only JAR and WAR packages are supported.
+					
+		Arguments:	* "project-file" attribute (required): The location of the project file
+					* "module-file" attribute (required): The location of the module file
+					* "type" attribute (optional): A comma-separated list of desired package
+					  types. Currently "jar" and "war" package types are supported. The
+					  default is to build both.
+	-->
+    <macrodef name="package-module">
+        <attribute name="project-file" />
+        <attribute name="module-file" />
+        <attribute name="type" default="jar,war" />
+
+        <sequential>
+			<!-- If "jar" packaging type is specified and the module specifies JAR options,
+				 create a JAR package. -->
+            <if>
+                <and>
+                    <contains string="@{type}" substring="jar" />
+                    <moduleJarOutputSpecified
+						modulefile="@{module-file}" projectfile="@{project-file}" />
+                </and>
+                <then>
+					<echo message="Packaging JAR for module ${module-name}..." />
+                    <packageModuleJar
+						modulefile="@{module-file}" projectfile="@{project-file}" />
+                </then>
+            </if>
+
+			<!-- If "war" packaging type is specified and the module has a Web facet, package
+				 it. -->
+            <if>
+                <and>
+                    <contains string="@{type}" substring="war" />
+                    <moduleFacetSpecified 
+						modulefile="@{module-file}" projectfile="@{project-file}" facet="web" />
+                </and>
+                <then>
+					<echo message="Packaging WAR and/or exploded output for module ${module-name}..." />
+                    <packageWebFacet modulefile="@{module-file}" projectfile="@{project-file}" />
+                </then>
+            </if>
+        </sequential>
+    </macrodef>
+
+	
+	<!--
+		"iterate-modules" macro
+		
+		Summary:	Iterates on a list of modules according to their build order and
+					executes an action.
+					
+					If no modules are specified, the list of modules is loaded from the
+					specified project. Modules can be specified either by name or by
+					module file URL.
+					
+					You may specify what to do with each module using nested tasks,
+					where you can refer to the current module using the @{module}
+					variable; the module name and directory are accessible via the
+					${module-name} and {$module-dir} properties, respectively.
+
+					You may furthermore choose to delegate the action to a custom build
+					script by specifying the "target" argument; if a build.xml file is
+					found in the module directory, the target specified by that 
+					argument is invoked. To avoid recursion issues, if the module
+					exists present in the same directory as the project this behavior
+					does not apply.  
+										
+		Arguments:	* "project-file" attribute (required): The location of the project
+					  file
+					* "modules" attribute (optional): A comma-separated list of 
+					  module names or file URLs, as specified by the "input-mode" 
+					  argument. If this argument is empty or omitted, all modules in 
+					  the project are included.
+					* "input-mode" attribute (optional): Determines how to interpret 
+					  the values in the "modules" argument. Accepts the values "names"
+					  (the default) for module names, or "descriptors" for file URLs.
+					* "target" attribute (optional): The target to delegate to if a 
+					  module defines a custom build script. If this argument is
+					  empty or omitted, the action specified by the nested tasks is
+					  always executed.
+					* All nested tasks will be sequentially executed for each module.
+	-->
+    <macrodef name="iterate-modules">
+		<attribute name="project-file" />
+        <attribute name="input-mode" default="names" />
+        <attribute name="modules" default="" />
+        <attribute name="target" default="" />
+        <element name="action" implicit="true" optional="false" />
+
+        <sequential>
+            <echo level="verbose" message="Resolving project build order" />
+			
+			<!-- Resolve the module build order -->
+            <var name="module-build-order" unset="true" />
+            <resolveBuildOrder
+				outputMode="descriptors" inputMode="@{input-mode}" modules="@{modules}"
+				projectFile="@{project-file}" property="module-build-order" />
+            <dirname file="@{project-file}" property="project-dir" />
+							   
+			<!-- Iterate the modules according to their build order -->
+            <for list="${module-build-order}" param="module">
+                <sequential>
+					<!-- Extract module name and directory from the module file location. -->
+                    <var name="module-dir" unset="true"/>
+                    <var name="module-name" unset="true"/>
+                    <dirname file="@{module}" property="module-dir" />
+                    <basename file="@{module}" property="module-name" suffix=".iml" />
+
+					<!-- If a delegation target is defined and a build.xml file is present
+						 in the module directory, invoke the custom build script -->
+                    <if>
+						<and>
+							<not><equals arg1="target" arg2="" /></not>
+                            <not><equals arg1="${module-dir}" arg2="${project-dir}" /></not>
+							<available file="${module-dir}/build.xml" />
+						</and>
+						  
+                        <then>
+                            <!-- Delegate to custom build script -->
+                            <echo message="Delegating '@{target}' target of module '${module-name}' to custom build script..." />
+                            <ant dir="${module-dir}" target="@{target}" />
+                        </then>
+						
+                        <else>
+							<!-- Delegate to nested action -->
+                            <action/>
+                        </else>
+                    </if>
+                </sequential>
+            </for>
+        </sequential>
+    </macrodef>  
+
+	
+    <!-- =====================================================================
+		 Targets 
+		 ===================================================================== -->
+
+	<!--
+		"init" target
+		
+		Summary:	Loads the task libraries for ant-intellij-tasks and ant-contrib, both
+					of which are assumed to be in the same directory as common.xml.
+					
+		Arguments:	None
+	-->
+	<target name="init">
+		<!-- Import ant-intellij-tasks and ant-contrib -->
+		<dirname file="${ant.file.common}" property="common.location" />
+		<taskdef
+				resource="com/tomergabel/build/intellij/ant/antlib.xml"
+		        classpath="${common.location}/ant-intellij-tasks.jar" />
+		<taskdef
+                resource="net/sf/antcontrib/antlib.xml"
+				classpath="${common.location}/ant-contrib.jar" />
+	</target>
+
+
+	<!--
+		"resolve-module" target
+		
+		Summary:	Ensures that a module file is specified. If the "module-file" property
+					is not specified, the base directory is searched for module files. This
+					target fails if no modules files could be located, or if more than one
+					was found. The resolved module file is then placed in the "module-file"
+					property.
+					
+		Arguments:	None
+	-->
+	<target name="resolve-module" depends="init">
+		<!-- First, ascertain that the property was not externally specified -->
+		<if>
+			<not><isset property="module-file" /></not>
+			
+            <then>
+                <!-- Iterate all module (*.iml) files in the base directory -->
+                <echo message="Trying to find module files in ${basedir}..." 
+					  level="verbose" />
+				
+                <for param="file">
+                    <fileset dir="${basedir}" includes="*.iml" />
+					
+                    <sequential>
+                        <!-- If the 'module-file' property is already specified, we have 
+							 encountered more than one module file. Since we cannot resolve 
+							 this, fail. -->
+                        <fail if="module-file">
+                            More than one module file (*.iml) found. Please delete all but one of the module files, or
+                            specify the 'module-file' property externally.
+                        </fail>
+						
+						<!-- Log and set the module-file property -->
+                        <echo message="Located module file @{file}" level="verbose" />
+                        <property name="module-file" value="@{file}" />
+                    </sequential>
+                </for>
+            </then>
+			
+            <else>
+				<!-- Just log that the property was externally specified. -->
+                <echo message="Module file property externally set to ${module-file}."
+					  level="verbose" />
+            </else>
+        </if>
+    </target>
+
+	
+	<!--
+		"resolve-project" target
+		
+		Summary:	Ensures that a project file is specified. If the "project-file" property
+					is not specified this target fails.
+					
+		Arguments:	"project-file" property (required): The location of the project file
+	-->
+    <target name="resolve-project" depends="init">
+		<fail unless="project-file">
+			Project file not specified, cannot build module.
+        </fail>
+    </target>
+
+	
+	<!--
+		"clean" target
+		
+		Summary:	Cleans the compile output for the specified module (both source and
+					test outputs). The output directories themselves are preserved.
+					
+		Arguments:	"project-file" property (required): The location of the project file
+					"module-file" property (required): The location of the module file
+	-->
+    <target name="clean" depends="init, resolve-module, resolve-project">
+        <clean-module-output module-file="${module-file}" project-file="${project-file}" />
+    </target>
+
+	
+	<!--
+		"build" target
+		
+		Summary:	Build the specified module. JARs will not be created even if the
+					"Build JARs On Make" project option is specified.
+					
+		Arguments:	"project-file" property (required): The location of the project file
+					"module-file" property (required): The location of the module file
+	-->
+    <target name="build" depends="init, resolve-module, resolve-project">
+        <build-module module-file="${module-file}" project-file="${project-file}" />
+    </target>
+
+
+	<!--
+		"test" target
+		
+		Summary:	Build the sources in the specified module's test directories, and run
+					them via JUnit. Please see the documentation for the "test-module"
+					macro for details on how to customize this.
+					
+		Arguments:	"project-file" property (required): The location of the project file
+					"module-file" property (required): The location of the module file
+	-->
+    <target name="test" depends="build">
+        <test-module module-file="${module-file}" project-file="${project-file}" />
+    </target>
+
+	
+	<!--
+		"package" target
+		
+		Summary:	Packages the specified module according to the outputs specified in
+					IntelliJ IDEA. Currently, only JAR and WAR packages are supported.
+					
+		Arguments:	"project-file" property (required): The location of the project file
+					"module-file" property (required): The location of the module file
+	-->
+    <target name="package" depends="build">
+        <package-module module-file="${module-file}" project-file="${project-file}" />
+    </target>
+
+</project>

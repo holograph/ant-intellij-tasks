@@ -1,0 +1,202 @@
+<?xml version="1.0" ?>
+
+<!--
+	Copyright 2009 Tomer Gabel <tomer@tomergabel.com>
+
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+		http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+
+
+	$Id$
+
+
+	ant-intellij-tasks project (http://code.google.com/p/ant-intellij-tasks/)
+	build-all.xml: Builds script for IntelliJ IDEA projects.
+	
+	I. Overview
+	
+	This build file implements the common build actions for an IntelliJ IDEA
+	project file. The following targets are included:
+	
+		clean		Cleans the compile output for all modules, as well as
+					the output directory for the project itself.
+					
+		build		Builds all modules in the project. If the IntelliJ IDEA
+					project settings specify the "Build JARs On Make" option,
+					JARs will be built for all modules which specify JAR 
+					output settings.
+					
+		test		Tests all modules in the project.
+		
+		package		Packages all modules in the project according to their
+					packaging options. Currently only JAR and WAR package
+					types are supported.
+
+	By default, all targets operate on every project file in the this script's
+	directory. You can specify a target project by pointing the "project-file"
+	property to the specific project file.
+
+					
+	II. Usage
+	
+	Simply call "ant -f build-all.xml target", with target replaced by any of
+	the four targets described in section I (Overview). The target will be
+	applied for each project file in the current directory. If you wish to
+	override this behavior, add "-Dproject-file=project.ipr" (replace
+	project.ipr with your project file name) to the command line.
+	
+	
+-->
+
+<project default="build">
+	<!-- Import the common targets -->
+    <import file="common.xml" />
+
+    <!-- =====================================================================
+		 Macros
+		 ===================================================================== -->
+
+	<!--
+		"iterate-project-modules" macro
+		
+		Summary:	Iterates on all modules contained in the specified project
+		            accoridng to their build order and executes an action.
+
+					You may specify what to do with each module using nested tasks,
+					where you can refer to the current module using the @{module}
+					variable; the module name and directory are accessible via the
+					${module-name} and {$module-dir} properties, respectively.
+					The current project can be accessed via the @{project-file}
+					variable.
+
+					You may furthermore choose to delegate the action to a custom build
+					script by specifying the "target" argument; if a build.xml file is
+					found in the module directory, the target specified by that
+					argument is invoked.
+
+		Arguments:	* "project-file" property (optional): A specific project file to
+					  iterate over. If this property is not specified, all project
+					  files in the directory containing 
+					* "target" attribute (required): The Ant target to delegate
+					  execution to if the module contains its own build script.
+					* All nested tasks will be sequentially executed for each module.
+	-->
+    <macrodef name="iterate-project-modules">
+		<attribute name="target" />
+        <element name="action" implicit="true" optional="false" />
+	
+		<sequential>
+			<!-- If the "project-file" property was not specified, iterate
+				 all project files in the base directory. -->
+			<if>
+				<not><isset property="project-file" /></not>
+				<then>
+					<for param="project">
+						<fileset dir="${basedir}" includes="*.ipr" />
+						
+						<sequential>
+							<iterate-modules target="@{target}" project-file="@{project}">
+								<action />
+							</iterate-modules>
+						</sequential>
+					</for>
+				</then>
+				
+				<else>
+					<iterate-modules target="@{target}" project-file="${project-file}">
+						<action />
+					</iterate-modules>
+				</else>
+			</if>
+		</sequential>
+	</macrodef>
+
+
+    <!-- =====================================================================
+		 Targets
+		 ===================================================================== -->
+
+    <!--
+        "build" target
+
+        Summary:	Builds all modules in the specified project. This target honors
+                    the "Build JARs On Make" project option.
+
+		Arguments:	"project-file" property (optional): A specific project file to
+					iterate over. If this property is not specified, all project
+					files in the directory containing
+    -->
+    <target name="build" depends="init">
+        <iterate-project-modules target="build">
+            <build-module project-file="@{project-file}" module-file="@{module}" />
+            <if>
+                <buildJarsOnMakeSpecified projectFile="@{project-file}" />
+                <then><package-module project-file="@{project-file}" module-file="@{module}" type="jar"/></then>
+            </if>
+        </iterate-project-modules>
+    </target>
+
+
+    <!--
+        "clean" target
+
+        Summary:	Cleans the output directories of all modules in the specified
+                    project.
+
+		Arguments:	"project-file" property (optional): A specific project file to
+					iterate over. If this property is not specified, all project
+					files in the directory containing
+    -->
+    <target name="clean" depends="init">
+        <iterate-project-modules target="clean">
+            <clean-module-output project-file="@{project-file}" module-file="@{module}" />
+        </iterate-project-modules>
+
+        <!-- TODO clean project output -->
+    </target>
+
+
+    <!--
+        "test" target
+
+        Summary:	Runs tests for all modules in the specified project. This target
+                    does not fail even if tests do.
+
+		Arguments:	"project-file" property (optional): A specific project file to
+					iterate over. If this property is not specified, all project
+					files in the directory containing
+    -->
+    <target name="test" depends="build">
+		<property name="junit.haltonfailure" value="false" />
+        <iterate-project-modules target="test">
+            <test-module project-file="@{project-file}" module-file="@{module}" />
+        </iterate-project-modules>
+    </target>
+
+
+    <!--
+        "package" target
+
+        Summary:	Packages all modules in the specified project.
+
+		Arguments:	"project-file" property (optional): A specific project file to
+					iterate over. If this property is not specified, all project
+					files in the directory containing
+    -->
+    <target name="package" depends="init">
+        <iterate-project-modules target="package">
+            <build-module project-file="@{project-file}" module-file="@{module}" />
+            <package-module project-file="@{project-file}" module-file="@{module}" />
+        </iterate-project-modules>
+    </target>
+
+</project>
