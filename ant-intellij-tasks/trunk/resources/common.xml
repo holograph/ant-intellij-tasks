@@ -485,7 +485,9 @@
                         <then>
                             <!-- Delegate to custom build script -->
                             <echo message="Delegating '@{target}' target of module '${module-name}' to custom build script..." />
-                            <ant dir="${module-dir}" target="@{target}" />
+                            <ant dir="${module-dir}" target="@{target}">
+                                <property name="project-file" value="@{project-file}" />
+                            </ant>
                         </then>
 						
                         <else>

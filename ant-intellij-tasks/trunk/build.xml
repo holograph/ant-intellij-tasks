@@ -36,7 +36,8 @@
                     for the release package. If not specified it will be
                     asked for interactively.
     -->
-    <target name="release" depends="test">
+    <target name="release" depends="init"> 
+            <!--depends="test">-->
         <!-- Resolve output directory -->
         <if>
             <not>
@@ -54,13 +55,27 @@
         <mkdir dir="${target-dir}" />
 
         <!-- Copy resources -->
-        <copy todir="${target-dir}" overwrite="true">
-            <fileset dir="${basedir}/resources" includes="**/*" excludes="ant-intellij-tasks.jar" />
+        <copy todir="${target-dir}">
+            <fileset dir="${basedir}/resources">
+                <include name="**/*" />
+                <exclude name="ant-intellij-tasks.jar" />
+                <exclude name="common.xml" />
+            </fileset>
+        </copy>
+        <copy file="${basedir}/resources/common.xml" todir="${target-dir}">
+            <filterchain>
+                <tokenfilter>
+                    <linetokenizer />
+                    <replacestring
+                            from="classpath=&quot;$${common.location}/ant-intellij-tasks.jar&quot;"
+                            to="classpath=&quot;$${common.location}/ant-intellij-tasks-${version}.jar&quot;"/>
+                </tokenfilter>
+            </filterchain>
         </copy>
 
         <!-- Create JAR -->
         <packageModuleJar modulename="ant-intellij-tasks" projectfile="${project-file}"
-                          targetfile="${target-dir}/ant-intellij-tasks.jar" />
+                          targetfile="${target-dir}/ant-intellij-tasks-${version}.jar" />
 
         <!-- Compress and build release package -->
         <zip basedir="${target-dir}" includes="**/*" destfile="${project-output}/ant-intellij-tasks-${version}.zip" />
