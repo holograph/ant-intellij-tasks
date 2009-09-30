@@ -16,12 +16,12 @@
 	limitations under the License.
 
 
+	ant-intellij-tasks project (http://code.google.com/p/ant-intellij-tasks/)
+	build-all.xml: Builds script for IntelliJ IDEA projects.
+
 	$Id$
 
 
-	ant-intellij-tasks project (http://code.google.com/p/ant-intellij-tasks/)
-	build-all.xml: Builds script for IntelliJ IDEA projects.
-	
 	I. Overview
 	
 	This build file implements the common build actions for an IntelliJ IDEA

@@ -1,24 +1,47 @@
 <?xml version="1.0" ?>
+
+<!--
+	Copyright 2009 Tomer Gabel <tomer@tomergabel.com>
+
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+		http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+
+
+	ant-intellij-tasks project (http://code.google.com/p/ant-intellij-tasks/)
+	antlib.xml: Main Ant task library
+
+	$Id$
+-->
+
 <antlib>
     <!-- Project resolution tasks -->
-    <taskdef name="resolveBuildOrder" classname="com.tomergabel.build.intellij.ant.ResolveBuildOrderTask" />
+    <taskdef name="resolveBuildOrder"         classname="com.tomergabel.build.intellij.ant.ResolveBuildOrderTask"             />
 
     <!-- Project conditions -->
-    <typedef name="buildJarsOnMakeSpecified" classname="com.tomergabel.build.intellij.ant.BuildJarsOnMakeSpecifiedCondition" />
+    <typedef name="buildJarsOnMakeSpecified"  classname="com.tomergabel.build.intellij.ant.BuildJarsOnMakeSpecifiedCondition" />
 
     <!-- Module resolution tasks -->
-    <taskdef name="resolveModuleDependencies" classname="com.tomergabel.build.intellij.ant.ResolveModuleDependenciesTask" />
-    <taskdef name="resolveOutputDirectory" classname="com.tomergabel.build.intellij.ant.ResolveOutputDirectoryTask" />
-    <taskdef name="resolveSourceDirectories" classname="com.tomergabel.build.intellij.ant.ResolveSourceDirectoriesTask" />
-    <taskdef name="resolveModuleClasspath" classname="com.tomergabel.build.intellij.ant.ResolveModuleClasspathTask" />
-    <taskdef name="resolveModuleResources" classname="com.tomergabel.build.intellij.ant.ResolveModuleResourcesTask" />
+    <taskdef name="resolveModuleDependencies" classname="com.tomergabel.build.intellij.ant.ResolveModuleDependenciesTask"     />
+    <taskdef name="resolveOutputDirectory"    classname="com.tomergabel.build.intellij.ant.ResolveOutputDirectoryTask"        />
+    <taskdef name="resolveSourceDirectories"  classname="com.tomergabel.build.intellij.ant.ResolveSourceDirectoriesTask"      />
+    <taskdef name="resolveModuleClasspath"    classname="com.tomergabel.build.intellij.ant.ResolveModuleClasspathTask"        />
+    <taskdef name="resolveModuleResources"    classname="com.tomergabel.build.intellij.ant.ResolveModuleResourcesTask"        />
 
     <!-- Module conditions -->
-    <typedef name="moduleJarOutputSpecified" classname="com.tomergabel.build.intellij.ant.ModuleJarOutputSpecifiedCondition" />
-    <typedef name="moduleFacetSpecified" classname="com.tomergabel.build.intellij.ant.ModuleFacetSpecifiedCondition" />
+    <typedef name="moduleJarOutputSpecified"  classname="com.tomergabel.build.intellij.ant.ModuleJarOutputSpecifiedCondition" />
+    <typedef name="moduleFacetSpecified"      classname="com.tomergabel.build.intellij.ant.ModuleFacetSpecifiedCondition"     />
 
     <!-- Packging tasks -->
-    <taskdef name="packageModuleJar" classname="com.tomergabel.build.intellij.ant.PackageModuleJarTask" />
-    <taskdef name="packageWebFacet" classname="com.tomergabel.build.intellij.ant.PackageWebFacetTask" />
+    <taskdef name="packageModuleJar"          classname="com.tomergabel.build.intellij.ant.PackageModuleJarTask"              />
+    <taskdef name="packageWebFacet"           classname="com.tomergabel.build.intellij.ant.PackageWebFacetTask"               />
 </antlib>
         

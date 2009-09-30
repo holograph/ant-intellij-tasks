@@ -16,12 +16,12 @@
 	limitations under the License.
 
 
-	$Id$
-	
-
 	ant-intellij-tasks project (http://code.google.com/p/ant-intellij-tasks/)
 	common.xml: Common build script for ant-intellij-tasks
-	
+
+	$Id$
+
+
 	I.	Overview
 	
 	This build file can be included from any build script building on ant-intellij-tasks
