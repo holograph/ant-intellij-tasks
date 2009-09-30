@@ -25,6 +25,7 @@
 <antlib>
     <!-- Project resolution tasks -->
     <taskdef name="resolveBuildOrder"         classname="com.tomergabel.build.intellij.ant.ResolveBuildOrderTask"             />
+    <taskdef name="resolveProjectOutput"      classname="com.tomergabel.build.intellij.ant.ResolveProjectOutputTask"          />
 
     <!-- Project conditions -->
     <typedef name="buildJarsOnMakeSpecified"  classname="com.tomergabel.build.intellij.ant.BuildJarsOnMakeSpecifiedCondition" />
