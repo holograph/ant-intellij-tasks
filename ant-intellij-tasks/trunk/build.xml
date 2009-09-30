@@ -60,15 +60,24 @@
                 <include name="**/*" />
                 <exclude name="ant-intellij-tasks.jar" />
                 <exclude name="common.xml" />
+                <exclude name="README" />
             </fileset>
         </copy>
-        <copy file="${basedir}/resources/common.xml" todir="${target-dir}">
+
+        <copy todir="${target-dir}">
+            <fileset dir="${basedir}/resources">
+                <include name="common.xml" />
+                <include name="README" />
+            </fileset>
             <filterchain>
                 <tokenfilter>
                     <linetokenizer />
                     <replacestring
-                            from="classpath=&quot;$${common.location}/ant-intellij-tasks.jar&quot;"
-                            to="classpath=&quot;$${common.location}/ant-intellij-tasks-${version}.jar&quot;"/>
+                            from="ant-intellij-tasks.jar"
+                            to="ant-intellij-tasks-${version}.jar"/>
+                    <replacestring
+                            from="ant-intellij-tasks vX.Y"
+                            to="ant-intellij-tasks v${version}"/>
                 </tokenfilter>
             </filterchain>
         </copy>
