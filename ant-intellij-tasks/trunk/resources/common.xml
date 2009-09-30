@@ -150,7 +150,7 @@
 
 			<!-- Resolve source directories, output directory for production classes,
 			     classpath and the module's resources. -->
-            <resolveOutputDirectory
+            <resolveModuleOutput
 				property="idea.output.core" mode="source"
 				projectfile="@{project-file}" modulefile="@{module-file}" />
             <resolveSourceDirectories
@@ -234,7 +234,7 @@
 
 			<!-- Resolve test directories, output directory for test classes,
 			     classpath and the module's test resources. -->
-            <resolveOutputDirectory
+            <resolveModuleOutput
 				property="idea.output.test" mode="test"
 				projectfile="@{project-file}" modulefile="@{module-file}" />
             <resolveSourceDirectories
@@ -345,11 +345,11 @@
             <basename file="@{module-file}" property="module-name" suffix=".iml" />
             <echo message="Cleaning output for module ${module-name}..." />
 
-            <resolveOutputDirectory
+            <resolveModuleOutput
 				property="idea.output.core" projectfile="@{project-file}"
 				modulefile="@{module-file}" mode="source" />
             <delete dir="${idea.output.core}" includes="**" />
-            <resolveOutputDirectory
+            <resolveModuleOutput
 				property="idea.output.test" projectfile="@{project-file}"
 				modulefile="@{module-file}" mode="test" />
             <delete dir="${idea.output.test}" includes="**" />

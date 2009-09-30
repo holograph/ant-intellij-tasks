@@ -25,7 +25,7 @@ import com.tomergabel.build.intellij.model.ResolutionException;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 
-public class ResolveOutputDirectoryTask extends ModuleTaskBase {
+public class ResolveModuleOutputTask extends ModuleTaskBase {
     public enum Mode {
         test,
         source

@@ -30,12 +30,12 @@ import org.junit.Test;
 
 import java.net.URISyntaxException;
 
-public class ResolveOutputDirectoryTaskTests {
-    ResolveOutputDirectoryTask task;
+public class ResolveModuleOutputTaskTests {
+    ResolveModuleOutputTask task;
 
     @Before
     public void testSetup() {
-        this.task = new ResolveOutputDirectoryTask();
+        this.task = new ResolveModuleOutputTask();
     }
 
     @Test

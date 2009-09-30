@@ -31,7 +31,7 @@
 
     <!-- Module resolution tasks -->
     <taskdef name="resolveModuleDependencies" classname="com.tomergabel.build.intellij.ant.ResolveModuleDependenciesTask"     />
-    <taskdef name="resolveOutputDirectory"    classname="com.tomergabel.build.intellij.ant.ResolveOutputDirectoryTask"        />
+    <taskdef name="resolveModuleOutput"       classname="com.tomergabel.build.intellij.ant.ResolveModuleOutputTask"           />
     <taskdef name="resolveSourceDirectories"  classname="com.tomergabel.build.intellij.ant.ResolveSourceDirectoriesTask"      />
     <taskdef name="resolveModuleClasspath"    classname="com.tomergabel.build.intellij.ant.ResolveModuleClasspathTask"        />
     <taskdef name="resolveModuleResources"    classname="com.tomergabel.build.intellij.ant.ResolveModuleResourcesTask"        />
