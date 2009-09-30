@@ -1,15 +1,10 @@
 #summary Project to-do list
 
-Before initial release:
-
-  * Javadocs for all present code
-  * Licensing headers
-  * Missing tests
-  * Test on Linux
-  * Done - Test on Mac
-
 Next version:
 
+  * Test on Linux
+  * Javadocs for all present code
+  * Missing tests
   * Correct parsing and implementation of compiler options
     * Support for jikes and other relevant compilers
     * Implement javac compiler options
