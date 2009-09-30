@@ -23,6 +23,49 @@
 -->
 
 <project name="ant-intellij-tasks" default="build">
-    <!-- Simply delegate to build-all.xml -->
+    <property name="project-file" value="ant-intellij-tasks.ipr" />
     <import file="resources/build-all.xml" />
+
+
+    <!--
+        "release" target
+
+        Summary:	Creates a release package for ant-intellij-tasks.
+
+        Arguments:	"version" property (optional): Defines the version number
+                    for the release package. If not specified it will be
+                    asked for interactively.
+    -->
+    <target name="release" depends="test">
+        <!-- Resolve output directory -->
+        <if>
+            <not>
+                <isset property="version" />
+            </not>
+            <then>
+                <input message="Please input release version: " addproperty="version" />
+            </then>
+        </if>
+        <resolveProjectOutput property="project-output" projectfile="${project-file}" />
+        <property name="target-dir" value="${project-output}/${ant.project.name}-${version}" />
+
+        <!-- Recreate output directory -->
+        <delete includeemptydirs="true" dir="${target-dir}" />
+        <mkdir dir="${target-dir}" />
+
+        <!-- Copy resources -->
+        <copy todir="${target-dir}" overwrite="true">
+            <fileset dir="${basedir}/resources" includes="**/*" excludes="ant-intellij-tasks.jar" />
+        </copy>
+
+        <!-- Create JAR -->
+        <packageModuleJar modulename="ant-intellij-tasks" projectfile="${project-file}"
+                          targetfile="${target-dir}/ant-intellij-tasks.jar" />
+
+        <!-- Compress and build release package -->
+        <zip basedir="${target-dir}" includes="**/*" destfile="${project-output}/ant-intellij-tasks-${version}.zip" />
+
+        <!-- Clean up -->
+        <delete includeemptydirs="true" dir="${target-dir}" />
+    </target>
 </project>

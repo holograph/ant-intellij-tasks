@@ -21,10 +21,7 @@
 
 package com.tomergabel.build.intellij.ant;
 
-import com.tomergabel.build.intellij.model.Module;
-import com.tomergabel.build.intellij.model.ModuleResolver;
-import com.tomergabel.build.intellij.model.ParseException;
-import com.tomergabel.build.intellij.model.ProjectResolver;
+import com.tomergabel.build.intellij.model.*;
 import com.tomergabel.build.intellij.ant.prototype.ModuleReceiver;
 import com.tomergabel.util.Lazy;
 import com.tomergabel.util.LazyInitializationException;
@@ -69,7 +66,7 @@ public abstract class ModuleTaskBase extends ProjectTaskBase implements ModuleRe
     // Code-facing properties
 
     @Override
-    public void setModule( final Module module ) {
+    public void setModule( final Module module ) throws IllegalArgumentException {
         if ( module == null )
             throw new IllegalArgumentException( "The module cannot be null." );
         assertNotExecuted();
@@ -77,7 +74,7 @@ public abstract class ModuleTaskBase extends ProjectTaskBase implements ModuleRe
     }
 
     @Override
-    public void setModuleDescriptor( final URI moduleDescriptor ) {
+    public void setModuleDescriptor( final URI moduleDescriptor ) throws IllegalArgumentException {
         if ( moduleDescriptor == null )
             throw new IllegalArgumentException( "The module descriptor URI cannot be null." );
         assertNotExecuted();
@@ -85,6 +82,19 @@ public abstract class ModuleTaskBase extends ProjectTaskBase implements ModuleRe
             @Override
             public Module call() throws IOException, ParseException {
                 return Module.parse( moduleDescriptor, new WarnHandler( "module" ) );
+            }
+        };
+    }
+
+    @Override
+    public void setModuleName( final String moduleName ) throws IllegalArgumentException {
+        if ( moduleName == null )
+            throw new IllegalArgumentException( "The module name cannot be null." );
+        assertNotExecuted();
+        this.module = new Lazy<Module>() {
+            @Override
+            public Module call() throws ResolutionException {
+                return projectResolver().getModule( moduleName );
             }
         };
     }

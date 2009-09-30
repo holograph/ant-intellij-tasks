@@ -99,6 +99,19 @@ public abstract class ModuleConditionBase extends ProjectConditionBase implement
         };
     }
 
+    @Override
+    public void setModuleName( final String moduleName ) throws IllegalArgumentException {
+        if ( moduleName == null )
+            throw new IllegalArgumentException( "The module name cannot be null." );
+        assertNotEvaluated();
+        this.module = new Lazy<Module>() {
+            @Override
+            public Module call() throws Exception {
+                return projectResolver().getModule( moduleName );
+            }
+        };
+    }
+
     // Helper methods
 
     protected Module module() throws BuildException {

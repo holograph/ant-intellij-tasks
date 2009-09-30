@@ -42,7 +42,7 @@ public interface ModuleReceiver extends ProjectReceiver {
     void setModule( final Module module ) throws IllegalArgumentException;
 
     /**
-     * Sets a new module file (.iml).
+     * Sets a module file (.iml).
      *
      * @param moduleFile The path to the module file.
      * @throws IllegalArgumentException The module file cannot be null.
@@ -50,10 +50,18 @@ public interface ModuleReceiver extends ProjectReceiver {
     void setModuleFile( final File moduleFile ) throws IllegalArgumentException;
 
     /**
-     * Sets a new descriptor (.iml) URI.
+     * Sets a descriptor (.iml) URI.
      *
      * @param moduleDescriptor The module descriptor URI.
      * @throws IllegalArgumentException The URI cannot be null.
      */
     void setModuleDescriptor( final URI moduleDescriptor ) throws IllegalArgumentException;
+
+    /**
+     * Sets an input module by name. If the 'moduleName' attribute is used a project must be set as well.
+     *
+     * @param moduleName The module name.
+     * @throws IllegalArgumentException The module name cannot be null.
+     */
+    void setModuleName( final String moduleName ) throws IllegalArgumentException;
 }

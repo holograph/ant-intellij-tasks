@@ -35,6 +35,16 @@ import org.apache.tools.ant.types.FileSet;
 import java.io.File;
 
 public class PackageModuleJarTask extends PackageTaskBase {
+    protected File targetFile;
+
+    public File getTargetFile() {
+        return this.targetFile;
+    }
+
+    public void setTargetFile( final File targetFile ) {
+        this.targetFile = targetFile;
+    }
+
     @Override
     protected void executeTask() throws BuildException {
         if ( !module().isBuildJar() )
@@ -64,7 +74,8 @@ public class PackageModuleJarTask extends PackageTaskBase {
 
         // Set destination file
         try {
-            final File target = UriUtils.getFile( resolver().resolveUriString( settings.getJarUrl() ) );
+            final File target = this.targetFile != null ? this.targetFile
+                    : UriUtils.getFile( resolver().resolveUriString( settings.getJarUrl() ) );
             target.getParentFile().mkdirs();     // Ensure target directory exists
             jar.setDestFile( target );
         } catch ( ResolutionException e ) {

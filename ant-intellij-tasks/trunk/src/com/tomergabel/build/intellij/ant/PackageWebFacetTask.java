@@ -34,6 +34,16 @@ import org.apache.tools.ant.types.Path;
 import java.io.File;
 
 public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
+    protected File targetFile;
+
+    public File getTargetFile() {
+        return this.targetFile;
+    }
+
+    public void setTargetFile( final File targetFile ) {
+        this.targetFile = targetFile;
+    }
+
     @Override
     protected Class<WebFacet> getFacetClass() {
         return WebFacet.class;
@@ -75,7 +85,8 @@ public class PackageWebFacetTask extends PackageFacetTaskBase<WebFacet> {
         if ( facet.isTargetEnabled() ) {
             final War war = (War) getProject().createTask( "war" );
             try {
-                final File target = resolver().resolveUriFile( facet.getTargetUrl() );
+                final File target =
+                        this.targetFile != null ? this.targetFile : resolver().resolveUriFile( facet.getTargetUrl() );
                 war.setDestFile( target );
                 logVerbose( "Deleting package target %s", war.getDestFile() );
                 target.delete();
