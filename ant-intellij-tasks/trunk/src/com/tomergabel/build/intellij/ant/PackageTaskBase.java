@@ -90,7 +90,7 @@ public abstract class PackageTaskBase extends ModuleTaskBase {
             case COPY:
                 logVerbose( "Packaging dependee module \"%s\" to \"%s\"...", dependency.getModule().getName(), target );
                 ant().compile( dependency.resolveUriFiles( dependency.getModule().getSourceUrls() ), target,
-                        ant().buildClasspath( dependency, SourceFilter.source ) );
+                        ant().buildModuleClasspath( dependency, SourceFilter.source ) );
                 ant().copy( ant().resolveModuleResources( dependency ), target );
                 break;
 

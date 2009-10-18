@@ -26,8 +26,34 @@ import com.tomergabel.build.intellij.model.Project;
 import java.io.File;
 import java.net.URI;
 
+/**
+ * Prototype for Ant-facing APIs (tasks, conditions) that take an input project. To maintain a consitent API, all
+ * Ant-facing APIs that work on projects should extend this interface.
+ * <p/>
+ * I wish Java had mixins.
+ */
 public interface ProjectReceiver {
-    void setProject( final Project project );
-    void setProjectFile( final File projectFile );
-    void setProjectDescriptor( final URI projectDescriptor );
+    /**
+     * Sets the project.
+     *
+     * @param project The project.
+     * @throws IllegalArgumentException The project cannot be null.
+     */
+    void setProject( final Project project ) throws IllegalArgumentException;
+
+    /**
+     * Sets a project file (.ipr).
+     *
+     * @param projectFile The path to the project file.
+     * @throws IllegalArgumentException The project file cannot be null.
+     */
+    void setProjectFile( final File projectFile ) throws IllegalArgumentException;
+
+    /**
+     * Sets a project decsriptor (.ipr) URI.
+     *
+     * @param projectDescriptor The project decsriptor URI.
+     * @throws IllegalArgumentException The URI cannot be null.
+     */
+    void setProjectDescriptor( final URI projectDescriptor ) throws IllegalArgumentException;
 }

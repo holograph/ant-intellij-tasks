@@ -25,18 +25,31 @@ import com.tomergabel.build.intellij.model.MockModel;
 import static com.tomergabel.util.TestUtils.assertSetEquality;
 import static junit.framework.Assert.assertNotNull;
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.Path;
 import static org.junit.Assert.*;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 @SuppressWarnings( { "ConstantConditions" } )
-public class ResolveModuleResourcesTaskTests {
+public class ResolveModuleResourcesTaskTests extends AntTestBase {
+    ResolveModuleResourcesTask task = new ResolveModuleResourcesTask();
+
+    public ResolveModuleResourcesTaskTests() throws URISyntaxException, IOException {
+        super();
+    }
+
+    @Before
+    public void setup() {
+        this.task = new ResolveModuleResourcesTask();
+        this.task.setProject( this.project );
+    }
+
     @Test
     public void execute_ModuleNotSpecified_ThrowsBuildException() {
-        final ResolveModuleResourcesTask task = new ResolveModuleResourcesTask();
         try {
             task.execute();
             fail( "Module not specified, BuildException expected." );
@@ -47,14 +60,12 @@ public class ResolveModuleResourcesTaskTests {
 
     @Test
     public void execute_ModuleNotSpecified_NoFailOnError_NothingHappens() {
-        final ResolveModuleResourcesTask task = new ResolveModuleResourcesTask();
         task.setFailonerror( false );
         task.execute();
     }
 
     @Test
     public void execute_PathIdNotSpecified_ThrowsBuildException() throws Exception {
-        final ResolveModuleResourcesTask task = new ResolveModuleResourcesTask();
         task.setModule( MockModel.Modules.selfContained.get() );
         try {
             task.execute();
@@ -66,7 +77,6 @@ public class ResolveModuleResourcesTaskTests {
 
     @Test
     public void execute_PathIdNotSpecified_NoFailOnError_NothingHappens() throws Exception {
-        final ResolveModuleResourcesTask task = new ResolveModuleResourcesTask();
         task.setFailonerror( false );
         task.setModule( MockModel.Modules.selfContained.get() );
         task.execute();
@@ -74,9 +84,6 @@ public class ResolveModuleResourcesTaskTests {
 
     @Test
     public void execute_NoProjectSpecified_EmptyPathGenerated() throws Exception {
-        final Project project = new Project();
-        final ResolveModuleResourcesTask task = new ResolveModuleResourcesTask();
-        task.setProject( project );
         task.setPathId( "test-path" );
         task.setModuleDescriptor( this.getClass().getResource( "resources-test.iml" ).toURI() );
         task.execute();
@@ -91,9 +98,6 @@ public class ResolveModuleResourcesTaskTests {
 
     @Test
     public void execute_ModuleAndProjectSpecified_ResourcesResolvedCorrectly() throws Exception {
-        final Project project = new Project();
-        final ResolveModuleResourcesTask task = new ResolveModuleResourcesTask();
-        task.setProject( project );
         task.setPathId( "test-path" );
         task.setModuleDescriptor( this.getClass().getResource( "resources-test.iml" ).toURI() );
         task.setProjectDescriptor( this.getClass().getResource( "resources-test.ipr" ).toURI() );

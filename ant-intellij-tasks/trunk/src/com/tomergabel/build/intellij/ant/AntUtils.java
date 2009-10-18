@@ -41,14 +41,37 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
+/**
+ * Provides utility methods to aid Ant scripting.
+ */
 public class AntUtils {
+    /**
+     * The Ant project instance.
+     */
     private final org.apache.tools.ant.Project project;
 
-    public AntUtils( final org.apache.tools.ant.Project project ) {
+    /**
+     * Creates and returns a new instance of {@link AntUtils}.
+     *
+     * @param project The Ant project instance.
+     * @throws IllegalArgumentException The project cannot be null.
+     */
+    public AntUtils( final org.apache.tools.ant.Project project ) throws IllegalArgumentException {
+        if ( project == null )
+            throw new IllegalArgumentException( "The project cannot be null." );
         this.project = project;
     }
 
-    static String[] generateResourceIncludes( final Project project ) {
+    /**
+     * Generates a set of resource inclusion pattern for the specified project.
+     * <p/>
+     * These patterns follow the Ant pattern format, e.g. <code>**&#x2f;*.xml</code>.
+     *
+     * @param project The project for which to generate resource inclusion patterns.
+     * @return An array of reosurce inclusion patterns for the specified project.
+     * @throws IllegalArgumentException The project cannot be null.
+     */
+    static String[] generateResourceIncludes( final Project project ) throws IllegalArgumentException {
         if ( project == null )
             throw new IllegalArgumentException( "The project cannot be null." );
 
@@ -67,50 +90,33 @@ public class AntUtils {
         return includes;
     }
 
+    /**
+     * Takes a URI and returns it without the preceding slash (if present).
+     *
+     * @param uri The URI to process. If {@literal null} is specified, this method returns {@literal null}.
+     * @return The specified URI with not preceding slash, or {@literal null} if no URI is specified.
+     */
     protected static String stripPreceedingSlash( final String uri ) {
         return uri != null ? ( uri.startsWith( "/" ) ? uri.substring( 1 ) : uri ) : null;
     }
 
-//    public static class SingletonResource implements ResourceCollection {
-//        private final Resource resource;
-//
-//        public SingletonResource( final Resource resource ) {
-//            if ( resource == null )
-//                throw new IllegalArgumentException( "The resource cannot be null." );
-//            this.resource = resource;
-//        }
-//
-//        @Override
-//        public Iterator iterator() {
-//            return Collections.singleton( this.resource ).iterator();
-//        }
-//
-//        @Override
-//        public int size() {
-//            return 1;
-//        }
-//
-//        @Override
-//        public boolean isFilesystemOnly() {
-//            return resource.isFilesystemOnly();
-//        }
-//
-//        public Resource getResource() {
-//            return this.resource;
-//        }
-//    }
-//
+    /**
+     * An ordered dcontainer for Ant {@link org.apache.tools.ant.types.Resource file resources}.
+     */
     public static class ResourceContainer implements ResourceCollection {
-        final Collection<Resource> resources = new ArrayList<Resource>();
+        /**
+         * The list of reosurces.
+         */
+        protected final Collection<Resource> resources = new ArrayList<Resource>();
 
         @Override
         public Iterator iterator() {
-            return resources.iterator();
+            return this.resources.iterator();
         }
 
         @Override
         public int size() {
-            return resources.size();
+            return this.resources.size();
         }
 
         @Override
@@ -123,104 +129,29 @@ public class AntUtils {
             } );
         }
 
+        /**
+         * Adds a resource to the container.
+         *
+         * @param resource The resource to add to the container. {@literal null}s are ignored.
+         */
         public void add( final Resource resource ) {
-            this.resources.add( resource );
+            if ( resource != null )
+                this.resources.add( resource );
         }
     }
-//
-//    public static Resource mapFileResource( final FileResource resource, final String targetPrefix ) {
-//        if ( resource == null )
-//            throw new IllegalArgumentException( "The file resource cannot be null." );
-//        if ( targetPrefix == null )
-//            throw new IllegalArgumentException( "The target prefix cannot be null." );
-//
-//        return new FileResource( resource.getFile() ) {
-//            @Override
-//            public String getName() {
-//                return targetPrefix + File.separator +
-//                        PathUtils.relativize( resource.getBaseDir(), resource.getFile() );
-//            }
-//        };
-//    }
-//
-//    public static Resource mapFileResource( final File file, final String targetLocation ) {
-//        if ( file == null )
-//            throw new IllegalArgumentException( "The file cannot be null." );
-//        if ( targetLocation == null )
-//            throw new IllegalArgumentException( "The target location cannot be null." );
-//        if ( !file.isAbsolute() )
-//            throw new IllegalArgumentException( "The file path must be absolute." );
-//
-//        return new FileResource( file.getAbsoluteFile() ) {
-//            @Override
-//            public String getName() {
-//                return targetLocation;
-//            }
-//        };
-//    }
-//
-//    public static Resource mapFileResource( final File root, final File target, final String targetPrefix ) {
-//        if ( root == null )
-//            throw new IllegalArgumentException( "The root cannot be null." );
-//        if ( target == null )
-//            throw new IllegalArgumentException( "The target cannot be null." );
-//        if ( targetPrefix == null )
-//            throw new IllegalArgumentException( "The target prefix cannot be null." );
-//
-//        return new FileResource( target.getAbsoluteFile() ) {
-//            @Override
-//            public String getName() {
-//                return targetPrefix + File.separator + PathUtils.relativize( root, target );
-//            }
-//        };
-//    }
-//
-//    public static ResourceCollection mapResources( final ResourceCollection source,
-//                                                   final String targetPrefix ) {
-//        if ( source == null )
-//            throw new IllegalArgumentException( "The source resource collection cannot be null." );
-//        if ( targetPrefix == null )
-//            throw new IllegalArgumentException( "The target prefix cannot be null." );
-//
-//        if ( targetPrefix.length() == 0 )
-//            return source;
-//
-//        return new ResourceCollection() {
-//            @Override
-//            public Iterator iterator() {
-//                return new Iterator() {
-//                    Iterator iter = source.iterator();
-//
-//                    @Override
-//                    public boolean hasNext() {
-//                        return iter.hasNext();
-//                    }
-//
-//                    @Override
-//                    public Object next() {
-//                        return mapFileResource( (FileResource) iter.next(), targetPrefix );
-//                    }
-//
-//                    @Override
-//                    public void remove() {
-//                        iter.remove();
-//                    }
-//                };
-//            }
-//
-//            @Override
-//            public int size() {
-//                return source.size();
-//            }
-//
-//            @Override
-//            public boolean isFilesystemOnly() {
-//                return source.isFilesystemOnly();
-//            }
-//        };
-//    }
 
-    public void copy( final ResourceCollection source, final File to ) throws BuildException {
+    /**
+     * Copies the specified resources to the target directory. If the target directory does not already exist, it is
+     * created.
+     *
+     * @param source The resources to copy.
+     * @param to     The target directory.
+     * @throws BuildException           An error has occured during the copy.
+     * @throws IllegalArgumentException <ul><li>The source resource collection cannot be null.</li><li>The target
+     *                                  directory cannot be null.</li><li>Target path already exists but is not a
+     *                                  directory.</li></ul>
+     */
+    public void copy( final ResourceCollection source, final File to ) throws BuildException, IllegalArgumentException {
         if ( source == null )
             throw new IllegalArgumentException( "The source resource collection cannot be null." );
         if ( to == null )
@@ -236,6 +167,17 @@ public class AntUtils {
         copy.perform();
     }
 
+    /**
+     * Moves the specified resources to the target directory. If the target directory does not already exist, it is
+     * created.
+     *
+     * @param source The resources to move.
+     * @param to     The target directory.
+     * @throws BuildException           An error has occured during the move.
+     * @throws IllegalArgumentException <ul><li>The source resource collection cannot be null.</li><li>The target
+     *                                  directory cannot be null.</li><li>Target path already exists but is not a
+     *                                  directory.</li></ul>
+     */
     public void move( final ResourceCollection source, final File to ) throws BuildException {
         if ( source == null )
             throw new IllegalArgumentException( "The source resource collection cannot be null." );
@@ -258,7 +200,22 @@ public class AntUtils {
         compile( Collections.singleton( source ), to, classpath );
     }
 
-    public void compile( final Iterable<File> sourceDirectories, final File to, final Path classpath ) throws BuildException {
+    /**
+     * Takes a set of source directories and compiles all source files to a target directory.
+     *
+     * @param sourceDirectories The source directories.
+     * @param to                The target directory.
+     * @param classpath         The compilation classpath as an Ant {@link Path}, or {@literal null} if the default
+     *                          classpath is desired.
+     * @throws BuildException           An error has occurred during the compilation.
+     * @throws IllegalArgumentException <ul><li>The list of source directories cannot be null.</li><li>The target
+     *                                  direcotry cannot be null.</li><li>Target path already exists but is not a
+     *                                  directory.</li> <li>The source directory list contains a null
+     *                                  directory.</li><li>A source path does not exist.</li><li>A source path exists
+     *                                  but is not a directory.</li></ul>
+     */
+    public void compile( final Iterable<File> sourceDirectories, final File to, final Path classpath )
+            throws BuildException, IllegalArgumentException {
         if ( sourceDirectories == null )
             throw new IllegalArgumentException( "The list of source directories cannot be null." );
         if ( to == null )
@@ -271,8 +228,11 @@ public class AntUtils {
         for ( final File directory : sourceDirectories ) {
             if ( directory == null )
                 throw new IllegalArgumentException( "The source directory list contains a null directory." );
-            if ( !directory.exists() && !to.isDirectory() )
-                throw new BuildException( "Target path \"" + to + "\" already exists but is not a directory." );
+            if ( !directory.exists() )
+                throw new IllegalArgumentException( "Source path \"" + directory + "\" does not exist." );
+            else if ( !directory.isDirectory() )
+                throw new IllegalArgumentException(
+                        "Source path \"" + directory + "\" exists but is not a directory." );
             final Path path = (Path) this.project.createDataType( "path" );
             path.setLocation( directory );
             javac.setSrcdir( path );
@@ -284,15 +244,25 @@ public class AntUtils {
         javac.perform();
     }
 
+    /**
+     * Resolves all resources in a module source directory into an Ant resource collection.
+     *
+     * @param module  The module for which to resolve resources.
+     * @param rootUrl The source URL for which to resolve resources. The URL <em>must</em> be one of the source URLs
+     *                specified in the module.
+     * @return A {@link ResourceCollection} which contains the module's resources.
+     * @throws ResolutionException      An error has occurred while resolving the module's resources.
+     * @throws IllegalArgumentException The specified source URL is not part of the module.
+     */
     public ResourceCollection resolveModuleResources( final ModuleResolver module, final String rootUrl )
-            throws ResolutionException {
+            throws ResolutionException, IllegalArgumentException {
         if ( module == null )
             throw new IllegalArgumentException( "The module cannot be null." );
 
         // Verify this is an actual source directory
         if ( !module.getModule().getSourceUrls().contains( rootUrl ) )
-            throw new ResolutionException( "The web facet specifies source URL \"" + rootUrl +
-                    "\", but it is not part of the module." );
+            throw new IllegalArgumentException(
+                    "The specified source URL \"" + rootUrl + "\" is not part of the module." );
 
         final FileSet fs = (FileSet) this.project.createDataType( "fileset" );
         fs.setDir( module.resolveUriFile( rootUrl ) );
@@ -300,8 +270,16 @@ public class AntUtils {
         return fs;
     }
 
+    /**
+     * Resolves all of the module's resources into an Ant resource collection.
+     *
+     * @param module The module for which to resolve resources.
+     * @return A {@link ResourceCollection} containing the module's resources.
+     * @throws IllegalArgumentException The module cannot be null.
+     * @throws ResolutionException      An error has occurred while resolving the module's resources.
+     */
     public ResourceCollection resolveModuleResources( final ModuleResolver module )
-            throws ResolutionException {
+            throws IllegalArgumentException, ResolutionException {
         if ( module == null )
             throw new IllegalArgumentException( "The module cannot be null." );
 
@@ -311,7 +289,20 @@ public class AntUtils {
         return path;
     }
 
-    public Path buildClasspath( final ModuleResolver module, final SourceFilter filter ) throws BuildException {
+    /**
+     * Resolves the module's classpath and generates an Ant path object, which can then be passed on to subsequent build
+     * tasks (such as javac).
+     *
+     * @param module The module for which to build the classpath.
+     * @param filter A {@link SourceFilter} which specifies which types of sources should be considered for the
+     *               classpath.
+     * @return A {@link Path} representing the module's classpath.
+     * @throws BuildException           An error has occurred while building the classpath.
+     * @throws IllegalArgumentException <ul><li>The module cannot be null.</li><li>The source filter cannot be
+     *                                  null.</li></ul>
+     */
+    public Path buildModuleClasspath( final ModuleResolver module, final SourceFilter filter )
+            throws BuildException, IllegalArgumentException {
         if ( module == null )
             throw new IllegalArgumentException( "The module cannot be null." );
         if ( filter == null )
@@ -323,7 +314,8 @@ public class AntUtils {
             resolved = module.resolveModuleClasspath( filter == SourceFilter.source || filter == SourceFilter.both,
                     filter == SourceFilter.test || filter == SourceFilter.both );
         } catch ( ResolutionException e ) {
-            throw new BuildException( "Cannot resolve module classpath for module \"" + module.getModule().getName() + "\".", e );
+            throw new BuildException(
+                    "Cannot resolve module classpath for module \"" + module.getModule().getName() + "\".", e );
         }
 
         // Create path object and add reference by name
@@ -335,5 +327,4 @@ public class AntUtils {
         }
         return classpath;
     }
-
 }

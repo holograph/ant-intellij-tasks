@@ -29,13 +29,19 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URISyntaxException;
+import java.io.IOException;
 
-public class ResolveModuleOutputTaskTests {
+public class ResolveModuleOutputTaskTests extends AntTestBase {
     ResolveModuleOutputTask task;
+
+    public ResolveModuleOutputTaskTests() throws URISyntaxException, IOException {
+        super();
+    }
 
     @Before
     public void testSetup() {
         this.task = new ResolveModuleOutputTask();
+        this.task.setProject( this.project );
     }
 
     @Test

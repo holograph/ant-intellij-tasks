@@ -47,6 +47,6 @@ public class ResolveModuleClasspathTask extends ModuleTaskBase {
             throw new BuildException( "Target path ID (attribute 'pathId') not specified." );
 
         logVerbose( "Resolving classpath for module '%s', filter=%s", module().getName(), this.filter );
-        getProject().addReference( this.pathId, ant().buildClasspath( resolver(), this.filter ) );
+        getProject().addReference( this.pathId, ant().buildModuleClasspath( resolver(), this.filter ) );
     }
 }
