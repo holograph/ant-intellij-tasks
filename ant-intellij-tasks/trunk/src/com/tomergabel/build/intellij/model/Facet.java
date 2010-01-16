@@ -28,16 +28,31 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A base parser class for all module facets.
+ */
 public abstract class Facet extends ParserBase {
+    /**
+     * Creats and returns a new instance of {@link Facet}.
+     *
+     * @param facetNode The XML node containing the facet description.
+     * @throws IllegalArgumentException The facet node cannot be null.
+     * @throws ParseException           An error has occurred while parsing the facet node.
+     */
     public Facet( final Node facetNode ) throws IllegalArgumentException, ParseException {
         super();
         if ( facetNode == null )
             throw new IllegalArgumentException( "The facet node cannot be null." );
     }
 
+    /**
+     * Statically maps a facet type key to the appropriate constructor.
+     */
     private static final Map<String, Constructor<? extends Facet>> facetTypeMap;
 
+    /** Static c'tor */
     static {
+        // Build the facet map
         try {
             facetTypeMap = new HashMap<String, Constructor<? extends Facet>>();
             facetTypeMap.put( "web", WebFacet.class.getConstructor( Node.class ) );
@@ -49,6 +64,12 @@ public abstract class Facet extends ParserBase {
         }
     }
 
+    /**
+     * Resolves a specified facet key to its corresponding class.
+     *
+     * @param typeName The facet type name (as appears in the module descriptor).
+     * @return The facet class which matches the specified facet type, or {@literal null} if unavailable.
+     */
     public static Class<? extends Facet> resolveFacetClass( final String typeName ) {
         if ( typeName == null )
             throw new IllegalArgumentException( "The facet type name cannot be null." );
@@ -57,7 +78,18 @@ public abstract class Facet extends ParserBase {
         return ctor != null ? ctor.getDeclaringClass() : null;
     }
 
-    public static Facet create( final String typeName, final Node facetNode ) throws ParseException {
+    /**
+     * Creates a facet instance for the specified node.
+     *
+     * @param typeName  The type key from the facet descriptor.
+     * @param facetNode The XML node containing the facet descriptor.
+     * @return A {@link Facet} instance, or {@literal null} if the facet type key is not recognized.
+     * @throws ParseException           An error has occurred while parsing the facet descriptor.
+     * @throws IllegalArgumentException <ul><li>The facet type name cannot be null.</li><li>The facet node cannot be
+     *                                  null.</li></ul>
+     */
+    public static Facet create( final String typeName, final Node facetNode )
+            throws IllegalArgumentException, ParseException {
         if ( typeName == null )
             throw new IllegalArgumentException( "The facet type name cannot be null." );
         if ( facetNode == null )

@@ -32,32 +32,63 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Represent a single library in an IntelliJ IDEA project.
+ */
 public final class Library extends ParserBase {
+    /**
+     * The library name.
+     */
     private final String name;
-    private final Collection<String> classes = new HashSet<String>();
-    private final Collection<String> javadoc = new HashSet<String>();
-    private final Collection<String> sources = new HashSet<String>();
+    /**
+     * The class file/JAR URIs for this library.
+     */
+    private final Collection<String> classes;
+    /**
+     * The javadoc URIs for this library.
+     */
+    private final Collection<String> javadoc;
+    /**
+     * The source URIs for this library.
+     */
+    private final Collection<String> sources;
+    /**
+     * The JAR directories specified for this library. Each directory is a tuple of the the JAR directory URI and a
+     * boolean flag indicating whether or not the directory should be processed recursively.
+     */
     private final Collection<Tuple<String, Boolean>> jarDirectories = new HashSet<Tuple<String, Boolean>>();
 
     /**
-     * Package-only c'tor for testing purposes.
-         * @param name The library name.
-         * @param classes The library's classpath.
-         */
-        Library( final String name, final Collection<String> classes ) {
+     * Package-only c'tor for testing purposes. Do not use!
+     *
+     * @param name    The library name.
+     * @param classes The library's classpath.
+     */
+    Library( final String name, final Collection<String> classes ) {
         super();
         this.name = name;
-        this.classes.addAll( classes );
+        this.classes = new HashSet<String>( classes );
+        this.sources = this.javadoc = Collections.emptySet();
     }
 
+    /**
+     * Creates and returns a new instance of {@link Library}.
+     *
+     * @param libraryNode The XML node containing the library descriptor.
+     * @throws ParseException           An error has occurred while parsing the library descriptor.
+     * @throws IllegalArgumentException The library node cannot be null.
+     */
     public Library( final Node libraryNode ) throws ParseException {
         super();
 
+        if ( libraryNode == null )
+            throw new IllegalArgumentException( "The library node cannot be null." );
+
         // Parse library data
         this.name = extract( libraryNode, "@name", "Cannot extract library name" );
-        iterateRoots( libraryNode, "CLASSES", this.classes );
-        iterateRoots( libraryNode, "JAVADOC", this.javadoc );
-        iterateRoots( libraryNode, "SOURCES", this.sources );
+        this.classes = iterateRoots( libraryNode, "CLASSES" );
+        this.javadoc = iterateRoots( libraryNode, "JAVADOC" );
+        this.sources = iterateRoots( libraryNode, "SOURCES" );
 
         // Parse JAR directories
         for ( final Node jarDirectory : extractAll( libraryNode, "jarDirectory",
@@ -71,33 +102,89 @@ public final class Library extends ParserBase {
         }
     }
 
+    /**
+     * Gets the library name.
+     *
+     * @return The library name, or {@literal null} if the library is unnamed.
+     */
     public String getName() {
         return this.name;
     }
 
+    /**
+     * Returns the collection of class/JAR URIs. These are raw URIs that should be resolved with one of the {@link
+     * PropertyResolver} resolution methods.
+     * <p/>
+     * The collection returned is read-only (any attempts to modify it will result in an {@link
+     * UnsupportedOperationException}.
+     */
     public Collection<String> getClasses() {
-        return Collections.unmodifiableCollection( this.classes );
+        return this.classes;
     }
 
+    /**
+     * Returns the collection of JavaDocs URIs. These are raw URIs that should be resolved with one of the {@link
+     * PropertyResolver} resolution methods.
+     * <p/>
+     * The collection returned is read-only (any attempts to modify it will result in an {@link
+     * UnsupportedOperationException}.
+     */
     public Collection<String> getJavadoc() {
-        return Collections.unmodifiableCollection( this.javadoc );
+        return this.javadoc;
     }
 
+    /**
+     * Returns the collection of source directory URIs. These are raw URIs that should be resolved with one of the
+     * {@link PropertyResolver} resolution methods.
+     * <p/>
+     * The collection returned is read-only (any attempts to modify it will result in an {@link
+     * UnsupportedOperationException}.
+     */
     public Collection<String> getSources() {
-        return Collections.unmodifiableCollection( this.sources );
+        return this.sources;
     }
 
-    public Collection<String> resolveClasspath( final PropertyResolver resolver ) throws ResolutionException {
+    /**
+     * Resolves the classpath for this library using the specified {@link PropertyResolver resolver}.
+     *
+     * @param resolver The {@link PropertyResolver} used to resolve the library URIs.
+     * @return A collection of resolved classpath entries for this library.
+     * @throws IllegalArgumentException The property resolver cannot be null.
+     * @throws ResolutionException      An error has occurred while resolving the classpath.
+     */
+    public Collection<String> resolveClasspath( final PropertyResolver resolver )
+            throws IllegalArgumentException, ResolutionException {
+        if ( resolver == null )
+            throw new IllegalArgumentException( "The property resolver cannot be null." );
+
         final Set<String> classpath = new HashSet<String>();
+
+        // Resolve class URIs
         for ( final String uri : this.classes )
             classpath.add( UriUtils.getPath( resolver.resolveUriString( uri ) ) );
+
+        // Resolve JAR directories
         for ( final Tuple<String, Boolean> jarDirectory : this.jarDirectories )
-            resolveJarDirectory( UriUtils.getFile( resolver.resolveUriString( jarDirectory.left ) ), jarDirectory.right, classpath );
+            resolveJarDirectory( UriUtils.getFile( resolver.resolveUriString( jarDirectory.left ) ), jarDirectory.right,
+                    classpath );
+
+        // Return the resolved classpath
         return Collections.unmodifiableCollection( classpath );
     }
 
+    /**
+     * Takes a JAR directory and adds all JARs therein (recursion optional) to the specified classpath container.
+     *
+     * @param directory The directory to resolve.
+     * @param recursive Should the directory be reoslved recursively?
+     * @param bag       The classpath container to which to add the resolved JARs
+     * @throws IllegalArgumentException <ul><li>The JAR directory cannot be null.</li><li>The classpath container cannot
+     *                                  be null.</li></ul>
+     * @throws ResolutionException      <ul><li>The directory does not exist.</li><li>The directory parameter does not
+     *                                  point to a directory.</li></ul>
+     */
     private void resolveJarDirectory( final File directory, final boolean recursive, final Set<String> bag )
-            throws ResolutionException {
+            throws IllegalArgumentException, ResolutionException {
         if ( !directory.exists() )
             throw new ResolutionException(
                     "Directory \"" + directory + "\" is referenced by " + this.toString() + " but does not exist." );
@@ -118,14 +205,29 @@ public final class Library extends ParserBase {
         }
     }
 
-    private void iterateRoots( final Node libraryNode, final String node,
-                               final Collection<String> target )
-            throws ParseException {
-        for ( final Node root : extractAll( libraryNode, node + "/root",
-                "Cannot extract " + node.toLowerCase() + " root paths for library \"" + this.name + "\"" ) )
-            target.add( extract( root, "@url",
-                    "Cannot extract " + node.toLowerCase() + " root path URL for library \"" + this.name +
-                            "\"" ) );
+    /**
+     * Iterates and returns a collection of library roots of the specified type.
+     *
+     * @param libraryNode The library XML node.
+     * @param rootType    The root type string.
+     * @return A collection of the root URIs for the specified type.
+     * @throws ParseException           An error has occurred while iterating the specified node.
+     * @throws IllegalArgumentException <ul>The library node cannot be null.</li><li>The root type string cannot be
+     *                                  null.</li></ul>
+     */
+    private Collection<String> iterateRoots( final Node libraryNode, final String rootType )
+            throws IllegalArgumentException, ParseException {
+        if ( libraryNode == null )
+            throw new IllegalArgumentException( "The library node cannot be null." );
+        if ( rootType == null )
+            throw new IllegalArgumentException( "The root type string cannot be null." );
+
+        final Set<String> set = new HashSet<String>();
+        for ( final Node root : extractAll( libraryNode, rootType + "/root",
+                "Cannot extract " + rootType.toLowerCase() + " root paths for library \"" + this.name + "\"" ) )
+            set.add( extract( root, "@url",
+                    "Cannot extract " + rootType.toLowerCase() + " root path URL for library \"" + this.name + "\"" ) );
+        return Collections.unmodifiableCollection( set );
     }
 
     @Override

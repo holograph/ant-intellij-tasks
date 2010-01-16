@@ -36,7 +36,7 @@ import java.util.Map;
  * <p/>
  * This class provides a common codebase for parsing these components and handling errors. Implementors register
  * component {@link Handler handlers} via {@link #registerComponentHandler(String, Handler)}, typically at construction
- * tieme, and can specify a default handler for unrecognized sections via a constructor argument. A call to {@link
+ * time, and can specify a default handler for unrecognized sections via a constructor argument. A call to {@link
  * #processComponents(org.w3c.dom.Document)} will then process the file, delegating the task of parsing component
  * elements to their respective handlers.
  */
