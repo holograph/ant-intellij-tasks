@@ -1,0 +1,17 @@
+Next version:
+
+  * Test on Linux
+  * Javadocs for all present code
+  * Missing tests
+  * Correct parsing and implementation of compiler options
+    * Support for jikes and other relevant compilers
+    * Implement javac compiler options
+    * Implement encoding options
+  * Significant optimizations, possibly:
+    * A cache layer for parsed module/project files. Assuming a simple process life cycle for Ant, this will significantly improve packaging and project-wide build times.
+    * Dependency checks to see if targets need to be recompiled.
+    * Better build artifact reuse, e.g. exploit already-built class files for packaging.
+
+Long-term:
+
+  * Obtain samples of non-Java projects and add support
